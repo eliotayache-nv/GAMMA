@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-11 15:34:22
+* @Last Modified time: 2020-06-11 18:36:00
 */
 
 #include <iostream>
@@ -25,37 +25,16 @@ void chbindir(const char binPath[]);
 
 int main(int argc, char *argv[])
 {
+    int status;
     c_simu simu;
 
     chbindir(argv[0]);
+    mpi_init(&argc, &argv);
+    checkEnvironment();
 
-    mpi_init(argc, argv);
-    simu.initialise();
+    status = simu.initialise();
 
-    // hydro.loadConfig();
-    // grid.create();
-    // grid.initialState();
-
-    // int** arr;
-    // arr = array_2d_dyn<int>(10,10,120);
-
-    // for (int i = 0; i < 10; ++i)
-    // {
-    //     for (int j = 0; j < 10; ++j)
-    //     {
-    //         arr[i][j] = 10 * i + j;
-    //     }
-    // }
-
-    // for (int i = 0; i < 10; ++i)
-    // {
-    //     for (int j = 0; j < 10; ++j)
-    //     {
-    //         printf("%2d ", arr[i][j]);
-    //     }
-    //     printf("\n");
-    // }
-
+    mpi_finalise();
     return 0;
 }
 

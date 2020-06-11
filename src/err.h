@@ -3,18 +3,17 @@
 
 #include <iostream>
 #include <exception>
-
-// Global variables
-// Debug variables:
-extern bool     g_printErr;         // flag to print or not
-extern bool     g_lockPrintErr;     // lock printErr if verbose is 0 or 2
-
-// Global functions
-void setPrintErr(bool b);
-void printErr(const char* format,...); 
-
+#include "environment.h"
 
 using namespace std;
+
+struct inconsistentEnvironmentException : public exception
+{
+  const char * what () const throw ()
+  {
+    return "Forbidden combination of environment options (check documentation)!";
+  }
+};
 
 struct MPITooManyTasksException : public exception
 {
@@ -55,6 +54,5 @@ struct StartupFileManagementException : public exception
     return "Error when handling files on startup";
   }
 };
-
 
 #endif
