@@ -1,12 +1,15 @@
 /*
 * @Author: eliotayache
 * @Date:   2020-06-10 15:59:03
-* @Last Modified by:   eliotayache
-* @Last Modified time: 2020-06-11 11:37:05
+* @Last Modified by:   Eliot Ayache
+* @Last Modified time: 2020-06-11 15:34:04
 */
 #include "mpi.h"
 #include "err.h"
 #include "environment.h"
+
+int worldsize, worldrank, nodesize, noderank;
+MPI_Comm nodecom;
 
 void mpi_init(int argc, char *argv[])
 {

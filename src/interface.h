@@ -5,7 +5,7 @@
 #include "environment.h"
 #include "fluid.h"
 
-class c_fluid_cell;     // forward declaration
+class c_cell;     // forward declaration
 
 class c_cell_interface
 {
@@ -23,8 +23,8 @@ public:
   double dim;             // orientation (orthogonal vector direction)
   double dA;              // surface area
 
-  c_fluid_cell  *pCL;     // pointer to left cell
-  c_fluid_cell  *pCR;     // pointer to right cells
+  c_cell  *pCL;     // pointer to left cell
+  c_cell  *pCR;     // pointer to right cells
 
   double F[NUM_Q];        // flux accross interface
   c_fluid_state  S;       // interface state

@@ -6,9 +6,14 @@
 #define SIM_H_
 
 //////////////////////////////////////////////////////////////////////////////////////////
-#include "fluid_grid.h"
 #include "environment.h"
-#include "config.h"
+#include "grid.h"
+
+struct s_par
+{
+    double tini;
+};
+
 
 class c_simu
 {
@@ -16,15 +21,15 @@ public:
     c_simu();
     ~c_simu();
     
-    // MEMBERS
-    bool            stop = false;   // stop computation
-    double          t=0, dt, tmax;    // time, timestep, max simulation time
-    long int        it=0, itmax;      // time increment, max time increment
+    bool      stop;   // stop computation
+    double    t, dt, tmax;    // time, timestep, max simulation time
+    long int  it, itmax;      // time increment, max time increment
     c_grid    grid;           // simulation grid
+    s_par     par;
 
-    FILE*           fout        = 0;
+    FILE*     fout;
 
-    // METHODS
+    int initialise();   // load configurations
     int run();          // Runs the hydro evolution of the grid 
     // void prepareEvolution(long int it, double t, double dt); // computes wavespeeds,
     //     // updates boundaries

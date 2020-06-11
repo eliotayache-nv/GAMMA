@@ -2,28 +2,38 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-11 13:53:36
+* @Last Modified time: 2020-06-11 15:34:22
 */
+
+#include <iostream>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <libgen.h>
+#include <unistd.h>
+#include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "environment.h"
 #include "simu.h"
-#include "fluid_grid.h"
+#include "grid.h"
 #include "err.h"
+#include "mpisetup.h"
 #include "array_tools.h"
 
 void chbindir(const char binPath[]);
 
-int main(int argc, char const *argv[])
+int main(int argc, char *argv[])
 {
-    UNUSED(argc);
-
-    c_hydro      hydro;
-    c_grid grid;
+    c_simu simu;
 
     chbindir(argv[0]);
 
+    mpi_init(argc, argv);
+    simu.initialise();
+
     // hydro.loadConfig();
-    grid.create();
+    // grid.create();
     // grid.initialState();
 
     // int** arr;

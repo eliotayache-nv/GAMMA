@@ -2,7 +2,7 @@
 #define FLUID_GRID_H_
 
 #include "environment.h"
-#include "fluid_cell.h"
+#include "cell.h"
 #include "array_tools.h"
 
 
@@ -25,21 +25,21 @@ public:
   int nde_n_ax[NUM_DIM];  // number of cells in each direction
 
   #if   NUM_DIM == 1
-    c_fluid_cell        *C;
+    c_cell        *C;
     c_cell_interface    *I;     // moving interfaces
 
     int n_act;                  // number of active cells in track
     int iLactive, iRactive;     // indexes of leftmost and rightmost active cells on track
 
   #elif NUM_DIM == 2
-    c_fluid_cell        **C;
+    c_cell        **C;
     c_cell_interface    **I;
 
     int *n_act;
     int *iLactive, *iRactive;
 
   #elif NUM_DIM == 3
-    c_fluid_cell        ***C;
+    c_cell        ***C;
     c_cell_interface    ***I;
 
     int **n_act;
@@ -48,18 +48,19 @@ public:
   #endif
 
 
-  // bool initialized;
+  // bool initialised;
 
   // int ncells_active;          // number of active cells at a given moment (ACTIVE)
   // int ncells_total;           // total number of cells (ghost, active)
   // int ncells_max;             // max number of cells (ghost, active, inactive)
   // int iLactive, iRactive;     // indexes of leftmost and rightmost active cells
   // int iLlim, iRlim;           // indexes of left and right evolving region limits
-  // c_fluid_cell        *C;
+  // c_cell        *C;
   // c_cell_interface    *I;
 
   // // METHODS
-  void initialize();          // allocate memory for maximum number of cells
+  void initialise();          // allocate memory for maximum number of cells
+  void destruct();            // free memory
   // void loadInitialConfig(s_config_setup config);   // Fill grid with initial conditions
   // void reloadConfig(s_config_setup *pconfig); // Fill grid with result of previous run
   // void updateBoundaries();    // sets up the boundary conditions
@@ -119,7 +120,6 @@ public:
   // void RK3ComputeState2(long int it, double t, double dt);
   // void RK3ComputeState3(long int it, double t, double dt);
 
-  // void destruct();            // free memory
 };
 
 #endif

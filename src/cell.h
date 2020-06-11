@@ -3,12 +3,12 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // STATUS FOR CELLS
-enum{INACTIVE_STATUS_,ACTIVE_STATUS_,GHOST_STATUS_}
+enum{INACTIVE_STATUS_,ACTIVE_STATUS_,GHOST_STATUS_};
 
 //////////////////////////////////////////////////////////////////////////////////////////
 #include "environment.h"
 #include "fluid.h"
-#include "fluid_cell_interface.h"
+#include "interface.h"
 
 struct s_cell_geometry
 {

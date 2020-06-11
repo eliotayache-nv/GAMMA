@@ -2,14 +2,13 @@
 * @Author: eliotayache
 * @Date:   2020-05-06 09:26:35
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-11 13:53:38
+* @Last Modified time: 2020-06-11 14:25:12
 */
 
-#include "fluid_grid.h"
+#include "grid.h"
 
 c_grid :: c_grid()
 {
-    initialized = false;
 }
 
 c_grid::~c_grid()
@@ -17,7 +16,7 @@ c_grid::~c_grid()
 
 }
 
-c_grid :: initialize()
+void c_grid :: initialise()
 {
     #if   NUM_DIM == 1
         // C = array_1d<c_cell>(n_max)
@@ -38,6 +37,5 @@ void c_grid :: destruct()
         delete_array_2d(C);
         delete_array_2d(I);
     #endif
-    initialized = false;
 }
 
