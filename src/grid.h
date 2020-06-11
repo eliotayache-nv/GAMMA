@@ -17,31 +17,27 @@ public:
 
   // total grid info
   int n_ax[NUM_DIM];  // number of cells in each direction to be allocated
-                        // n_ax[MOV_DIM] = n_max 
-  int n_max;          // max number of cells on moving dim
-  int n_gst;          // number of ghost cells on each side of the grid 
+                        // n_ax[MOV_DIM] = n_max (includes ghosts)
+  int n_gst;          // number of ghost cells on each side of the grid
 
   // node-specific info
   int nde_n_ax[NUM_DIM];  // number of cells in each direction
 
   #if   NUM_DIM == 1
-    c_cell        *C;
-    c_cell_interface    *I;     // moving interfaces
-
+    c_cell         *C;
+    c_interface    *I;     // moving interfaces
     int n_act;                  // number of active cells in track
     int iLactive, iRactive;     // indexes of leftmost and rightmost active cells on track
 
   #elif NUM_DIM == 2
-    c_cell        **C;
-    c_cell_interface    **I;
-
+    c_cell         **C;
+    c_interface    **I;
     int *n_act;
     int *iLactive, *iRactive;
 
   #elif NUM_DIM == 3
-    c_cell        ***C;
-    c_cell_interface    ***I;
-
+    c_cell         ***C;
+    c_interface    ***I;
     int **n_act;
     int **iLactive, **iRactive;
 
