@@ -9,11 +9,11 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 struct s_config_setup;
 
-class c_fluid_grid
+class c_grid
 {
 public:
-  c_fluid_grid();
-  ~c_fluid_grid();
+  c_grid();
+  ~c_grid();
 
   // total grid info
   int n_ax[NUM_DIM];  // number of cells in each direction to be allocated

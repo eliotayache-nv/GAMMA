@@ -19,12 +19,12 @@ struct s_cell_geometry
   double cen[NUM_DIM];      // centroid 
 };
 
-class c_fluid_cell
+class c_cell
 {
 public:
-  c_fluid_cell();
-  c_fluid_cell(double rho, double v, double p);
-  ~c_fluid_cell();
+  c_cell();
+  c_cell(double rho, double v, double p);
+  ~c_cell();
 
   int  status;
   int  memNumber;

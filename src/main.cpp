@@ -1,12 +1,12 @@
 /*
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
-* @Last Modified by:   eliotayache
-* @Last Modified time: 2020-05-06 09:41:31
+* @Last Modified by:   Eliot Ayache
+* @Last Modified time: 2020-06-11 13:53:36
 */
 
 #include "environment.h"
-#include "hydro.h"
+#include "simu.h"
 #include "fluid_grid.h"
 #include "err.h"
 #include "array_tools.h"
@@ -18,33 +18,33 @@ int main(int argc, char const *argv[])
     UNUSED(argc);
 
     c_hydro      hydro;
-    c_fluid_grid grid;
+    c_grid grid;
 
     chbindir(argv[0]);
 
     // hydro.loadConfig();
-    // grid.create();
+    grid.create();
     // grid.initialState();
 
-    int** arr;
-    arr = array_2d_dyn<int>(10,10,120);
+    // int** arr;
+    // arr = array_2d_dyn<int>(10,10,120);
 
-    for (int i = 0; i < 10; ++i)
-    {
-        for (int j = 0; j < 10; ++j)
-        {
-            arr[i][j] = 10 * i + j;
-        }
-    }
+    // for (int i = 0; i < 10; ++i)
+    // {
+    //     for (int j = 0; j < 10; ++j)
+    //     {
+    //         arr[i][j] = 10 * i + j;
+    //     }
+    // }
 
-    for (int i = 0; i < 10; ++i)
-    {
-        for (int j = 0; j < 10; ++j)
-        {
-            printf("%2d ", arr[i][j]);
-        }
-        printf("\n");
-    }
+    // for (int i = 0; i < 10; ++i)
+    // {
+    //     for (int j = 0; j < 10; ++j)
+    //     {
+    //         printf("%2d ", arr[i][j]);
+    //     }
+    //     printf("\n");
+    // }
 
     return 0;
 }
