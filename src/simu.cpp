@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-12 09:36:02
+* @Last Modified time: 2020-06-12 13:34:46
 */
 #include "simu.h"
 #include "environment.h"
@@ -27,3 +27,8 @@ int c_simu :: initialise()
   return 0;
 }
 
+int c_simu :: run()
+{
+    
+    return 0;
+}

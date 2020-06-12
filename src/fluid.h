@@ -6,8 +6,8 @@
 class c_fluid_state
 {
 public:
-  c_fluid_state();
-  ~c_fluid_state();
+  c_fluid_state(){}
+  ~c_fluid_state(){}
 
   double prim[NUM_Q];
   double cons[NUM_Q];

@@ -1,14 +1,14 @@
 /*
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
-* @Last Modified by:   eliotayache
-* @Last Modified time: 2020-06-10 11:18:27
+* @Last Modified by:   Eliot Ayache
+* @Last Modified time: 2020-06-12 13:41:03
 */
 
-#include "fluid.h"
-#include "environment.h"
-#include "err.h"
-#include "constants.h"
+#include "../fluid.h"
+#include "../environment.h"
+#include "../err.h"
+#include "../constants.h"
 #include <iostream>
 #include <gsl/gsl_roots.h>   // root finding algorithms
 #include <gsl/gsl_math.h>
