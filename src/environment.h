@@ -16,8 +16,9 @@ enum{ENABLED_,DISABLED_};
 #define NUM_C 5               // conserved (changes with number of dimensions)
 #define NUM_T 1               // tracers
 #define NUM_Q (NUM_C+NUM_T)   // advected variables (tracers are placed at end of list)
-#define NUM_DIM 3             // number of dimensions
-#define MOV_DIM x_            // moving dimension
+#define NUM_DIM 2             // number of dimensions
+#define MV_D_ x_            // moving dimension
+#define FX_D1 y_            // moving dimension
 #define GAMMA_  (4./3.)
 
 #define OPEN_MPI_ ENABLED_
@@ -29,5 +30,11 @@ extern MPI_Comm nodecom;
 
 // ---------------------------------------------------------------------------------------
 void checkEnvironment();
+
+struct s_par
+{
+    double tini;
+    int n_cell[NUM_DIM];
+};
 
 #endif

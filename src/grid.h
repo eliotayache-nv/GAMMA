@@ -3,12 +3,8 @@
 
 #include "environment.h"
 #include "cell.h"
-#include "array_tools.h"
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
-struct s_config_setup;
-
 class c_grid
 {
 public:
@@ -17,7 +13,7 @@ public:
 
   // total grid info
   int n_ax[NUM_DIM];  // number of cells in each direction to be allocated
-                        // n_ax[MOV_DIM] = n_max (includes ghosts)
+                        // n_ax[MV_D_] = n_max (includes ghosts)
   int n_gst;          // number of ghost cells on each side of the grid
 
   // node-specific info
@@ -30,8 +26,9 @@ public:
     int iLactive, iRactive;     // indexes of leftmost and rightmost active cells on track
 
   #elif NUM_DIM == 2
-    c_cell         **C;
-    c_interface    **I;
+    c_cell         **C;     // physical grid
+    c_cell         **Ctot;  // grid with ghosts
+    c_interface    **I;     // moving dim interfaces
     int *n_act;
     int *iLactive, *iRactive;
 
@@ -52,10 +49,10 @@ public:
   // int iLactive, iRactive;     // indexes of leftmost and rightmost active cells
   // int iLlim, iRlim;           // indexes of left and right evolving region limits
   // c_cell        *C;
-  // c_cell_interface    *I;
+  // c_interface    *I;
 
   // // METHODS
-  void initialise();          // allocate memory for maximum number of cells
+  void initialise(s_par par);          // allocate memory for maximum number of cells
   void destruct();            // free memory
   // void loadInitialConfig(s_config_setup config);   // Fill grid with initial conditions
   // void reloadConfig(s_config_setup *pconfig); // Fill grid with result of previous run

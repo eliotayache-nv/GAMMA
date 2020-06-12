@@ -1,8 +1,8 @@
 /*
 * @Author: eliotayache
 * @Date:   2020-06-09 11:38:38
-* @Last Modified by:   eliotayache
-* @Last Modified time: 2020-06-09 17:06:37
+* @Last Modified by:   Eliot Ayache
+* @Last Modified time: 2020-06-12 09:28:20
 */
 #include "math.h"
 #include "stdio.h"
@@ -19,7 +19,7 @@ enum{x_,y_,z_};
 #define NUM_T 1               // tracers
 #define NUM_Q (NUM_C+NUM_T)   // advected variables (tracers are placed at end of list)
 #define NUM_DIM 2             // number of dimensions
-#define MOV_DIM x_            // moving dimension
+#define MV_D_ x_            // moving dimension
 
 #define GAMMA_  (4./3.)
 

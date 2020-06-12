@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-11 18:31:11
+* @Last Modified time: 2020-06-12 09:36:02
 */
 #include "simu.h"
 #include "environment.h"
@@ -23,7 +23,7 @@ int c_simu :: initialise()
 {
   par.tini = 0.;
   t = par.tini;
-  grid.initialise();
+  grid.initialise(par);
   return 0;
 }
 

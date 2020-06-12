@@ -7,11 +7,11 @@
 
 class c_cell;     // forward declaration
 
-class c_cell_interface
+class c_interface
 {
 public:
-  c_cell_interface();
-  ~c_cell_interface();
+  c_interface();
+  ~c_interface();
 
   // MEMBERS
   int  status; 

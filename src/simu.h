@@ -4,12 +4,6 @@
 #include "environment.h"
 #include "grid.h"
 
-struct s_par
-{
-    double tini;
-    int n_cell[NUM_DIM];
-};
-
 
 class c_simu
 {

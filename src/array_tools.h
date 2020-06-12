@@ -70,25 +70,6 @@ template <class T> T** array_2d(const int ni, const int nj)
   return pp;
 }
 
-template <class T> T** to_array_2d(T* A, const int ni, const int nj)
-{
-  T** pp;
-
-  try {
-  pp = new T*[ni];
-  }
-  catch (bad_alloc&) {
-  cout<<"arr_2d: memory allocation error, pp = new T*["<<ni<<"]"<<endl;
-  exit(1);
-  }
-
-  pp[0] = A;
-
-  for (int i=1; i<ni; ++i) { pp[i] = pp[0] + i * nj; }
-
-  return pp;
-}
-
 template <class T> T** array_2d_dyn(const int ni, const int nj, const int nmax)
 {
   T** pp;
