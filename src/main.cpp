@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-12 13:31:04
+* @Last Modified time: 2020-06-12 14:12:37
 */
 
 #include <iostream>
@@ -21,8 +21,8 @@
 
 void chbindir(const char binPath[]);
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]){
+
     int status;
     c_simu simu;
 
@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void chbindir(const char binPath[])
-{
+void chbindir(const char binPath[]){
+    
     char pathCopy[300];
     int status = 0;
 

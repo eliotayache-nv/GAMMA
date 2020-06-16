@@ -31,10 +31,9 @@ extern MPI_Comm nodecom;
 // ---------------------------------------------------------------------------------------
 void checkEnvironment();
 
-struct s_par
-{
-    double tini;
-    int n_cell[NUM_DIM];
+struct s_par {    
+  double tini;
+  int n_cell[NUM_DIM];
 };
 
 #endif

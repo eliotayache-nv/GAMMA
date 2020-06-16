@@ -5,9 +5,9 @@
 #include "cell.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
-class c_grid
-{
-public:
+class c_grid{
+
+  public:
   c_grid();
   ~c_grid();
 
@@ -54,6 +54,7 @@ public:
   // // METHODS
   void initialise(s_par par);          // allocate memory for maximum number of cells
   void destruct();            // free memory
+  void print(int var);
   // void loadInitialConfig(s_config_setup config);   // Fill grid with initial conditions
   // void reloadConfig(s_config_setup *pconfig); // Fill grid with result of previous run
   // void updateBoundaries();    // sets up the boundary conditions
