@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-09 11:38:38
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-12 09:28:20
+* @Last Modified time: 2020-06-18 10:14:37
 */
 #include "math.h"
 #include "stdio.h"
@@ -18,8 +18,8 @@ enum{x_,y_,z_};
 #define NUM_C 4               // conserved (changes with number of dimensions)
 #define NUM_T 1               // tracers
 #define NUM_Q (NUM_C+NUM_T)   // advected variables (tracers are placed at end of list)
-#define NUM_DIM 2             // number of dimensions
-#define MV_D_ x_            // moving dimension
+#define NUM_D 2             // number of dimensions
+#define MV x_            // moving dimension
 
 #define GAMMA_  (4./3.)
 
@@ -32,7 +32,7 @@ public:
   double prim[NUM_Q];
   double cons[NUM_Q];
   double trac[NUM_T];
-  double flux[NUM_DIM][NUM_Q];
+  double flux[NUM_D][NUM_Q];
 
   void prim2cons();
   void state2flux();
@@ -48,7 +48,7 @@ c_fluid_state :: c_fluid_state()
   for (int i = 0; i < NUM_Q; ++i) cons[i]=0.;
   prim[DEN]=1.;
 
-  for (int n = 0; n < NUM_DIM; ++n)
+  for (int n = 0; n < NUM_D; ++n)
   {
     for (int i = 0; i < NUM_Q; ++i) flux[n][i]=0.;
   }
@@ -63,9 +63,9 @@ void c_fluid_state :: prim2cons()
 {
   double rho = prim[RHO];
   double p   = prim[PPP];
-  double uu[NUM_DIM];
+  double uu[NUM_D];
   double u = 0;
-  for (int i = 0; i < NUM_DIM; ++i)
+  for (int i = 0; i < NUM_D; ++i)
   {
     uu[i] = prim[UU1+i];
     u += uu[i]*uu[i];
@@ -76,20 +76,20 @@ void c_fluid_state :: prim2cons()
 
   double D   = lfac * rho;
   double tau = D * h * lfac - p - D;
-  double ss[NUM_DIM];
-  for (int i = 0; i < NUM_DIM; ++i) ss[i] = D * h * uu[i];
+  double ss[NUM_D];
+  for (int i = 0; i < NUM_D; ++i) ss[i] = D * h * uu[i];
 
   cons[DEN] = D;
   cons[TAU] = tau;
-  for (int i = 0; i < NUM_DIM; ++i) cons[SS1+i] = ss[i];
+  for (int i = 0; i < NUM_D; ++i) cons[SS1+i] = ss[i];
 }
 
 void c_fluid_state :: state2flux()
 {
   double p   = prim[PPP];
-  double uu[NUM_DIM];
+  double uu[NUM_D];
   double u = 0;
-  for (int i = 0; i < NUM_DIM; ++i)
+  for (int i = 0; i < NUM_D; ++i)
   {
     uu[i] = prim[UU1+i];
     u += uu[i]*uu[i];
@@ -98,14 +98,14 @@ void c_fluid_state :: state2flux()
   double lfac = sqrt(1+u*u);
   double D = cons[DEN];
   double tau = cons[TAU];
-  double ss[NUM_DIM];
-  for (int i = 0; i < NUM_DIM; ++i) ss[i] = cons[SS1+i];
+  double ss[NUM_D];
+  for (int i = 0; i < NUM_D; ++i) ss[i] = cons[SS1+i];
 
-  for (int n = 0; n < NUM_DIM; ++n)
+  for (int n = 0; n < NUM_D; ++n)
   {
     flux[n][DEN] = D*uu[n]/lfac;
     flux[n][TAU] = ss[n]-D*uu[n]/lfac;
-    for (int i = 0; i < NUM_DIM; ++i)
+    for (int i = 0; i < NUM_D; ++i)
     {
       if (i==n) flux[n][SS1+i] = ss[i]*uu[i]/lfac + p;
       else flux[n][SS1+i] = ss[i]*uu[i]/lfac;
@@ -154,7 +154,7 @@ void c_fluid_state :: cons2prim(double pin)
   // setting initial parameters
   D = cons[DEN];
   S = 0.;
-  for (int i = 0; i < NUM_DIM; ++i) S += cons[SS1+i]*cons[SS1+i];
+  for (int i = 0; i < NUM_D; ++i) S += cons[SS1+i]*cons[SS1+i];
   S = sqrt(S);
   E = cons[TAU]+cons[DEN];
 
@@ -219,11 +219,11 @@ void c_fluid_state :: cons2prim(double pin)
   prim[RHO] = D/lfac;
 
   if (S == 0.)    
-    for (int i = 0; i < NUM_DIM; ++i) prim[UU1+i] = 0;
+    for (int i = 0; i < NUM_D; ++i) prim[UU1+i] = 0;
   else
   {
     double v = sqrt(1.- 1./(lfac*lfac));
-    for (int i = 0; i < NUM_DIM; ++i) prim[UU1+i] = lfac*v*(cons[SS1+i]/S);
+    for (int i = 0; i < NUM_D; ++i) prim[UU1+i] = lfac*v*(cons[SS1+i]/S);
     // Mignone (2006) eq. 3
   }
 

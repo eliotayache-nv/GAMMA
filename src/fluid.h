@@ -11,7 +11,7 @@ public:
 
   double prim[NUM_Q];
   double cons[NUM_Q];
-  double flux[NUM_DIM][NUM_Q];
+  double flux[NUM_D][NUM_Q];
 
   void prim2cons();
   void cons2prim(double pin = 0);

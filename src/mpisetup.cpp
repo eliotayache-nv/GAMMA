@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 15:59:03
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-16 14:58:49
+* @Last Modified time: 2020-06-18 10:14:44
 */
 #include "mpi.h"
 #include "err.h"
@@ -43,7 +43,7 @@ void generate_mpi_cell( MPI_Datatype * cell_mpi ){
   c_fluid_state state;
   MPI_Datatype state_mpi;
   int fcount = 1; // no. of types: only doubles
-  int fblocklenghts[]={NUM_Q*NUM_Q*NUM_DIM*NUM_Q};
+  int fblocklenghts[]={NUM_Q*NUM_Q*NUM_D*NUM_Q};
   MPI_Datatype ftypes[]={MPI_DOUBLE};
   MPI_Aint foffsets[fcount];
 
@@ -55,7 +55,7 @@ void generate_mpi_cell( MPI_Datatype * cell_mpi ){
   // GEOMETRY MPI DATATYPE
   MPI_Datatype geom_mpi;
   int gcount = 1; // no. of types: only doubles
-  int gblocklenghts[]={1+4*NUM_DIM};
+  int gblocklenghts[]={1+4*NUM_D};
   MPI_Datatype gtypes[]={MPI_DOUBLE};
   MPI_Aint goffsets[gcount];
 

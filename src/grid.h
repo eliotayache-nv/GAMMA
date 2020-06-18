@@ -12,27 +12,29 @@ class c_grid{
   ~c_grid();
 
   // total grid info
-  int n_ax[NUM_DIM];  // number of cells in each direction to be allocated
-                        // n_ax[MV_D_] = n_max (includes ghosts)
+  int n_ax[NUM_D];  // number of cells in each direction to be allocated
+                        // n_ax[MV] = n_max (includes ghosts)
   int n_gst;          // number of ghost cells on each side of the grid
 
   // node-specific info
-  int nde_n_ax[NUM_DIM];  // number of cells in each direction
+  int nde_n_ax[NUM_D];  // number of cells in each direction (including ghosts)
+  int nde_n_cell[NUM_D];  // number of cells in each direction
+  int origin[NUM_D];    // coordinates of C[0][0] in simulation domain
 
-  #if   NUM_DIM == 1
+  #if   NUM_D == 1
     c_cell         *C;
     c_interface    *I;     // moving interfaces
     int n_act;                  // number of active cells in track
     int iLactive, iRactive;     // indexes of leftmost and rightmost active cells on track
 
-  #elif NUM_DIM == 2
+  #elif NUM_D == 2
     c_cell         **C;     // physical grid
     c_cell         **Ctot;  // grid with ghosts
     c_interface    **I;     // moving dim interfaces
     int *n_act;
     int *iLactive, *iRactive;
 
-  #elif NUM_DIM == 3
+  #elif NUM_D == 3
     c_cell         ***C;
     c_interface    ***I;
     int **n_act;

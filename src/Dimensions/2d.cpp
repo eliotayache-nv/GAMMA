@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-16 15:14:51
+* @Last Modified time: 2020-06-18 10:38:40
 */
 
 #include "../environment.h"
@@ -12,61 +12,79 @@
 #include "../array_tools.h"
 #include "../mpisetup.h"
 
-static int splitGrid(int n_cell, int n_gst){
+static int splitGrid(int n_cell, int n_gst, int *origin){
   /*
-  int n_cell: total number of cells (non including ghost boundaries)
-  int n_gst:  size of ghost regions.
+  int n_cell:   total number of cells (non including ghost boundaries)
+  int n_gst:    size of ghost regions.
+  int *origin:  coordinates of C[0][0] in the simulation domain
   */
   int base = n_cell/worldsize;
   int rest = n_cell%worldsize;
   int nde_n_ax = base;
   if (worldrank<rest) nde_n_ax++;
   nde_n_ax+=2*n_gst;
+
+  origin[MV] = 0;
+  origin[F1] = worldrank*base;
+  if (worldrank <rest) origin[F1]+=worldrank;
+  else origin[F1]+=rest;
+
   return nde_n_ax;
 
 }
 
 void c_grid :: initialise(s_par par){
 
-  for (int d = 0; d < NUM_DIM; ++d) n_ax[d] = par.n_cell[d]+2*n_gst;
-  nde_n_ax[MV_D_] = n_ax[MV_D_];
-  nde_n_ax[FX_D1] = splitGrid(par.n_cell[FX_D1], n_gst);
+  for (int d = 0; d < NUM_D; ++d) n_ax[d] = par.n_cell[d]+2*n_gst;
+  nde_n_ax[MV]   = n_ax[MV];
+  nde_n_ax[F1]   = splitGrid(par.n_cell[F1], n_gst, origin);
+  nde_n_cell[MV] = nde_n_ax[MV]-2*n_gst;  // max number of active cells in mov dim
+  nde_n_cell[F1] = nde_n_ax[F1]-2*n_gst;
   
-  Ctot = array_2d<c_cell>(nde_n_ax[FX_D1],nde_n_ax[MV_D_]);
-  I    = array_2d<c_interface>(nde_n_ax[FX_D1],nde_n_ax[MV_D_]+1);
+  Ctot = array_2d<c_cell>(nde_n_ax[F1],nde_n_ax[MV]);
+  I    = array_2d<c_interface>(nde_n_ax[F1],nde_n_ax[MV]+1);
   C    = &Ctot[n_gst];
 
 }
 
 void c_grid :: destruct(){
 
-  delete_array_2d(C);
+  delete_array_2d(Ctot);
   delete_array_2d(I);
 
 }
 
 void c_grid :: print(int var){
 
-  int size  = nde_n_ax[FX_D1] * nde_n_ax[MV_D_];
   MPI_Datatype cell_mpi = {0}; 
-  generate_mpi_cell( &cell_mpi );
+  generate_mpi_cell(&cell_mpi);
 
   if (worldrank == 0){
 
-    c_cell **Cdump  = array_2d<c_cell>(n_ax[FX_D1], n_ax[MV_D_]);
-    std::memcpy(&Cdump[0][0],&C[0][0],size * sizeof(c_cell))
+    int sizes[worldsize];
+    c_cell **Cdump  = array_2d<c_cell>(n_ax[F1], n_ax[MV]);
 
-    for (int j = 1; j < numprocs; ++j){
-      MPI_Recv(&Cdump[index][0], size, cell_mpi, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    sizes[0] = nde_n_cell[F1] * nde_n_cell[MV];
+    std::memcpy(&Cdump[0][0],&C[0][0],sizes[0] * sizeof(c_cell));
+
+    for (int j = 1; j < worldsize; ++j){
+      int o[NUM_D];
+      MPI_Recv(           &sizes[j],        1,  MPI_INT, j, 0, 
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(                   o,    NUM_D,  MPI_INT, j, 1, 
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(&Cdump[o[F1]][o[MV]], sizes[j], cell_mpi, j, 2, 
+        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
-    for (int j = 0; j < n_ax[FX_D1]; ++j){
-      for (int i = 0; i < n_ax[MV_D_]; ++i) printf("%le \n", Cdump[j][i]);
+    for (int j = 0; j < n_ax[F1]; ++j){
+      for (int i = 0; i < n_ax[MV]; ++i) printf("%le \n", Cdump[j][i].S.prim[var]);
       printf("\n");
     }
-    cout << t << endl;
   }else{
-    int index = noderank * nodeNy / nodesize;
-    MPI_Send(&C[index][0], size, cell_mpi, 0, 0, MPI_COMM_WORLD);
+    int size  = nde_n_cell[F1] * nde_n_cell[MV];
+    MPI_Send(   &size,     1,  MPI_INT, 0, 0, MPI_COMM_WORLD);
+    MPI_Send(  origin, NUM_D,  MPI_INT, 0, 1, MPI_COMM_WORLD);
+    MPI_Send(&C[0][0],  size, cell_mpi, 0, 2, MPI_COMM_WORLD);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
