@@ -16,7 +16,7 @@ endif
 
 ifeq ($(HOST_NAME), balena)
 	CXX     = mpicxx
-	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 		#run this line on distant
+	CXXFLAGS = -Wall -Wextra -Qunused-arguments -std=c++0x -O3 		#run this line on distant
 	LFLAGS = -lgsl -lgslcblas -lm	#run this line on distant
 endif
 
