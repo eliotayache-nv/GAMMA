@@ -2,11 +2,12 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 15:59:03
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-21 19:53:22
+* @Last Modified time: 2020-06-22 10:24:23
 */
 #include "mpi.h"
 #include "err.h"
 #include "environment.h"
+#include "array_tools.h"
 #include "fluid.h"
 #include "cell.h"
 #include <stddef.h>
@@ -49,17 +50,17 @@ struct s_cell
 void toStruct(Cell c, s_cell * sc)
 {
   sc->status = c.status;
-  sc->prim   = c.S.prim;
-  sc->x      = c.G.x;
-  sc->dl     = c.G.dl;
+  arrcpy<double>(c.S.prim, sc->prim, NUM_Q);
+  arrcpy<double>(c.G.x   , sc->x   , NUM_D);
+  arrcpy<double>(c.G.dl  , sc->dl  , NUM_D);
 }
 
 void toClass(s_cell sc, Cell * c)
 {
-  c->S.status = sc.status;
-  c->S.prim   = sc.prim;
-  c->G.x      = sc.x;
-  c->G.dl     = sc.dl;
+  c->status = sc.status;
+  arrcpy<double>(sc.prim, c->S.prim, NUM_Q);
+  arrcpy<double>(sc.x   , c->G.x   , NUM_D);
+  arrcpy<double>(sc.dl  , c->G.dl  , NUM_D);
 }
 
 void generate_mpi_cell( MPI_Datatype * cell_mpi ){
@@ -117,7 +118,7 @@ void generate_mpi_cell( MPI_Datatype * cell_mpi ){
   // // CELL MPI DATATYPE
   s_cell sc;
   int count = 3; // no. of types: int,state,geometry
-  int blocklengths[]={1.NUM_Q,NUM_D,NUM_D};
+  int blocklengths[]={1,NUM_Q,NUM_D,NUM_D};
   MPI_Datatype types[]={MPI_INT,MPI_DOUBLE,MPI_DOUBLE,MPI_DOUBLE};
   MPI_Aint offsets[count];
 

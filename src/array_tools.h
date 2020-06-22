@@ -26,6 +26,17 @@ template <class T> T*** array_3d(const int ni, const int nj, const int nk);
 template <class T> void delete_array_1d(T* p);
 template <class T> void delete_array_2d(T** pp);
 template <class T> void delete_array_3d(T*** ppp);
+template <class T> void arrcpy(T* src, T* dest, int len);
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <class T> void arrcpy(T* src, T* dest, int len){
+  
+  for (int i = 0; i < len; ++i){
+    dest[i] = src[i];
+  }
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
