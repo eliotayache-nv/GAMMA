@@ -3,7 +3,17 @@
 
 #include "environment.h"
 
-struct s_cell;
+
+class Grid;
+
+struct s_cell
+{
+  int status;
+  double prim[NUM_Q];
+  double x[NUM_D];
+  double dl[NUM_D];
+};
+
 void mpi_init(int *argc, char **argv[]);
 void toStruct(Cell c, s_cell * sc);
 void toClass(s_cell sc, Cell * c);

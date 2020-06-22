@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 15:59:03
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-22 10:39:08
+* @Last Modified time: 2020-06-22 16:04:55
 */
 #include "mpi.h"
 #include "err.h"
@@ -10,6 +10,7 @@
 #include "array_tools.h"
 #include "fluid.h"
 #include "cell.h"
+#include "mpisetup.h"
 #include <stddef.h>
 #include <iostream>
 #include <cstddef>
@@ -39,15 +40,6 @@ void mpi_init(int *argc, char **argv[]){
   if (nodesize_check!=1) throw MPITooManyTasksException();
 
 }
-
-
-struct s_cell
-{
-  int status;
-  double prim[NUM_Q];
-  double x[NUM_D];
-  double dl[NUM_D];
-};
 
 void toStruct(Cell c, s_cell * sc)
 {
@@ -136,11 +128,11 @@ void generate_mpi_cell( MPI_Datatype * cell_mpi ){
   // offsets[2] = (char *)&(sc.x)      - (char *)(&sc);
   // offsets[3] = (char *)&(sc.dl)     - (char *)(&sc);
 
-  printf("blah\n");
 
   MPI_Type_create_struct(count,blocklengths,offsets,types,cell_mpi);
   MPI_Type_commit(cell_mpi);
 
+  printf("blah\n");
 }
 
 

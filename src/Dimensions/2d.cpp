@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-22 15:31:29
+* @Last Modified time: 2020-06-22 16:02:43
 */
 
 #include "../environment.h"
@@ -68,29 +68,36 @@ void Grid :: print(int var){
   if (worldrank == 0){
 
     int sizes[worldsize];
-    Cell **Cdump = array_2d<Cell>(n_cell[F1], n_ax[MV]);
+    Cell    **Cdump = array_2d<Cell>(n_cell[F1], n_ax[MV]);
+    s_cell **SCdump = array_2d<s_cell>(n_cell[F1], n_ax[MV]);
 
     sizes[0] = nde_n_cell[F1] * nde_n_ax[MV];
     std::copy_n(&C[0][0], sizes[0], &Cdump[0][0]);
 
     for (int j = 1; j < worldsize; ++j){
       int o[NUM_D];
-      MPI_Recv(           &sizes[j],        1,  MPI_INT, j, 0, 
-        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Recv(                   o,    NUM_D,  MPI_INT, j, 1, 
-        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Recv(&Cdump[o[F1]][o[MV]], sizes[j], cell_mpi, j, 2, 
-        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(            &sizes[j],        1,  MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(                    o,    NUM_D,  MPI_INT, j, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(&SCdump[o[F1]][o[MV]], sizes[j], cell_mpi, j, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     for (int j = 0; j < n_cell[F1]; ++j){
-      for (int i = 0; i < n_ax[MV]; ++i) printf("%le \n", Cdump[j][i].S.prim[var]);
+      for (int i = 0; i < n_ax[MV]; ++i) {
+        toClass(SCdump[j][i], &Cdump[j][i]);
+        printf("%le \n", Cdump[j][i].S.prim[var]);
+      }
       printf("\n");
     }
   }else{
     int size  = nde_n_cell[F1] * nde_n_ax[MV];  // size includes MV ghost cells
     MPI_Send( &size,     1,  MPI_INT, 0, 0, MPI_COMM_WORLD);
     MPI_Send(origin, NUM_D,  MPI_INT, 0, 1, MPI_COMM_WORLD);
-    MPI_Send(     C,  size, cell_mpi, 0, 2, MPI_COMM_WORLD);
+    s_cell **SC = array_2d<s_cell>(nde_n_cell[F1],nde_n_ax[MV]);
+    for (int j = 0; j < nde_n_cell[F1]; ++j){
+      for (int i = 0; i < nde_n_ax[MV]; ++i){
+        toStruct(C[j][i], &SC[j][i]);
+      }
+    }
+    MPI_Send(    SC,  size, cell_mpi, 0, 2, MPI_COMM_WORLD);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
