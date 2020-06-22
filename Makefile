@@ -12,13 +12,11 @@ ifeq ($(OS_NAME), linux)
 	CXX     = /usr/bin/g++
 	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 		#run this line on distant
 	LFLAGS = -L/usr/local/lib -fopenmp -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5 -lgsl -lgslcblas -lm	#run this line on distant
-endif
 else
 ifeq ($(HOME), /home/t/ehra20)
 	CXX     = mpicxx
 	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 		#run this line on distant
 	LFLAGS = -lgsl -lgslcblas -lm	#run this line on distant
-endif
 else
 ifeq ($(OS_NAME), darwin)
 	CXX     = /usr/local/bin/mpic++
@@ -26,6 +24,8 @@ ifeq ($(OS_NAME), darwin)
 	CXXFLAGS = -Wall -Wextra -Qunused-arguments -std=c++11 -g  	#run this line on local
 # 	LFLAGS = -L/usr/local/lib -fopenmp -lhdf5 -lgsl -lm 		#run this line on local
 	LFLAGS = -L/usr/local/lib -lgsl -lm 	#run this line on local
+endif
+endif
 endif
 
 IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
