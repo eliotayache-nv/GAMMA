@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 15:59:03
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-22 10:24:23
+* @Last Modified time: 2020-06-22 10:39:08
 */
 #include "mpi.h"
 #include "err.h"
@@ -11,6 +11,8 @@
 #include "fluid.h"
 #include "cell.h"
 #include <stddef.h>
+#include <iostream>
+#include <cstddef>
 
 void mpi_init(int *argc, char **argv[]){
 
@@ -117,15 +119,24 @@ void generate_mpi_cell( MPI_Datatype * cell_mpi ){
 
   // // CELL MPI DATATYPE
   s_cell sc;
-  int count = 3; // no. of types: int,state,geometry
-  int blocklengths[]={1,NUM_Q,NUM_D,NUM_D};
-  MPI_Datatype types[]={MPI_INT,MPI_DOUBLE,MPI_DOUBLE,MPI_DOUBLE};
+  int count = 2; // no. of types: int,double
+  int blocklengths[]={1,NUM_Q+NUM_D+NUM_D};
+  MPI_Datatype types[]={MPI_INT,MPI_DOUBLE};
   MPI_Aint offsets[count];
 
-  offsets[0] = (char *)&(sc.status) - (char *)(&sc);
-  offsets[1] = (char *)&(sc.prim) - (char *)(&sc);
-  offsets[2] = (char *)&(sc.x)    - (char *)(&sc);
-  offsets[3] = (char *)&(sc.dl)   - (char *)(&sc);
+  MPI_Aint a_sc, a_status, a_prim;
+  MPI_Get_address(&sc,&a_sc);   // address of cell
+  MPI_Get_address(&sc.status,&a_status); // address of first attribute of cell
+  MPI_Get_address(&sc.prim,&a_prim); // address of first attribute of cell
+
+  offsets[0] = a_status-a_sc;
+  offsets[1] = a_prim-a_sc;
+
+  // offsets[1] = (char *)&(sc.prim)   - (char *)(&sc);
+  // offsets[2] = (char *)&(sc.x)      - (char *)(&sc);
+  // offsets[3] = (char *)&(sc.dl)     - (char *)(&sc);
+
+  printf("blah\n");
 
   MPI_Type_create_struct(count,blocklengths,offsets,types,cell_mpi);
   MPI_Type_commit(cell_mpi);

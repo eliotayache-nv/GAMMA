@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-19 10:13:14
+* @Last Modified time: 2020-06-22 10:41:27
 */
 
 #include "../environment.h"
@@ -61,7 +61,7 @@ void Grid :: destruct(){
 
 void Grid :: print(int var){
 
-  MPI_Datatype cell_mpi = NULL; 
+  MPI_Datatype cell_mpi = {0}; 
   generate_mpi_cell(&cell_mpi);
 
   if (worldrank == 0){
@@ -70,7 +70,6 @@ void Grid :: print(int var){
     Cell **Cdump = array_2d<Cell>(n_cell[F1], n_ax[MV]);
 
     sizes[0] = nde_n_cell[F1] * nde_n_ax[MV];
-    exit(0);
     std::memcpy(&Cdump[0][0], &C[0][0], sizes[0]*sizeof(Cell));
 
     for (int j = 1; j < worldsize; ++j){
