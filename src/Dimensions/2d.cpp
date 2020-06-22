@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-22 16:02:43
+* @Last Modified time: 2020-06-22 16:27:52
 */
 
 #include "../environment.h"
@@ -70,9 +70,14 @@ void Grid :: print(int var){
     int sizes[worldsize];
     Cell    **Cdump = array_2d<Cell>(n_cell[F1], n_ax[MV]);
     s_cell **SCdump = array_2d<s_cell>(n_cell[F1], n_ax[MV]);
+    for (int j = 0; j < nde_n_cell[F1]; ++j){
+      for (int i = 0; i < nde_n_ax[MV]; ++i){
+        toStruct(C[j][i], &SCdump[j][i]);
+      }
+    }
 
     sizes[0] = nde_n_cell[F1] * nde_n_ax[MV];
-    std::copy_n(&C[0][0], sizes[0], &Cdump[0][0]);
+    std::copy_n(&C[0][0],  sizes[0], &Cdump[0][0]);
 
     for (int j = 1; j < worldsize; ++j){
       int o[NUM_D];

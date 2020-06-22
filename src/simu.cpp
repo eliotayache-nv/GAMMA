@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-22 15:32:50
+* @Last Modified time: 2020-06-22 16:19:51
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -35,7 +35,5 @@ int Simu :: initialise(){
 int Simu :: run(){
 
     grid.print(RHO);
-    grid.destruct();
-    exit(0);
     return 0;
 }
