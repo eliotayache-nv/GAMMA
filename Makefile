@@ -13,17 +13,17 @@ ifeq ($(OS_NAME), linux)
 	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 		#run this line on distant
 	LFLAGS = -L/usr/local/lib -fopenmp -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5 -lgsl -lgslcblas -lm	#run this line on distant
 endif
-
-ifeq ($(HOST_NAME), balena)
+else
+ifeq ($(HOME), /home/t/ehra20)
 	CXX     = mpicxx
 	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 		#run this line on distant
 	LFLAGS = -lgsl -lgslcblas -lm	#run this line on distant
 endif
-
+else
 ifeq ($(OS_NAME), darwin)
 	CXX     = /usr/local/bin/mpic++
 # 	CXXFLAGS = -Wall -Wextra -g -std=c++11 -O0  	#run this line on local
-	CXXFLAGS = -Wall -Wextra -Qunused-arguments -g  	#run this line on local
+	CXXFLAGS = -Wall -Wextra -Qunused-arguments -std=c++11 -g  	#run this line on local
 # 	LFLAGS = -L/usr/local/lib -fopenmp -lhdf5 -lgsl -lm 		#run this line on local
 	LFLAGS = -L/usr/local/lib -lgsl -lm 	#run this line on local
 endif
