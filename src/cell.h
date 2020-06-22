@@ -12,19 +12,18 @@ enum{INACTIVE_STATUS_,ACTIVE_STATUS_,GHOST_STATUS_};
 
 struct s_cell_geometry{
 
-  double dV;                // volume
-  double pos[NUM_D];      // position 
-  double v[NUM_D];        // velocity (lab frame)
+  double dV;              // volume
+  double x[NUM_D];        // position 
   double dl[NUM_D];       // width in every dimension
   double cen[NUM_D];      // centroid 
 
 };
 
-class c_cell{
+class Cell{
 
 public:
-  c_cell();
-  ~c_cell();
+  Cell();
+  ~Cell();
 
   int  status;
   int  memNumber;

@@ -15,6 +15,14 @@ struct inconsistentEnvironmentException : public exception
   }
 };
 
+struct notImplementedException : public exception
+{
+  const char * what () const throw ()
+  {
+    return "This is not implemented yet!";
+  }
+};
+
 struct MPITooManyTasksException : public exception
 {
   const char * what () const throw ()

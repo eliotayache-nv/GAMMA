@@ -4,17 +4,18 @@
 #include "environment.h"
 #include "grid.h"
 
+void loadParams(s_par *par);
 
-class c_simu
+class Simu
 {
 public:
-    c_simu();
-    ~c_simu();
+    Simu();
+    ~Simu();
     
     bool      stop;   // stop computation
     double    t, dt, tmax;    // time, timestep, max simulation time
     long int  it, itmax;      // time increment, max time increment
-    c_grid    grid;           // simulation grid
+    Grid      grid;           // simulation grid
     s_par     par;
 
     FILE*     fout;
@@ -27,7 +28,7 @@ public:
     // void setup();       // sets up the various hydro parameters before running
     // void updateCFL(long int it); // updates the value of the CFL depending on time-step
     // void timeScale();   // Computes the value of dt according to the CFL condition
-    // void assignGrid(c_grid grid);
+    // void assignGrid(Grid grid);
     // void printInfo();
     // void setDebugProfile();
     // void specialDebugProfile();

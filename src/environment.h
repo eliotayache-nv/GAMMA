@@ -34,6 +34,7 @@ void checkEnvironment();
 struct s_par {    
   double tini;
   int n_cell[NUM_D];
+  int n_gst;
 };
 
 #endif

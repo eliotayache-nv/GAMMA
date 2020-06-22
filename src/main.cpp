@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-12 14:12:37
+* @Last Modified time: 2020-06-18 11:22:29
 */
 
 #include <iostream>
@@ -24,7 +24,7 @@ void chbindir(const char binPath[]);
 int main(int argc, char *argv[]){
 
     int status;
-    c_simu simu;
+    Simu simu;
 
     chbindir(argv[0]);
     mpi_init(&argc, &argv);
@@ -35,10 +35,11 @@ int main(int argc, char *argv[]){
 
     mpi_finalise();
     return 0;
+
 }
 
 void chbindir(const char binPath[]){
-    
+
     char pathCopy[300];
     int status = 0;
 
@@ -46,4 +47,5 @@ void chbindir(const char binPath[]){
     status = chdir(dirname(pathCopy));
     if (status == -1) throw StartupFileManagementException();
     return;
+    
 }
