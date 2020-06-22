@@ -15,9 +15,9 @@ ifeq ($(OS_NAME), linux)
 endif
 
 ifeq ($(HOST_NAME), balena)
-	CXX     = g++
-	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 		#run this line on distant
-	LFLAGS = -fopenmp -lhdf5 -lgsl -lgslcblas -lm	#run this line on distant
+	CXX     = mpicxx
+	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 		#run this line on distant
+	LFLAGS = -lgsl -lgslcblas -lm	#run this line on distant
 endif
 
 ifeq ($(OS_NAME), darwin)
