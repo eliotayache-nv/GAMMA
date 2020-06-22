@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-22 10:41:27
+* @Last Modified time: 2020-06-22 11:52:57
 */
 
 #include "../environment.h"
@@ -70,7 +70,7 @@ void Grid :: print(int var){
     Cell **Cdump = array_2d<Cell>(n_cell[F1], n_ax[MV]);
 
     sizes[0] = nde_n_cell[F1] * nde_n_ax[MV];
-    std::memcpy(&Cdump[0][0], &C[0][0], sizes[0]*sizeof(Cell));
+    std::copy_n(&Cdump[0][0], sizes[0], &C[0][0]);
 
     for (int j = 1; j < worldsize; ++j){
       int o[NUM_D];
@@ -102,7 +102,7 @@ void mpi_distribute(Grid *grid){
   int size  = grid->nde_n_ax[MV];  // size includes MV ghost cells
   for (int j = 0; j < grid->nde_n_cell[F1]; ++j){  // have to  copy track by track
     int index = grid->origin[F1]+j;
-    std::memcpy(&(grid->C[j]), &(grid->Cinit[index]), size*sizeof(Cell));
+    std::copy(&(grid->C[j]), size, &(grid->Cinit[index]));
   }
   delete_array_2d(grid->Cinit);
 
