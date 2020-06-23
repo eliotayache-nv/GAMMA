@@ -81,6 +81,25 @@ template <class T> T** array_2d(const int ni, const int nj)
   return pp;
 }
 
+template <class T> T** array_2d_nogst(T** in, int nj, const int ngst){
+
+  T** pp;
+
+  int nj_new = nj-2*ngst;
+  try {
+    pp = new T*[nj_new];
+  }
+  catch (bad_alloc&) {
+    cout<<"arr_2d: memory allocation error, pp = new T*["<<nj_new<<"]"<<endl;
+    exit(1);
+  }
+
+  for (int j=0; j<nj_new; ++j) { pp[j] = in[ngst+j] + ngst; }
+
+  return pp;
+
+}
+
 template <class T> T** array_2d_dyn(const int ni, const int nj, const int nmax)
 {
   T** pp;

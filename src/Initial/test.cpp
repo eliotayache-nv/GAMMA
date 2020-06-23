@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-18 15:27:24
+* @Last Modified time: 2020-06-23 10:43:24
 */
 
 #include "../environment.h"
@@ -11,21 +11,21 @@
 void loadParams(s_par *par){
 
   par->tini       = 0.;
-  par->n_cell[x_] = 10;
-  par->n_cell[y_] = 10;
-  par->n_gst      = 1;
+  par->ncell[x_] = 10;
+  par->ncell[y_] = 10;
+  par->ngst      = 1;
 
 }
 
 int Grid :: initialGeometry(){
 
-  for (int j = 0; j < n_cell[y_]; ++j){
-    for (int i = 0; i < n_cell[x_]; ++i){
+  for (int j = 0; j < ncell[y_]; ++j){
+    for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
-      c->G.x[x_]  = (double)i/n_cell[x_];
-      c->G.dl[x_] =        1./n_cell[x_];
-      c->G.x[y_]  = (double)j/n_cell[y_];
-      c->G.dl[y_] =        1./n_cell[y_];
+      c->G.x[x_]  = (double)i/ncell[x_];
+      c->G.dl[x_] =        1./ncell[x_];
+      c->G.x[y_]  = (double)j/ncell[y_];
+      c->G.dl[y_] =        1./ncell[y_];
       c->G.dV     = c->G.dl[x_]*c->G.dl[y_];
     }
   }
@@ -35,8 +35,8 @@ int Grid :: initialGeometry(){
 
 int Grid :: initialValues(){
 
-  for (int j = 0; j < n_cell[F1]; ++j){
-    for (int i = 0; i < n_cell[MV]; ++i){
+  for (int j = 0; j < ncell[F1]; ++j){
+    for (int i = 0; i < ncell[MV]; ++i){
       Cell *c = &Cinit[j][i];
       c->S.prim[RHO] = 1;
       c->S.prim[PPP] = 1;

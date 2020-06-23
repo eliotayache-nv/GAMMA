@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-23 10:19:49
+* @Last Modified time: 2020-06-23 11:15:53
 */
 
 #include "../environment.h"
@@ -13,43 +13,44 @@
 #include "../mpisetup.h"
 #include <algorithm>
 
-static int splitGrid(int n_cell, int n_gst, int *origin){
+static int splitGrid(int ncell, int ngst, int *origin){
   /*
-  int n_cell:   total number of cells (non including ghost boundaries)
-  int n_gst:    size of ghost regions.
+  int ncell:   total number of cells (non including ghost boundaries)
+  int ngst:    size of ghost regions.
   int *origin:  coordinates of C[0][0] in the simulation domain
   */
-  int base = n_cell/worldsize;
-  int rest = n_cell%worldsize;
-  int nde_n_ax = base;
-  if (worldrank<rest) nde_n_ax++;
-  nde_n_ax+=2*n_gst;
+  int base = ncell/worldsize;
+  int rest = ncell%worldsize;
+  int nde_nax = base;
+  if (worldrank<rest) nde_nax++;
+  nde_nax+=2*ngst;
 
   origin[MV] = 0;
   origin[F1] = worldrank*base;
   if (worldrank <rest) origin[F1]+=worldrank;
   else origin[F1]+=rest;
 
-  return nde_n_ax;
+  return nde_nax;
 
 }
 
 void Grid :: initialise(s_par par){
 
   for (int d = 0; d < NUM_D; ++d){
-    n_cell[d] = par.n_cell[d];
-    n_gst     = par.n_gst;
-    n_ax[d]   = n_cell[d]+2*n_gst;
+    ncell[d] = par.ncell[d];
+    ngst     = par.ngst;
+    nax[d]   = ncell[d]+2*ngst;
   }
-  nde_n_ax[MV]   = n_ax[MV];
-  nde_n_ax[F1]   = splitGrid(n_cell[F1], n_gst, origin);
-  nde_n_cell[MV] = nde_n_ax[MV]-2*n_gst;  // max number of active cells in mov dim
-  nde_n_cell[F1] = nde_n_ax[F1]-2*n_gst;
+  nde_nax[MV]   = nax[MV];
+  nde_nax[F1]   = splitGrid(ncell[F1], ngst, origin);
+  nde_ncell[MV] = nde_nax[MV]-2*ngst;  // max number of active cells in mov dim
+  nde_ncell[F1] = nde_nax[F1]-2*ngst;
   
-  Cinit = array_2d<Cell>(n_cell[F1],n_cell[MV]);
-  Ctot  = array_2d<Cell>(nde_n_ax[F1],nde_n_ax[MV]);
-  I     = array_2d<Interface>(nde_n_ax[F1],nde_n_ax[MV]+1);
-  C     = &Ctot[n_gst];     // still includes ghost cells on MV dim
+  Cinit = array_2d<Cell>(ncell[F1],ncell[MV]);
+  Ctot  = array_2d<Cell>(nde_nax[F1],nde_nax[MV]);
+  I     = array_2d<Interface>(nde_nax[F1],nde_nax[MV]+1);
+  C     = array_2d_nogst<Cell>(Ctot, nde_nax[F1], ngst);     
+    // still includes ghost cells on MV dim
 
 }
 
@@ -68,26 +69,28 @@ void Grid :: print(int var){
   if (worldrank == 0){
 
     int sizes[worldsize];
-    Cell    **Cdump = array_2d<Cell>(n_cell[F1], n_ax[MV]);
-    s_cell **SCdump = array_2d<s_cell>(n_cell[F1], n_ax[MV]);
-    for (int j = 0; j < nde_n_cell[F1]; ++j){
-      for (int i = 0; i < nde_n_ax[MV]; ++i){
-        toStruct(C[j][i], &SCdump[j][i]);
+    Cell    **Cdump = array_2d<Cell>(nax[F1], nax[MV]);
+    s_cell **SCdump = array_2d<s_cell>(nax[F1], nax[MV]);
+    for (int j = 0; j < nde_nax[F1]; ++j){
+      for (int i = 0; i < nde_nax[MV]; ++i){
+        toStruct(Ctot[j][i], &SCdump[j][i]);
       }
     }
 
-    sizes[0] = nde_n_cell[F1] * nde_n_ax[MV];
-    std::copy_n(&C[0][0],  sizes[0], &Cdump[0][0]);
+    sizes[0] = nde_nax[F1] * nde_nax[MV];
+    std::copy_n(&Ctot[0][0], sizes[0], &Cdump[0][0]);
 
     for (int j = 1; j < worldsize; ++j){
-      int o[NUM_D];
-      MPI_Recv(            &sizes[j],        1,  MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Recv(                    o,    NUM_D,  MPI_INT, j, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Recv(&SCdump[o[F1]][o[MV]], sizes[j], cell_mpi, j, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      int o[NUM_D]; // origin
+      MPI_Recv(      &sizes[j],        1,  MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(              o,    NUM_D,  MPI_INT, j, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      int i1 = o[F1];
+      int i2 = o[MV];
+      MPI_Recv(&SCdump[i1][i2], sizes[j], cell_mpi, j, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
-    for (int j = 0; j < n_cell[F1]; ++j){
-      for (int i = n_gst; i < n_cell[MV]; ++i) {
+    for (int j = ngst; j < ncell[F1]+ngst; ++j){
+      for (int i = ngst; i < ncell[MV]+ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
         printf("%le \n", Cdump[j][i].S.prim[var]);
       }
@@ -95,12 +98,12 @@ void Grid :: print(int var){
     }
 
   }else{
-    int size  = nde_n_cell[F1] * nde_n_ax[MV];  // size includes MV ghost cells
+    int size  = nde_nax[F1] * nde_nax[MV];  // size includes MV ghost cells
     MPI_Send( &size,     1,  MPI_INT, 0, 0, MPI_COMM_WORLD);
     MPI_Send(origin, NUM_D,  MPI_INT, 0, 1, MPI_COMM_WORLD);
-    s_cell **SC = array_2d<s_cell>(nde_n_cell[F1],nde_n_ax[MV]);
-    for (int j = 0; j < nde_n_cell[F1]; ++j){
-      for (int i = 0; i < nde_n_ax[MV]; ++i){
+    s_cell **SC = array_2d<s_cell>(nde_nax[F1],nde_nax[MV]);
+    for (int j = 0; j < nde_nax[F1]; ++j){
+      for (int i = 0; i < nde_nax[MV]; ++i){
         toStruct(C[j][i], &SC[j][i]);
       }
     }
@@ -114,10 +117,10 @@ void Grid :: print(int var){
 
 void mpi_distribute(Grid *grid){
 
-  int size  = grid->nde_n_ax[MV];
-  for (int j = 0; j < grid->nde_n_cell[F1]; ++j){  // have to  copy track by track
+  int size  = grid->nde_ncell[MV];
+  for (int j = 0; j < grid->nde_ncell[F1]; ++j){  // have to  copy track by track
     int index = grid->origin[F1]+j;
-    std::copy_n(&(grid->Cinit[index]), size, &(grid->C[j]));
+    std::copy_n(&(grid->Cinit[index][0]), size, &(grid->C[j][0]));
   }
   delete_array_2d(grid->Cinit);
 

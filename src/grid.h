@@ -12,14 +12,14 @@ class Grid{
   ~Grid();
 
   // total grid info
-  int n_ax[NUM_D];    // number of cells in each direction to be allocated
-                        // n_ax[MV] = n_max (includes ghosts)
-  int n_cell[NUM_D];  // number of cells in simulation domain
-  int n_gst;          // number of ghost cells on each side of the grid
+  int nax[NUM_D];    // number of cells in each direction to be allocated
+                        // nax[MV] = n_max (includes ghosts)
+  int ncell[NUM_D];  // number of cells in simulation domain
+  int ngst;          // number of ghost cells on each side of the grid
 
   // node-specific info
-  int nde_n_ax[NUM_D];  // number of cells in each direction (including ghosts)
-  int nde_n_cell[NUM_D];  // number of cells in each direction
+  int nde_nax[NUM_D];  // number of cells in each direction (including ghosts)
+  int nde_ncell[NUM_D];  // number of cells in each direction
   int origin[NUM_D];    // coordinates of C[0][0] in simulation domain
 
   #if   NUM_D == 1
