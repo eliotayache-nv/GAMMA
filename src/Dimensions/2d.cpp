@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-22 16:27:52
+* @Last Modified time: 2020-06-23 10:19:49
 */
 
 #include "../environment.h"
@@ -85,13 +85,15 @@ void Grid :: print(int var){
       MPI_Recv(                    o,    NUM_D,  MPI_INT, j, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Recv(&SCdump[o[F1]][o[MV]], sizes[j], cell_mpi, j, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
+
     for (int j = 0; j < n_cell[F1]; ++j){
-      for (int i = 0; i < n_ax[MV]; ++i) {
+      for (int i = n_gst; i < n_cell[MV]; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
         printf("%le \n", Cdump[j][i].S.prim[var]);
       }
       printf("\n");
     }
+
   }else{
     int size  = nde_n_cell[F1] * nde_n_ax[MV];  // size includes MV ghost cells
     MPI_Send( &size,     1,  MPI_INT, 0, 0, MPI_COMM_WORLD);
