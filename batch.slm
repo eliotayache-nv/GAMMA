@@ -9,7 +9,7 @@
 #SBATCH --error=hydro.e
  
 # set the number of nodes and partition
-#SBATCH --nodes=2
+#SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --partition=batch-devel
 #SBATCH --qos=devel
