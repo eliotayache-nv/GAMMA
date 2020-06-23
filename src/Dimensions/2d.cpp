@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-23 11:15:53
+* @Last Modified time: 2020-06-23 15:26:04
 */
 
 #include "../environment.h"
@@ -66,6 +66,7 @@ void Grid :: print(int var){
   MPI_Datatype cell_mpi = {0}; 
   generate_mpi_cell(&cell_mpi);
 
+
   if (worldrank == 0){
 
     int sizes[worldsize];
@@ -84,11 +85,13 @@ void Grid :: print(int var){
       int o[NUM_D]; // origin
       MPI_Recv(      &sizes[j],        1,  MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Recv(              o,    NUM_D,  MPI_INT, j, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      printf("coucou\n");
       int i1 = o[F1];
       int i2 = o[MV];
       MPI_Recv(&SCdump[i1][i2], sizes[j], cell_mpi, j, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
+    MPI_Barrier(MPI_COMM_WORLD);
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
       for (int i = ngst; i < ncell[MV]+ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
@@ -104,7 +107,7 @@ void Grid :: print(int var){
     s_cell **SC = array_2d<s_cell>(nde_nax[F1],nde_nax[MV]);
     for (int j = 0; j < nde_nax[F1]; ++j){
       for (int i = 0; i < nde_nax[MV]; ++i){
-        toStruct(C[j][i], &SC[j][i]);
+        toStruct(Ctot[j][i], &SC[j][i]);
       }
     }
     MPI_Send(    SC,  size, cell_mpi, 0, 2, MPI_COMM_WORLD);
