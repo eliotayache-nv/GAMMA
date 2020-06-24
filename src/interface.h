@@ -27,9 +27,9 @@ public:
   Cell  *pCR;     // pointer to right cells
 
   double F[NUM_Q];        // flux accross interface
-  c_fluid_state  S;       // interface state
-  c_fluid_state  SL;      // left state (after reconstruction)
-  c_fluid_state  SR;      // right state (after reconstruction)
+  FluidState  S;       // interface state
+  FluidState  SL;      // left state (after reconstruction)
+  FluidState  SR;      // right state (after reconstruction)
 
   void computeInterCellFlux(); // computes the flux vector accross the interface
 };

@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-09 11:38:38
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-18 10:14:37
+* @Last Modified time: 2020-06-24 15:19:11
 */
 #include "math.h"
 #include "stdio.h"
@@ -23,11 +23,11 @@ enum{x_,y_,z_};
 
 #define GAMMA_  (4./3.)
 
-class c_fluid_state
+class FluidState
 {
 public:
-  c_fluid_state();
-  ~c_fluid_state();
+  FluidState();
+  ~FluidState();
 
   double prim[NUM_Q];
   double cons[NUM_Q];
@@ -39,7 +39,7 @@ public:
   void cons2prim(double pin = 0);
 };
 
-c_fluid_state :: c_fluid_state()
+FluidState :: FluidState()
 {
   for (int i = 0; i < NUM_Q; ++i) prim[i]=0.;
   prim[RHO]=1.;
@@ -54,12 +54,12 @@ c_fluid_state :: c_fluid_state()
   }
 }
 
-c_fluid_state :: ~c_fluid_state()
+FluidState :: ~FluidState()
 {
   
 }
 
-void c_fluid_state :: prim2cons()
+void FluidState :: prim2cons()
 {
   double rho = prim[RHO];
   double p   = prim[PPP];
@@ -84,7 +84,7 @@ void c_fluid_state :: prim2cons()
   for (int i = 0; i < NUM_D; ++i) cons[SS1+i] = ss[i];
 }
 
-void c_fluid_state :: state2flux()
+void FluidState :: state2flux()
 {
   double p   = prim[PPP];
   double uu[NUM_D];
@@ -136,7 +136,7 @@ static double f(double p, void *params)
     // Mignone (2006) eq. 5
 }
 
-void c_fluid_state :: cons2prim(double pin)
+void FluidState :: cons2prim(double pin)
 {
   double  lfac,E,S,D;  // (computed from conserved variables)
   int     status;
@@ -233,7 +233,7 @@ void c_fluid_state :: cons2prim(double pin)
 int main(int argc, char const *argv[])
 {
   
-  c_fluid_state S;
+  FluidState S;
 
   S.prim[UU2] = 100;
   S.prim2cons();

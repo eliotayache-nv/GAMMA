@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-18 10:14:38
+* @Last Modified time: 2020-06-24 15:19:11
 */
 
 #include "../fluid.h"
@@ -14,8 +14,8 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_errno.h>
 
-c_fluid_state :: c_fluid_state()
-{
+FluidState :: FluidState(){
+
   for (int i = 0; i < NUM_Q; ++i) prim[i]=0.;
   prim[RHO]=1.;
   prim[PPP]=1.;
@@ -23,19 +23,18 @@ c_fluid_state :: c_fluid_state()
   for (int i = 0; i < NUM_Q; ++i) cons[i]=0.;
   prim[DEN]=1.;
 
-  for (int n = 0; n < NUM_D; ++n)
-  {
+  for (int n = 0; n < NUM_D; ++n){
     for (int i = 0; i < NUM_Q; ++i) flux[n][i]=0.;
   }
+
 }
 
-c_fluid_state :: ~c_fluid_state()
-{
-  
-}
+FluidState :: ~FluidState(){}
 
-void c_fluid_state :: prim2cons()
-{
+
+
+void FluidState :: prim2cons(){
+
   double rho = prim[RHO];
   double p   = prim[PPP];
   double u   = 0;
@@ -57,11 +56,12 @@ void c_fluid_state :: prim2cons()
   cons[DEN] = D;
   cons[TAU] = tau;
   for (int i = 0; i < NUM_D; ++i) cons[SS1+i] = ss[i];
+
 }
 
 
-void c_fluid_state :: state2flux()
-{
+void FluidState :: state2flux(){
+
   double p = prim[PPP];
   double u = 0;
   double uu[NUM_D];
@@ -88,6 +88,7 @@ void c_fluid_state :: state2flux()
     }
     for (int t = 0; t < NUM_T; ++t) flux[n][NUM_C+t] = cons[NUM_C+t]*uu[n]/lfac;
   }
+
 }
 
 /**
@@ -96,14 +97,13 @@ void c_fluid_state :: state2flux()
  *
  */
 
-struct f_params
-{
+struct f_params{
   double D,S,E,gamma;
 };
 
 // This is the function we need to set to zero:
-static double f(double p, void *params)
-{
+static double f(double p, void *params){
+
   double lfac; 
   // parsing parameters
   struct f_params *par = (struct f_params *) params;
@@ -116,10 +116,11 @@ static double f(double p, void *params)
 
   return (E + p - D * lfac - (gamma * p * lfac * lfac) / (gamma - 1.));
     // Mignone (2006) eq. 5
+
 }
 
-void c_fluid_state :: cons2prim(double pin)
-{
+void FluidState :: cons2prim(double pin){
+
   double  lfac,E,S,D;  // (computed from conserved variables)
   int     status;
   int     iter = 0, max_iter = 1000000;
@@ -210,4 +211,5 @@ void c_fluid_state :: cons2prim(double pin)
   }
 
   prim2cons(); // for consistency
+  
 }

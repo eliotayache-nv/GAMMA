@@ -12,12 +12,14 @@ class Grid{
   ~Grid();
 
   // total grid info
+  int nsimu;         // number of cells in simu
   int nax[NUM_D];    // number of cells in each direction to be allocated
                         // nax[MV] = n_max (includes ghosts)
   int ncell[NUM_D];  // number of cells in simulation domain
   int ngst;          // number of ghost cells on each side of the grid
 
   // node-specific info
+  int nde_ntot;        // total number of allocated cells on node
   int nde_nax[NUM_D];  // number of cells in each direction (including ghosts)
   int nde_ncell[NUM_D];  // number of cells in each direction
   int origin[NUM_D];    // coordinates of C[0][0] in simulation domain
@@ -32,7 +34,9 @@ class Grid{
     Cell         **Cinit; // initial simulation domain
     Cell         **C;     // physical grid (without ghost tracks, but ghosts cells in MV)
     Cell         **Ctot;  // grid with ghost tracks
-    Interface    **I;     // moving dim interfaces
+    Interface    **I;     // moving dim interfaces (without ghost to ghost in moving dim)
+                            // does include ghost tracks
+    Interface    **Itot;  // moving dim interfaces 
     int *n_act;
     int *iLactive, *iRactive;
 
@@ -61,6 +65,10 @@ class Grid{
   int  initialValues();
   void destruct();            // free memory
   void print(int var);
+  void prepEvol();
+  template <class T> void apply(void (T::*func)());
+  template <> void apply<FluidState>(void (FluidState::*func)()); 
+
   // void loadInitialConfig(s_config_setup config);   // Fill grid with initial conditions
   // void reloadConfig(s_config_setup *pconfig); // Fill grid with result of previous run
   // void updateBoundaries();    // sets up the boundary conditions

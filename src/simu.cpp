@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-23 10:18:45
+* @Last Modified time: 2020-06-24 16:20:15
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -21,8 +21,10 @@ Simu::~Simu(){}
 int Simu :: initialise(){
 
   int status = 0;
+
   loadParams(&par);
   t = par.tini;
+
   grid.initialise(par);
   status = grid.initialGeometry();
   status = grid.initialValues();
@@ -34,6 +36,9 @@ int Simu :: initialise(){
 
 int Simu :: run(){
 
-    grid.print(RHO);
-    return 0;
+  grid.prepEvol();
+  
+  // grid.print(UU1);
+  return 0;
+
 }

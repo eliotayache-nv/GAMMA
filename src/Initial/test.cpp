@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-23 10:43:24
+* @Last Modified time: 2020-06-23 16:59:42
 */
 
 #include "../environment.h"
@@ -40,6 +40,8 @@ int Grid :: initialValues(){
       Cell *c = &Cinit[j][i];
       c->S.prim[RHO] = 1;
       c->S.prim[PPP] = 1;
+      c->S.prim[UU1] = 0.1;
+      c->S.prim[UU2] = 0;
     }
   }
   return 0;

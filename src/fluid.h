@@ -3,11 +3,11 @@
 
 #include "environment.h"
 
-class c_fluid_state
-{
+class FluidState{
+
 public:
-  c_fluid_state(){}
-  ~c_fluid_state(){}
+  FluidState();
+  ~FluidState();
 
   double prim[NUM_Q];
   double cons[NUM_Q];
@@ -16,6 +16,7 @@ public:
   void prim2cons();
   void cons2prim(double pin = 0);
   void state2flux();
+
 };
 
 #endif

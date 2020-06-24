@@ -27,10 +27,13 @@ public:
 
   int  status;
   int  memNumber;
-  c_fluid_state   S;
+  FluidState   S;
   s_cell_geometry G;
 
   void update(double dt);
+  void computedV();
+  void computeCentroid();
+  void computeAllGeom();
 
 };
 

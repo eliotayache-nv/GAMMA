@@ -11,6 +11,12 @@ Cell::~Cell()
 
 }
 
+void Cell :: computeAllGeom(){
+
+    computedV();
+    computeCentroid();
+
+}
 
 
 

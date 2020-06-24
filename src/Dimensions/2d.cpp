@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-23 16:06:30
+* @Last Modified time: 2020-06-24 16:41:21
 */
 
 #include "../environment.h"
@@ -12,6 +12,20 @@
 #include "../array_tools.h"
 #include "../mpisetup.h"
 #include <algorithm>
+
+
+template <> Interface** array_2d_nogst<Interface>(Interface** in, int nj, const int ngst){
+
+  Interface** pp;
+  try { pp = new Interface*[nj]; }
+  catch (bad_alloc&) {
+    cout<<"arr_2d: memory allocation error, pp = new T*["<<nj<<"]"<<endl;
+    exit(1);
+  }
+  for (int j=0; j<nj; ++j) { pp[j] = in[j] + (ngst-1); }
+  return pp;
+
+}
 
 static int splitGrid(int ncell, int ngst, int *origin){
   /*
@@ -36,19 +50,23 @@ static int splitGrid(int ncell, int ngst, int *origin){
 
 void Grid :: initialise(s_par par){
 
+  nsimu = 1;
   for (int d = 0; d < NUM_D; ++d){
     ncell[d] = par.ncell[d];
     ngst     = par.ngst;
     nax[d]   = ncell[d]+2*ngst;
+    nsimu   *= ncell[d];
   }
   nde_nax[MV]   = nax[MV];
   nde_nax[F1]   = splitGrid(ncell[F1], ngst, origin);
   nde_ncell[MV] = nde_nax[MV]-2*ngst;  // max number of active cells in mov dim
   nde_ncell[F1] = nde_nax[F1]-2*ngst;
+  nde_ntot      = nde_nax[F1] * nde_nax[MV];
   
   Cinit = array_2d<Cell>(ncell[F1],ncell[MV]);
   Ctot  = array_2d<Cell>(nde_nax[F1],nde_nax[MV]);
-  I     = array_2d<Interface>(nde_nax[F1],nde_nax[MV]+1);
+  Itot  = array_2d<Interface>(nde_nax[F1],nde_nax[MV]-1);
+  I     = array_2d_nogst<Interface>(Itot, nde_nax[F1], ngst);
   C     = array_2d_nogst<Cell>(Ctot, nde_nax[F1], ngst);     
     // still includes ghost cells on MV dim
 
@@ -59,6 +77,27 @@ void Grid :: destruct(){
   delete_array_2d(Ctot);
   delete_array_2d(I);
 
+}
+
+
+template <class T> void Grid::apply(void (T::*func)()){
+    
+  for (int j = 0; j < nde_nax[F1]; ++j){
+    for (int i = 0; i < nde_nax[MV]; ++i){
+      (Ctot[j][i].*func)();
+    }
+  }
+
+}
+
+template <> void Grid::apply<FluidState>(void (FluidState::*func)()){
+
+  for (int j = 0; j < nde_nax[F1]; ++j){
+    for (int i = 0; i < nde_nax[MV]; ++i){
+      (Ctot[j][i].S.*func)();
+    }
+  }
+    
 }
 
 void Grid :: print(int var){
@@ -84,7 +123,6 @@ void Grid :: print(int var){
       int o[NUM_D]; // origin
       MPI_Recv(      &sizes[j],        1,  MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Recv(              o,    NUM_D,  MPI_INT, j, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      printf("coucou %d %d\n", o[F1], o[MV]);
       int i1 = o[F1];
       int i2 = o[MV];
       MPI_Recv(&SCdump[i1][i2], sizes[j], cell_mpi, j, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -94,8 +132,7 @@ void Grid :: print(int var){
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
       for (int i = ngst; i < ncell[MV]+ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
-        // printf("%le \n", Cdump[j][i].S.prim[var]);
-        printf("%le \n", SCdump[j][i].prim[var]);
+        printf("%le \n", Cdump[j][i].S.prim[var]);
       }
       printf("\n");
     }
