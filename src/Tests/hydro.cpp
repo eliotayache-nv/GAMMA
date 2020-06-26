@@ -1,8 +1,8 @@
 /*
 * @Author: eliotayache
 * @Date:   2020-05-12 10:49:50
-* @Last Modified by:   eliotayache
-* @Last Modified time: 2020-06-04 15:06:54
+* @Last Modified by:   Eliot Ayache
+* @Last Modified time: 2020-06-25 08:51:37
 */
 
 #include <stdlib.h>
@@ -639,7 +639,7 @@ public:
   }
 };
 
-void Cell :: update(Interface IL, Interface IR, double dt)
+void Cell::update(Interface IL, Interface IR, double dt)
 {
   D += (IL.FD*IL.dA - IR.FD*IR.dA) * dt / dV;
   mx += (IL.Fmx*IL.dA - IR.Fmx*IR.dA) * dt / dV;

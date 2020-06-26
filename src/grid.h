@@ -27,8 +27,7 @@ class Grid{
   #if   NUM_D == 1
     Cell         *C;
     Interface    *I;     // moving interfaces
-    int n_act;                  // number of active cells in track
-    int iLactive, iRactive;     // indexes of leftmost and rightmost active cells on track
+    int n_act;           // number of active cells in track
 
   #elif NUM_D == 2
     Cell         **Cinit; // initial simulation domain
@@ -37,8 +36,8 @@ class Grid{
     Interface    **I;     // moving dim interfaces (without ghost to ghost in moving dim)
                             // does include ghost tracks
     Interface    **Itot;  // moving dim interfaces 
-    int *n_act;
-    int *iLactive, *iRactive;
+    int *nact;
+    int jLbnd, jRbnd, *iLbnd, *iRbnd; // tot index of first ghost cell out of active grid
 
   #elif NUM_D == 3
     Cell         ***C;
@@ -65,9 +64,14 @@ class Grid{
   int  initialValues();
   void destruct();            // free memory
   void print(int var);
-  void prepEvol();
+  void prepForRun();
+  void prepForUpdate();
+  void updateGhosts();
+  void interfaceGeomFromCellPos();
   template <class T> void apply(void (T::*func)());
   template <> void apply<FluidState>(void (FluidState::*func)()); 
+
+  void mpi_exchangeGhostTracks();
 
   // void loadInitialConfig(s_config_setup config);   // Fill grid with initial conditions
   // void reloadConfig(s_config_setup *pconfig); // Fill grid with result of previous run

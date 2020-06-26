@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-24 15:19:11
+* @Last Modified time: 2020-06-25 13:31:34
 */
 
 #include "../fluid.h"
@@ -14,7 +14,7 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_errno.h>
 
-FluidState :: FluidState(){
+FluidState::FluidState(){
 
   for (int i = 0; i < NUM_Q; ++i) prim[i]=0.;
   prim[RHO]=1.;
@@ -29,11 +29,11 @@ FluidState :: FluidState(){
 
 }
 
-FluidState :: ~FluidState(){}
+FluidState::~FluidState(){}
 
 
 
-void FluidState :: prim2cons(){
+void FluidState::prim2cons(){
 
   double rho = prim[RHO];
   double p   = prim[PPP];
@@ -60,7 +60,7 @@ void FluidState :: prim2cons(){
 }
 
 
-void FluidState :: state2flux(){
+void FluidState::state2flux(){
 
   double p = prim[PPP];
   double u = 0;
@@ -77,12 +77,10 @@ void FluidState :: state2flux(){
   double ss[NUM_D];
   for (int i = 0; i < NUM_D; ++i) ss[i] = cons[SS1+i];
 
-  for (int n = 0; n < NUM_D; ++n)
-  {
+  for (int n = 0; n < NUM_D; ++n){
     flux[n][DEN] = D*uu[n]/lfac;
     flux[n][TAU] = ss[n]-D*uu[n]/lfac;
-    for (int i = 0; i < NUM_D; ++i)
-    {
+    for (int i = 0; i < NUM_D; ++i){
       if (i==n) flux[n][SS1+i] = ss[i]*uu[i]/lfac + p;
       else flux[n][SS1+i] = ss[i]*uu[i]/lfac;
     }
@@ -119,7 +117,7 @@ static double f(double p, void *params){
 
 }
 
-void FluidState :: cons2prim(double pin){
+void FluidState::cons2prim(double pin){
 
   double  lfac,E,S,D;  // (computed from conserved variables)
   int     status;

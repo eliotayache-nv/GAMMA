@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-23 16:59:42
+* @Last Modified time: 2020-06-25 09:25:02
 */
 
 #include "../environment.h"
@@ -10,14 +10,14 @@
 
 void loadParams(s_par *par){
 
-  par->tini       = 0.;
+  par->tini      = 0.;
   par->ncell[x_] = 10;
   par->ncell[y_] = 10;
   par->ngst      = 1;
 
 }
 
-int Grid :: initialGeometry(){
+int Grid::initialGeometry(){
 
   for (int j = 0; j < ncell[y_]; ++j){
     for (int i = 0; i < ncell[x_]; ++i){
@@ -33,7 +33,7 @@ int Grid :: initialGeometry(){
 
 }
 
-int Grid :: initialValues(){
+int Grid::initialValues(){
 
   for (int j = 0; j < ncell[F1]; ++j){
     for (int i = 0; i < ncell[MV]; ++i){
