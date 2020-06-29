@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-26 11:24:50
+* @Last Modified time: 2020-06-29 09:25:11
 */
 
 #include "../environment.h"
@@ -51,22 +51,22 @@ static int splitGrid(int ncell, int ngst, int *origin){
 
 void Grid::initialise(s_par par){
 
-  nsimu = 1;
   for (int d = 0; d < NUM_D; ++d){
     ncell[d] = par.ncell[d];
     ngst     = par.ngst;
     nax[d]   = ncell[d]+2*ngst;
-    nsimu   *= ncell[d];
   }
+  nax[MV]    = par.nmax+2*ngst;  // overriding with max number of cells
+  nsimu = 1; for (int d = 0; d < NUM_D; ++d){ nsimu *= ncell[d]; }
   nde_nax[MV]   = nax[MV];
   nde_nax[F1]   = splitGrid(ncell[F1], ngst, origin);
-  nde_ncell[MV] = nde_nax[MV]-2*ngst;  // max number of active cells in mov dim
+  nde_ncell[MV] = ncell[MV];  // max number of active cells in mov dim
   nde_ncell[F1] = nde_nax[F1]-2*ngst;
   nde_ntot      = nde_nax[F1] * nde_nax[MV];
 
   // active cells and ghost cells
-  nact  = new int[nde_ncell[F1]];
-  for (int j = 0; j < nde_ncell[F1]; ++j){nact[j] = nde_ncell[MV];}
+  nact  = new int[nde_nax[F1]];
+  for (int j = 0; j < nde_nax[F1]; ++j){nact[j] = nde_ncell[MV];}
   jLbnd = ngst-1;
   jRbnd = nde_nax[F1]-ngst;
   iLbnd = new int[nde_nax[F1]];
@@ -94,42 +94,76 @@ void Grid::mpi_exchangeGhostTracks(){
   generate_mpi_cell( &cell_mpi );
   MPI_Barrier(MPI_COMM_WORLD);
 
-  if (worldrank!=0 and worldrank!=worldsize-1){
 
-    // sending to lower node, receiving from higher node
-    for (int j = 0; j < ngst; ++j){
-      int jout = j+ngst;
-      int jin  = jRbnd+j;
-      int nout = nact[jout]+2*ngst; // number of cells to receive
-      int nin;                        // number of cells to send
-      int tag1 = j;
-      int tag2 = ngst+j;
+  // sending to lower node, receiving from higher node
+  for (int j = 0; j < ngst; ++j){
+    int jout = j+ngst;
+    int jin  = jRbnd+j;
+    int nout = nact[jout]+2*ngst; // number of cells to receive
+    int nin  = 1;                 // number of cells to send (default is 1)
+    int tag1 = j;
+    int tag2 = ngst+j;
+
+    if (worldrank==0){
+      MPI_Recv(&nin , 1, MPI_INT, rR, tag1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);      
+    } else if (worldrank==worldsize-1){
+      MPI_Send(&nout, 1, MPI_INT, rL, tag1, MPI_COMM_WORLD);      
+    } else {
       MPI_Sendrecv(&nout, 1, MPI_INT, rL, tag1, 
-                   &nin , 1, MPI_INT, rR, tag1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      s_cell *SCout = new s_cell[nout];
-      s_cell *SCin  = new s_cell[nin];
+                   &nin , 1, MPI_INT, rR, tag1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);      
+    }
+
+    s_cell *SCout = new s_cell[nout];
+    s_cell *SCin  = new s_cell[nin];
+    if (worldrank==0){
+      MPI_Recv(SCin , nin , cell_mpi, rR, tag2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      for (int i = 0; i < nin; ++i) { toClass(SCin[i], &Ctot[jin][i]); }    
+    } 
+    else if (worldrank==worldsize-1){
+      for (int i = 0; i < nout; ++i) { toStruct(Ctot[jout][i], &SCout[i]); }
+      MPI_Send(SCout, nout, cell_mpi, rL, tag2, MPI_COMM_WORLD);      
+    } 
+    else {
       for (int i = 0; i < nout; ++i) { toStruct(Ctot[jout][i], &SCout[i]); }
       MPI_Sendrecv(SCout, nout, cell_mpi, rL, tag2, 
                    SCin , nin , cell_mpi, rR, tag2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      for (int i = 0; i < nin; ++i) { toClass(SCin[i], &Ctot[jin][i]); }    
+      for (int i = 0; i < nin; ++i) { toClass(SCin[i], &Ctot[jin][i]); }          
     }
+  }
 
-    // sending to higher node, receiving from lower node
-    for (int j = 0; j < ngst; ++j){
-      int jout = jRbnd-ngst+j;
-      int jin  = j;
-      int nout = nact[jout]+2*ngst; // number of cells to receive
-      int nin;                        // number of cells to send
-      int tag1 = j;
-      int tag2 = ngst+j;
+  // sending to higher node, receiving from lower node
+  for (int j = 0; j < ngst; ++j){
+    int jout = jRbnd-ngst+j;
+    int jin  = j;
+    int nout = nact[jout]+2*ngst; // number of cells to receive
+    int nin  = 1;                 // number of cells to send (default is 1)
+    int tag1 = j;
+    int tag2 = ngst+j;
+
+    if (worldrank==worldsize-1){
+      MPI_Recv(&nin , 1, MPI_INT, rL, tag1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);      
+    } else if (worldrank==0){
+      MPI_Send(&nout, 1, MPI_INT, rR, tag1, MPI_COMM_WORLD);      
+    } else {
       MPI_Sendrecv(&nout, 1, MPI_INT, rR, tag1, 
                    &nin , 1, MPI_INT, rL, tag1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      s_cell *SCout = new s_cell[nout];
-      s_cell *SCin  = new s_cell[nin];
+    }
+
+    s_cell *SCout = new s_cell[nout];
+    s_cell *SCin  = new s_cell[nin];
+    if (worldrank==worldsize-1){
+      MPI_Recv(SCin , nin , cell_mpi, rL, tag2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      for (int i = 0; i < nin; ++i) { toClass(SCin[i], &Ctot[jin][i]); }
+    } 
+    else if (worldrank==0){
+      for (int i = 0; i < nout; ++i) { toStruct(Ctot[jout][i], &SCout[i]); }
+      MPI_Send(SCout, nout, cell_mpi, rR, tag2, MPI_COMM_WORLD);      
+    } 
+    else {
       for (int i = 0; i < nout; ++i) { toStruct(Ctot[jout][i], &SCout[i]); }
       MPI_Sendrecv(SCout, nout, cell_mpi, rR, tag2, 
                    SCin , nin , cell_mpi, rL, tag2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      for (int i = 0; i < nin; ++i) { toClass(SCin[i], &Ctot[jin][i]); }    
+      for (int i = 0; i < nin; ++i) { toClass(SCin[i], &Ctot[jin][i]); }          
     }
   }
 
@@ -139,7 +173,7 @@ void Grid::mpi_exchangeGhostTracks(){
 
 void Grid::updateGhosts(){
 
-  mpi_exchangeGhostTracks();
+  if (worldsize>1) { mpi_exchangeGhostTracks(); }
 
   // outer boundaries (OUTFLOW)
   if (worldrank==0){
@@ -189,7 +223,8 @@ template <class T> void Grid::apply(void (T::*func)()){
 
 }
 
-template <> void Grid::apply<FluidState>(void (FluidState::*func)()){
+// overloading apply for FluidState
+void Grid::apply(void (FluidState::*func)()){
 
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < nde_nax[MV]; ++i){

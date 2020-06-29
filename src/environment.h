@@ -35,6 +35,7 @@ struct s_par {
   double tini;
   int ncell[NUM_D];
   int ngst;
+  int nmax;
 };
 
 #endif

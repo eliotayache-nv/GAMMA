@@ -68,8 +68,10 @@ class Grid{
   void prepForUpdate();
   void updateGhosts();
   void interfaceGeomFromCellPos();
+
   template <class T> void apply(void (T::*func)());
-  template <> void apply<FluidState>(void (FluidState::*func)()); 
+                     void apply(void (FluidState::*func)());
+                      // overloading for FluidState
 
   void mpi_exchangeGhostTracks();
 

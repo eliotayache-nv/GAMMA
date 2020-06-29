@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-25 09:25:02
+* @Last Modified time: 2020-06-28 21:13:51
 */
 
 #include "../environment.h"
@@ -11,8 +11,9 @@
 void loadParams(s_par *par){
 
   par->tini      = 0.;
-  par->ncell[x_] = 10;
-  par->ncell[y_] = 10;
+  par->ncell[x_] = 40;
+  par->ncell[y_] = 20;
+  par->nmax      = 80;    // max number of cells in MV direction
   par->ngst      = 1;
 
 }
