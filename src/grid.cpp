@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-06 09:26:35
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-27 14:03:26
+* @Last Modified time: 2020-06-29 15:54:52
 */
 
 #include "grid.h"
@@ -28,8 +28,13 @@ void Grid::prepForRun(){
 void Grid::prepForUpdate(){
 
   updateGhosts();
-
   apply(&FluidState::prim2cons);
   apply(&FluidState::state2flux);
+
+}
+
+void Grid::update(){
+
+  computeFluxes();
 
 }

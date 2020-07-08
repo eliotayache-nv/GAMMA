@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-29 09:25:11
+* @Last Modified time: 2020-07-08 16:42:45
 */
 
 #include "../environment.h"
@@ -67,6 +67,8 @@ void Grid::initialise(s_par par){
   // active cells and ghost cells
   nact  = new int[nde_nax[F1]];
   for (int j = 0; j < nde_nax[F1]; ++j){nact[j] = nde_ncell[MV];}
+  ntrack  = new int[nde_nax[F1]];
+  for (int j = 0; j < nde_nax[F1]; ++j){ntrack[j] = nact[j]+2*ngst;}
   jLbnd = ngst-1;
   jRbnd = nde_nax[F1]-ngst;
   iLbnd = new int[nde_nax[F1]];
@@ -194,6 +196,79 @@ void Grid::updateGhosts(){
 
 }
 
+void Grid::reconstructStates(int j, int i, int dim, int iplus, Interface *Int){
+
+  if (Int==NULL){ Int = &I[j][i]; }
+
+  #if SPATIAL_RECONSTRUCTION_ == PIECEWISE_CONSTANT_
+    if (dim == MV){
+      Int->SL = C[j][i  ].S;
+      Int->SR = C[j][i+1].S;
+      UNUSED(iplus);
+    } else {
+      Int->SL = C[j][i].S;
+      Int->SR = C[j+1][iplus].S;      
+    }
+  #endif
+
+}
+
+void Grid::computeFluxes(){
+
+  // might need to change nact for ntrack
+
+  for (int j = 0; j < nde_nax[F1]; ++j){
+
+    // flux in MV direction (looping over interfaces)
+    for (int i = 0; i < nact[j]+1; ++i){
+      reconstructStates(j,i,MV);
+      I[j][i].computeLambda();
+      I[j][i].computeFlux();
+    }
+    for (int i = 0; i < nact[j]; ++i){
+      C[j][i].update_dt(MV, I[j][i].lR, I[j][i+1].lL);
+      for (int q = 0; q < NUM_C; ++q){
+        C[j][i].flux[0][MV][q] =  I[j][i  ].flux[q];
+        C[j][i].flux[1][MV][q] = -I[j][i+1].flux[q];
+      }
+    }
+  }
+  // flux in F1 direction (building the interfaces)
+  // vector of interfaces...
+  for (int j = 0; j < nde_nax[F1]-1; ++j){
+    int iR = 0;
+    for (int i = 0; i < nact[j]; ++i){
+      double xLj = C[j][i].G.x[MV] - C[j][i].G.dl[MV]/2.;
+      double xRj = C[j][i].G.x[MV] + C[j][i].G.dl[MV]/2.;
+      double xLjplus = -1.;  // unlimited ghost-cell size
+      double xRjplus = I[j+1][iR].x[MV];
+      while (xLjplus <= xRj){
+
+        Interface Int;
+        Int.x[F1] = ( C[j][i].G.x[F1] + C[j+1][i].G.x[F1] )/2.;
+        Int.x[MV] = ( fmax(xLj,xLjplus) + fmin(xRj,xRjplus) )/2.;
+        Int.dl[0] = fmin(xRj,xRjplus) - fmax(xLj,xLjplus);
+        Int.dA = Int.dl[0];
+
+        reconstructStates(j,i,F1,iR,&Int);
+        Int.computeLambda();
+        Int.computeFlux();
+
+        C[j][i].update_dt(F1, Int.lL);
+        for (int q = 0; q < NUM_C; ++q){
+          C[j  ][i ].flux[1][F1][q] += -Int.flux[q];
+          C[j+1][iR].flux[0][F1][q] +=  Int.flux[q];
+        }
+
+        xLjplus = xRjplus;
+        iR++;
+      } 
+    }  
+  }
+
+}
+  
+
 void Grid::interfaceGeomFromCellPos(){
 
   for (int j = 0; j < nde_nax[F1]; ++j){
@@ -266,7 +341,7 @@ void Grid::print(int var){
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
       for (int i = ngst; i < ncell[MV]+ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
-        printf("%le \n", Cdump[j][i].S.prim[var]);
+        printf("%le ", Cdump[j][i].S.prim[var]);
       }
       printf("\n");
     }

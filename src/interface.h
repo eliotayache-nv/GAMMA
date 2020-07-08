@@ -10,29 +10,29 @@ class Cell;     // forward declaration
 class Interface
 {
 public:
-  Interface();
+  Interface(int d=MV);
   ~Interface();
 
   // MEMBERS
   int  status; 
   int  memNumber;
+  int  dim;               // orientation (orthogonal vector direction)
 
   double x[NUM_D];        // position (in a single direction)
   double v;               // velocity (only in MV dimension) (lab frame)
   double lfac;            // Lorentz factor (only in MV dimension) (lab frame)
-  double dim;             // orientation (orthogonal vector direction)
   double dl[NUM_D-1];     // spatial extent
   double dA;              // surface area
 
-  // Cell  *pCL;     // pointer to left cell
-  // Cell  *pCR;     // pointer to right cells
+  FluidState S,SL,SR;     
+  double lL,lS,lR;        // wavespeeds
+  double flux[NUM_C];
 
-  // double F[NUM_Q];        // flux accross interface
-  // FluidState  S;       // interface state
-  // FluidState  SL;      // left state (after reconstruction)
-  // FluidState  SR;      // right state (after reconstruction)
+  void wavespeedEstimates();
+  void computeLambda();
+  void computeFlux();
+  FluidState starState(FluidState Sin, double lbda);
 
-  // void computeInterCellFlux(); // computes the flux vector accross the interface
 };
 
 #endif

@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-29 09:20:03
+* @Last Modified time: 2020-07-02 15:46:42
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -37,9 +37,11 @@ int Simu::initialise(){
 
 int Simu::run(){
 
+  grid.print(RHO);
   grid.prepForUpdate();
 
-  grid.print(UU1);
+  grid.update();
+
   return 0;
 
 }

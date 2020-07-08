@@ -17,6 +17,8 @@ public:
   void cons2prim(double pin = 0);
   void state2flux();
 
+  double lfac();
+
 };
 
 #endif

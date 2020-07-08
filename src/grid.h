@@ -20,14 +20,14 @@ class Grid{
 
   // node-specific info
   int nde_ntot;        // total number of allocated cells on node
-  int nde_nax[NUM_D];  // number of cells in each direction (including ghosts)
-  int nde_ncell[NUM_D];  // number of cells in each direction
+  int nde_nax[NUM_D];  // number of cells in each direction (including ghosts & inactive)
+  int nde_ncell[NUM_D];  // initial number of cells in each direction 
   int origin[NUM_D];    // coordinates of C[0][0] in simulation domain
 
   #if   NUM_D == 1
     Cell         *C;
     Interface    *I;     // moving interfaces
-    int n_act;           // number of active cells in track
+    int n_act;           // adaptive number of active cells in track
 
   #elif NUM_D == 2
     Cell         **Cinit; // initial simulation domain
@@ -36,7 +36,8 @@ class Grid{
     Interface    **I;     // moving dim interfaces (without ghost to ghost in moving dim)
                             // does include ghost tracks
     Interface    **Itot;  // moving dim interfaces 
-    int *nact;
+    int *nact;    // adaptive number of active cells in track
+    int *ntrack;  // adaptive number of active and ghost cells in track
     int jLbnd, jRbnd, *iLbnd, *iRbnd; // tot index of first ghost cell out of active grid
 
   #elif NUM_D == 3
@@ -48,27 +49,26 @@ class Grid{
   #endif
 
 
-  // bool initialised;
-
-  // int ncells_active;          // number of active cells at a given moment (ACTIVE)
-  // int ncells_total;           // total number of cells (ghost, active)
-  // int ncells_max;             // max number of cells (ghost, active, inactive)
-  // int iLactive, iRactive;     // indexes of leftmost and rightmost active cells
-  // int iLlim, iRlim;           // indexes of left and right evolving region limits
-  // Cell        *C;
-  // Interface    *I;
-
-  // // METHODS
+  // METHODS
+  // initialisation
   void initialise(s_par par);          // allocate memory for maximum number of cells
   int  initialGeometry();
   int  initialValues();
   void destruct();            // free memory
   void print(int var);
-  void prepForRun();
-  void prepForUpdate();
-  void updateGhosts();
   void interfaceGeomFromCellPos();
 
+  // update
+  void prepForRun();
+  void prepForUpdate();
+  void computeFluxes();
+  void updateGhosts();
+  void reconstructStates( int j, int i, int dim, 
+                                int iplus = -1, 
+                                Interface *Int = NULL );
+  void update();
+
+  // toools
   template <class T> void apply(void (T::*func)());
                      void apply(void (FluidState::*func)());
                       // overloading for FluidState

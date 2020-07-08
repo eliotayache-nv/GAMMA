@@ -25,15 +25,19 @@ public:
   Cell();
   ~Cell();
 
-  int  status;
-  int  memNumber;
-  FluidState   S;
+  int    status;
+  int    memNumber;
+  double dt_loc = 1.e15;  // local max dt
+  FluidState      S;
   s_cell_geometry G;
+  double flux[2][NUM_D][NUM_C];  // L and R fluxes in all dimensions and directions
 
   void update(double dt);
   void computedV();
   void computeCentroid();
   void computeAllGeom();
+
+  void update_dt(int dim, double IL_lR, double IR_lL=0);
 
 };
 

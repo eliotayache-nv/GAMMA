@@ -2,14 +2,17 @@
 #define ENVIRONMENT_H_
 
 #include <mpi.h>
+#include <math.h>
 #include "err.h"
 
-#define UNUSED(x) (void)
+#define UNUSED(x) (void)(x)
 
 enum{RHO,PPP,UU1,UU2,UU3};  // 3rd dimension optional so must be last
 enum{DEN,TAU,SS1,SS2,SS3};
 enum{x_,y_,z_};
 enum{ENABLED_,DISABLED_};
+
+enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 
 // ---------------------------------------------------------------------------------------
 // ENVIRONMENT OPTIONS
@@ -22,6 +25,8 @@ enum{ENABLED_,DISABLED_};
 #define GAMMA_  (4./3.)
 
 #define OPEN_MPI_ ENABLED_
+
+#define SPATIAL_RECONSTRUCTION_ PIECEWISE_CONSTANT_
 
 // ---------------------------------------------------------------------------------------
 // GLOBAL VARIABLES
