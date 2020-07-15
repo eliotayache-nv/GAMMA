@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-08 16:42:45
+* @Last Modified time: 2020-07-15 16:24:45
 */
 
 #include "../environment.h"
@@ -96,6 +96,8 @@ void Grid::mpi_exchangeGhostTracks(){
   generate_mpi_cell( &cell_mpi );
   MPI_Barrier(MPI_COMM_WORLD);
 
+  // for interfaces I just need to exchange the positions. That can be done in the cells
+  // directly or I can just exchange a vector of positions
 
   // sending to lower node, receiving from higher node
   for (int j = 0; j < ngst; ++j){
@@ -180,34 +182,66 @@ void Grid::updateGhosts(){
   // outer boundaries (OUTFLOW)
   if (worldrank==0){
     for (int j = 0; j <= jLbnd; ++j){
-      std::copy_n(&C[0][0], nact[j], &Ctot[j][0]);
+      ntrack[j] = ntrack[jLbnd+1];
+      std::copy_n(&Ctot[jLbnd+1][0], ntrack[jLbnd+1],   &Ctot[j][0]);
+      std::copy_n(&Itot[jLbnd+1][0], ntrack[jLbnd+1]-1, &Itot[j][0]);
+
+      // udating ghost positions
+      for (int i = 0; i < ntrack[j]; ++i){
+        Ctot[j][i].G.x[F1] -= (jLbnd-j+1)*C[0][0].G.dl[F1];
+        if (i != ntrack[j]-1){ 
+          Itot[j][i].x[F1] -= (jLbnd-j+1)*C[0][0].G.dl[F1]; 
+        }
+      }
     }
   }
   if (worldrank==worldsize-1){
     for (int j = jRbnd; j < nde_nax[F1]; ++j){
-      std::copy_n(&C[nde_ncell[F1]-1][0], nact[j], &Ctot[j][0]);
+      ntrack[j] = ntrack[jRbnd-1];
+      std::copy_n(&Ctot[jRbnd-1][0], ntrack[jRbnd-1]  , &Ctot[j][0]);
+      std::copy_n(&Itot[jRbnd-1][0], ntrack[jRbnd-1]-1, &Itot[j][0]);
+
+      // udating ghost positions
+      for (int i = 0; i < ntrack[j]; ++i){
+        Ctot[j][i].G.x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dl[F1];
+        if (i != ntrack[j]-1){ 
+          Itot[j][i].x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dl[F1]; 
+        }
+      }
     }
   }
   for (int j = 0; j < nde_nax[F1]; ++j)
   {
-    for (int i = 0; i <= iLbnd[j]; ++i){Ctot[j][i] = Ctot[j][iLbnd[j]+1];}
-    for (int i = iRbnd[j]; i < nde_nax[MV]; ++i){Ctot[j][i] = Ctot[j][iRbnd[j]-1];}
+    for (int i = 0; i <= iLbnd[j]; ++i){
+      Ctot[j][i] = Ctot[j][iLbnd[j]+1];
+      Ctot[j][i].G.x[MV] -= (iLbnd[j]-i+1) * Ctot[j][iLbnd[j]+1].G.dl[MV];
+
+      Itot[j][i] = Itot[j][iLbnd[j]+1];
+      Itot[j][i].x[MV]   -= (iLbnd[j]-i+1) * Ctot[j][iLbnd[j]+1].G.dl[MV];
+    }
+    for (int i = iRbnd[j]; i < nde_nax[MV]; ++i){
+      Ctot[j][i] = Ctot[j][iRbnd[j]-1];
+      Ctot[j][i].G.x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dl[MV];
+
+      Itot[j][i-1] = Itot[j][iRbnd[j]-2];
+      Itot[j][i-1].x[MV]   += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dl[MV];
+    }
   }
 
 }
 
 void Grid::reconstructStates(int j, int i, int dim, int iplus, Interface *Int){
 
-  if (Int==NULL){ Int = &I[j][i]; }
+  if (Int==NULL){ Int = &Itot[j][i]; }
 
   #if SPATIAL_RECONSTRUCTION_ == PIECEWISE_CONSTANT_
     if (dim == MV){
-      Int->SL = C[j][i  ].S;
-      Int->SR = C[j][i+1].S;
+      Int->SL = Ctot[j][i  ].S;
+      Int->SR = Ctot[j][i+1].S;
       UNUSED(iplus);
     } else {
-      Int->SL = C[j][i].S;
-      Int->SR = C[j+1][iplus].S;      
+      Int->SL = Ctot[j][i].S;
+      Int->SR = Ctot[j+1][iplus].S;
     }
   #endif
 
@@ -215,67 +249,110 @@ void Grid::reconstructStates(int j, int i, int dim, int iplus, Interface *Int){
 
 void Grid::computeFluxes(){
 
-  // might need to change nact for ntrack
-
   for (int j = 0; j < nde_nax[F1]; ++j){
 
     // flux in MV direction (looping over interfaces)
-    for (int i = 0; i < nact[j]+1; ++i){
+    for (int i = 0; i < ntrack[j]-1; ++i){
       reconstructStates(j,i,MV);
-      I[j][i].computeLambda();
-      I[j][i].computeFlux();
+      Itot[j][i].computeLambda();
+      Itot[j][i].computeFlux();
     }
-    for (int i = 0; i < nact[j]; ++i){
-      C[j][i].update_dt(MV, I[j][i].lR, I[j][i+1].lL);
-      for (int q = 0; q < NUM_C; ++q){
-        C[j][i].flux[0][MV][q] =  I[j][i  ].flux[q];
-        C[j][i].flux[1][MV][q] = -I[j][i+1].flux[q];
+    for (int i = 1; i < ntrack[j]-1; ++i){
+      // can't do the edges
+      
+      Ctot[j][i].update_dt(MV, Itot[j][i-1].lR, Itot[j][i].lL);
+      for (int q = 0; q < NUM_Q; ++q){
+        Ctot[j][i].flux[0][MV][q] = Itot[j][i-1].flux[q];
+        Ctot[j][i].flux[1][MV][q] = Itot[j][i  ].flux[q];
       }
     }
   }
   // flux in F1 direction (building the interfaces)
   // vector of interfaces...
   for (int j = 0; j < nde_nax[F1]-1; ++j){
-    int iR = 0;
-    for (int i = 0; i < nact[j]; ++i){
-      double xLj = C[j][i].G.x[MV] - C[j][i].G.dl[MV]/2.;
-      double xRj = C[j][i].G.x[MV] + C[j][i].G.dl[MV]/2.;
-      double xLjplus = -1.;  // unlimited ghost-cell size
-      double xRjplus = I[j+1][iR].x[MV];
-      while (xLjplus <= xRj){
+    int iplus = 1;
+    double jpos = ( Ctot[j][1].G.x[F1] + Ctot[j+1][1].G.x[F1] )/2.;
+
+    // resetting fluxes
+    for (int i = 0; i < ntrack[j]; ++i){
+      for (int q = 0; q < NUM_Q; ++q){ Ctot[j][i].flux[1][F1][q] = 0.; }
+    }
+    for (int i = 0; i < ntrack[j+1]; ++i){
+      for (int q = 0; q < NUM_Q; ++q){ Ctot[j+1][i].flux[0][F1][q] = 0.; }
+    }
+
+    for (int i = 1; i < ntrack[j]-1; ++i){
+      double xLj = Ctot[j][i].G.x[MV] - Ctot[j][i].G.dl[MV]/2.;
+      double xRj = Ctot[j][i].G.x[MV] + Ctot[j][i].G.dl[MV]/2.;
+      double xLjplus = -1.e15;  // unlimited ghost-cell size
+      iplus--;  // looking back one cell (in case it was also contributing)
+      while (xLjplus < xRj){
+
+        double xRjplus = Itot[j+1][iplus].x[MV];
 
         Interface Int;
-        Int.x[F1] = ( C[j][i].G.x[F1] + C[j+1][i].G.x[F1] )/2.;
+        Int.dim   = F1;
+        Int.x[F1] = jpos;
         Int.x[MV] = ( fmax(xLj,xLjplus) + fmin(xRj,xRjplus) )/2.;
-        Int.dl[0] = fmin(xRj,xRjplus) - fmax(xLj,xLjplus);
+        Int.dl[0] = fmax(0, fmin(xRj,xRjplus) - fmax(xLj,xLjplus));
         Int.dA = Int.dl[0];
 
-        reconstructStates(j,i,F1,iR,&Int);
+        reconstructStates(j,i,F1,iplus,&Int);
         Int.computeLambda();
         Int.computeFlux();
 
-        C[j][i].update_dt(F1, Int.lL);
-        for (int q = 0; q < NUM_C; ++q){
-          C[j  ][i ].flux[1][F1][q] += -Int.flux[q];
-          C[j+1][iR].flux[0][F1][q] +=  Int.flux[q];
+        Ctot[j  ][i    ].update_dt(F1, Int.lL);
+        Ctot[j+1][iplus].update_dt(F1, Int.lR);
+        for (int q = 0; q < NUM_Q; ++q){
+          Ctot[j  ][i    ].flux[1][F1][q] += Int.flux[q];
+          Ctot[j+1][iplus].flux[0][F1][q] += Int.flux[q];
         }
 
         xLjplus = xRjplus;
-        iR++;
-      } 
+        iplus++;
+      }
     }  
   }
 
 }
   
 
+double Grid::collect_dt(){
+
+  double dt = 1.e15;
+  for (int j = 0; j < nde_nax[F1]; ++j){
+    for (int i = 0; i < ntrack[j]; ++i){
+      dt = fmin(dt, Ctot[j][i].dt_loc);
+      Ctot[j][i].dt_loc = 1.e15;  // resetting dt_loc for next update
+    }
+  }
+
+  return dt;
+
+}
+
+
+void Grid::update(double dt){
+
+  // do not update border cells because can lead to non-physical states
+  for (int j = 1; j < nde_nax[F1]-1; ++j){
+    for (int i = 1; i < ntrack[j]-1; ++i){
+      Ctot[j][i].update(dt);
+    }
+  }
+
+}
+
+
 void Grid::interfaceGeomFromCellPos(){
 
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    double xj = C[0][0].G.x[F1];
-    for (int i = 0; i < nde_nax[MV]-1; ++i){
+  for (int j = jLbnd+1; j <= jRbnd-1; ++j){
+    double xj = Ctot[j][iLbnd[j]+1].G.x[F1];
+    for (int i = 0; i < ntrack[j]-1; ++i){
       Itot[j][i].x[MV] = (Ctot[j][i].G.x[MV] + Ctot[j][i+1].G.x[MV])/2.;
       Itot[j][i].x[F1] = xj;
+      Itot[j][i].dl[0] = Ctot[j][i].G.dl[F1];
+      Itot[j][i].dA = Itot[j][i].dl[0];
     }
   }
 

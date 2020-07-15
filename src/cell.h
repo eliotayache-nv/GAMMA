@@ -30,7 +30,7 @@ public:
   double dt_loc = 1.e15;  // local max dt
   FluidState      S;
   s_cell_geometry G;
-  double flux[2][NUM_D][NUM_C];  // L and R fluxes in all dimensions and directions
+  double flux[2][NUM_D][NUM_Q];  // L and R fluxes in all dimensions and directions
 
   void update(double dt);
   void computedV();

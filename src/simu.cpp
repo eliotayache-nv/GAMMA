@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-02 15:46:42
+* @Last Modified time: 2020-07-15 16:26:21
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -37,10 +37,27 @@ int Simu::initialise(){
 
 int Simu::run(){
 
-  grid.print(RHO);
-  grid.prepForUpdate();
+  while (!stop){
 
-  grid.update();
+    dt = grid.prepForUpdate();
+    // printf("dt = %le\n", dt);
+    grid.update(dt);
+
+    t += dt;
+    it++;
+
+    if (it == 300){ stop = true; }
+  }
+
+  grid.print(RHO);
+  // for (int j = 0; j < grid.nde_nax[F1]; ++j)
+  // {
+  //   for (int i = 0; i < grid.ntrack[j]; ++i)
+  //   {
+  //     printf("%le ", grid.Ctot[j][i].G.dV);
+  //   }
+  //   printf("\n");
+  // }
 
   return 0;
 

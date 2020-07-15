@@ -4,7 +4,7 @@
 Cell::Cell(){
 
   for (int d = 0; d < NUM_D; ++d){
-    for (int c = 0; c < NUM_C; ++c){
+    for (int c = 0; c < NUM_Q; ++c){
       flux[0][d][c] = 0;
       flux[1][d][c] = 0;
     }
@@ -32,7 +32,7 @@ void Cell::update_dt(int dim, double IL_lR, double IR_lL){
     else { dt_cand = 1.e15; }
   } 
   else {
-    dt_cand = a / fmax(IL_lR, IR_lL);
+    dt_cand = a / fmax(fabs(IL_lR), fabs(IR_lL));
   }
 
   if (dt_cand < 0) dt_loc = fmin(dt_loc, 1.e15);
@@ -40,6 +40,18 @@ void Cell::update_dt(int dim, double IL_lR, double IR_lL){
 
 }
 
+
+void Cell::update(double dt){
+
+  for (int d = 0; d < NUM_D; ++d){
+    for (int q = 0; q < NUM_Q; ++q){
+      S.cons[q] += (flux[0][d][q] - flux[1][d][q]) * dt / G.dV;
+    }
+  }
+
+  S.cons2prim();
+
+}
 
 
 

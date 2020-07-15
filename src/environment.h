@@ -8,6 +8,7 @@
 #define UNUSED(x) (void)(x)
 
 enum{RHO,PPP,UU1,UU2,UU3};  // 3rd dimension optional so must be last
+enum{TP1,TP2,VV1,VV2,VV3};
 enum{DEN,TAU,SS1,SS2,SS3};
 enum{x_,y_,z_};
 enum{ENABLED_,DISABLED_};
@@ -16,13 +17,14 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 
 // ---------------------------------------------------------------------------------------
 // ENVIRONMENT OPTIONS
-#define NUM_C 5               // conserved (changes with number of dimensions)
+#define NUM_C 4               // conserved (changes with number of dimensions)
 #define NUM_T 1               // tracers
 #define NUM_Q (NUM_C+NUM_T)   // advected variables (tracers are placed at end of list)
 #define NUM_D 2             // number of dimensions
 #define MV x_            // moving dimension
 #define F1 y_            // moving dimension
-#define GAMMA_  (4./3.)
+#define GAMMA_  (5./3.)
+#define CFL_    0.2
 
 #define OPEN_MPI_ ENABLED_
 

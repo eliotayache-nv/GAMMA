@@ -26,7 +26,7 @@ public:
 
   FluidState S,SL,SR;     
   double lL,lS,lR;        // wavespeeds
-  double flux[NUM_C];
+  double flux[NUM_Q];
 
   void wavespeedEstimates();
   void computeLambda();

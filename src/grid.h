@@ -60,13 +60,14 @@ class Grid{
 
   // update
   void prepForRun();
-  void prepForUpdate();
+  double prepForUpdate();
   void computeFluxes();
+  double collect_dt();
   void updateGhosts();
   void reconstructStates( int j, int i, int dim, 
                                 int iplus = -1, 
                                 Interface *Int = NULL );
-  void update();
+  void update(double dt);
 
   // toools
   template <class T> void apply(void (T::*func)());

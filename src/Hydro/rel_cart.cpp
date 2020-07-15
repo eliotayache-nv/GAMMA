@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-02 15:57:22
+* @Last Modified time: 2020-07-15 10:30:18
 */
 
 #include "../fluid.h"
@@ -78,9 +78,10 @@ void FluidState::state2flux(){
   for (int n = 0; n < NUM_D; ++n){
     flux[n][DEN] = D*uu[n]/lfac;
     for (int i = 0; i < NUM_D; ++i){
-      if (i==n) flux[n][SS1+i] = ss[i]*uu[i]/lfac + p;
-      else flux[n][SS1+i] = ss[i]*uu[i]/lfac;
+      if (i==n) flux[n][SS1+i] = ss[i]*uu[n]/lfac + p;
+      else flux[n][SS1+i] = ss[i]*uu[n]/lfac;
     }
+    flux[n][TAU] = ss[n] - D*uu[n]/lfac;
     for (int t = 0; t < NUM_T; ++t) flux[n][NUM_C+t] = cons[NUM_C+t]*uu[n]/lfac;
   }
 
@@ -147,7 +148,7 @@ void FluidState::cons2prim(double pin){
   // Looking for pressure only if current one doesn't work;
   double f_init = f(p, &params);
 
-  if (fabs(f_init) > 1.e-14){
+  if (fabs(f_init) > 1.e-14) {
 
     T = gsl_root_fsolver_brent;
     s = gsl_root_fsolver_alloc (T);
@@ -191,6 +192,8 @@ void FluidState::cons2prim(double pin){
 
   prim[PPP] = p;
   prim[RHO] = D/lfac;
+
+  // printf("%le\n", (S*S)/((E+p)*(E+p)));
 
   if (S == 0.)    
     for (int i = 0; i < NUM_D; ++i) prim[UU1+i] = 0;
@@ -279,7 +282,7 @@ void Interface::computeLambda(){
 
   double delta = pow(Ehll + Fhllm,2.) - 4. * FhllE * mhll;
   lS = ((Ehll + Fhllm) - sqrt(delta)) / (2. * FhllE);
-  
+ 
 }
 
 
