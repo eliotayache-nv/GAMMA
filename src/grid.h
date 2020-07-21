@@ -70,7 +70,6 @@ class Grid{
   double collect_dt();
   void updateGhosts();
   void reconstructStates( int j, int i, int dim, 
-                                int iplus = -1, 
                                 Interface *Int = NULL );
   void update(double dt);
 

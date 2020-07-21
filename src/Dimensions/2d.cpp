@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-21 10:39:53
+* @Last Modified time: 2020-07-21 12:37:37
 */
 
 #include "../environment.h"
@@ -287,7 +287,7 @@ void Grid::updateGhosts(){
 // }
 
 
-void Grid::reconstructStates(int j, int i, int dim, int iplus, Interface *Int){
+void Grid::reconstructStates(int j, int i, int dim, Interface *Int){
 
   if (Int==NULL){ Int = &Itot[j][i]; }
 
@@ -295,7 +295,6 @@ void Grid::reconstructStates(int j, int i, int dim, int iplus, Interface *Int){
     if (dim == MV){
       Int->SL = Ctot[j][i  ].S;
       Int->SR = Ctot[j][i+1].S;
-      UNUSED(iplus);
     } else {
       Int->SL = Ctot[j][i].S;
       Int->SR = Ctot[j+1][iplus].S;
@@ -431,8 +430,9 @@ void Grid::computeFluxes(){
   }
   // flux in F1 direction (building the interfaces)
   // vector of interfaces...
+
+
   for (int j = 0; j < nde_nax[F1]-1; ++j){
-    int iplus = 1;
     double jpos = ( Ctot[j][1].G.x[F1] + Ctot[j+1][1].G.x[F1] )/2.;
 
     // resetting fluxes
@@ -444,37 +444,110 @@ void Grid::computeFluxes(){
     }
 
     for (int i = 1; i < ntrack[j]-1; ++i){
-      double xLj = Ctot[j][i].G.x[MV] - Ctot[j][i].G.dl[MV]/2.;
-      double xRj = Ctot[j][i].G.x[MV] + Ctot[j][i].G.dl[MV]/2.;
-      double xLjplus = -1.e15;  // unlimited ghost-cell size
-      iplus--;  // looking back one cell (in case it was also contributing)
-      while (xLjplus < xRj){
+      Cell *c0 = &Ctot[j][i];
+      double x0 = c0->G.x[x_];
+      double xL0 = x0 - c0->G.dl[x_]/2.;
+      double xR0 = x0 + c0->G.dl[x_]/2.;
 
-        double xRjplus = Itot[j+1][iplus].x[MV];
+      for (int n = 0; n < c0->neigh[F1][1].size(); ++n){
+        idn = neigh[F1][1][n];
+        Cell *cn = &Ctot[0][idn];
+        double xn = cn->G.x[x_];
+        double xLn = xn - c0->G.dl[x_]/2.;
+        double xRn = xn + c0->G.dl[x_]/2.;
 
         Interface Int;
         Int.dim   = F1;
         Int.x[F1] = jpos;
-        Int.x[MV] = ( fmax(xLj,xLjplus) + fmin(xRj,xRjplus) )/2.;
-        Int.dl[0] = fmax(0, fmin(xRj,xRjplus) - fmax(xLj,xLjplus));
+        Int.x[MV] = ( fmax(xL0,xLn) + fmin(xR0,xRn) )/2.;
+        Int.dl[0] = fmax(0, fmin(xR0,xRn) - fmax(xL0,xLn));
         Int.dA = Int.dl[0];
 
-        reconstructStates(j,i,F1,iplus,&Int);
+        reconstructStates(j,i,F1,&Int);
         Int.computeLambda();
         Int.computeFlux();
 
-        Ctot[j  ][i    ].update_dt(F1, Int.lL);
-        Ctot[j+1][iplus].update_dt(F1, Int.lR);
+        c0.update_dt(F1, Int.lL);
+        cn.update_dt(F1, Int.lR);
         for (int q = 0; q < NUM_Q; ++q){
-          Ctot[j  ][i    ].flux[1][F1][q] += Int.flux[q];
-          Ctot[j+1][iplus].flux[0][F1][q] += Int.flux[q];
+          c0.flux[1][F1][q] += Int.flux[q];
+          cn.flux[0][F1][q] += Int.flux[q];
         }
-
-        xLjplus = xRjplus;
-        iplus++;
       }
+
+      // ---------
+      // while (xLjplus < xRj){
+
+      //   double xRjplus = Itot[j+1][iplus].x[MV];
+
+      //   Interface Int;
+      //   Int.dim   = F1;
+      //   Int.x[F1] = jpos;
+      //   Int.x[MV] = ( fmax(xLj,xLjplus) + fmin(xRj,xRjplus) )/2.;
+      //   Int.dl[0] = fmax(0, fmin(xRj,xRjplus) - fmax(xLj,xLjplus));
+      //   Int.dA = Int.dl[0];
+
+      //   reconstructStates(j,i,F1,iplus,&Int);
+      //   Int.computeLambda();
+      //   Int.computeFlux();
+
+      //   Ctot[j  ][i    ].update_dt(F1, Int.lL);
+      //   Ctot[j+1][iplus].update_dt(F1, Int.lR);
+      //   for (int q = 0; q < NUM_Q; ++q){
+      //     Ctot[j  ][i    ].flux[1][F1][q] += Int.flux[q];
+      //     Ctot[j+1][iplus].flux[0][F1][q] += Int.flux[q];
+      //   }
+
+      //   xLjplus = xRjplus;
+      //   iplus++;
+      // }
     }  
   }
+
+  // for (int j = 0; j < nde_nax[F1]-1; ++j){
+  //   int iplus = 1;
+  //   double jpos = ( Ctot[j][1].G.x[F1] + Ctot[j+1][1].G.x[F1] )/2.;
+
+  //   // resetting fluxes
+  //   for (int i = 0; i < ntrack[j]; ++i){
+  //     for (int q = 0; q < NUM_Q; ++q){ Ctot[j][i].flux[1][F1][q] = 0.; }
+  //   }
+  //   for (int i = 0; i < ntrack[j+1]; ++i){
+  //     for (int q = 0; q < NUM_Q; ++q){ Ctot[j+1][i].flux[0][F1][q] = 0.; }
+  //   }
+
+  //   for (int i = 1; i < ntrack[j]-1; ++i){
+  //     double xLj = Ctot[j][i].G.x[MV] - Ctot[j][i].G.dl[MV]/2.;
+  //     double xRj = Ctot[j][i].G.x[MV] + Ctot[j][i].G.dl[MV]/2.;
+  //     double xLjplus = -1.e15;  // unlimited ghost-cell size
+  //     iplus--;  // looking back one cell (in case it was also contributing)
+  //     while (xLjplus < xRj){
+
+  //       double xRjplus = Itot[j+1][iplus].x[MV];
+
+  //       Interface Int;
+  //       Int.dim   = F1;
+  //       Int.x[F1] = jpos;
+  //       Int.x[MV] = ( fmax(xLj,xLjplus) + fmin(xRj,xRjplus) )/2.;
+  //       Int.dl[0] = fmax(0, fmin(xRj,xRjplus) - fmax(xLj,xLjplus));
+  //       Int.dA = Int.dl[0];
+
+  //       reconstructStates(j,i,F1,iplus,&Int);
+  //       Int.computeLambda();
+  //       Int.computeFlux();
+
+  //       Ctot[j  ][i    ].update_dt(F1, Int.lL);
+  //       Ctot[j+1][iplus].update_dt(F1, Int.lR);
+  //       for (int q = 0; q < NUM_Q; ++q){
+  //         Ctot[j  ][i    ].flux[1][F1][q] += Int.flux[q];
+  //         Ctot[j+1][iplus].flux[0][F1][q] += Int.flux[q];
+  //       }
+
+  //       xLjplus = xRjplus;
+  //       iplus++;
+  //     }
+  //   }  
+  // }
 
 }
   
