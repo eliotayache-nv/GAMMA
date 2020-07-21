@@ -33,6 +33,8 @@ public:
   void computeFlux();
   FluidState starState(FluidState Sin, double lbda);
 
+  void move(double dt);
+
 };
 
 #endif

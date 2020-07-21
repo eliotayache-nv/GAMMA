@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-06 09:26:35
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-14 16:26:06
+* @Last Modified time: 2020-07-21 10:40:57
 */
 
 #include "grid.h"
@@ -46,19 +46,13 @@ double Grid::prepForUpdate(){
 
   updateGhosts();
 
-  // for (int j = 0; j < nde_nax[F1]; ++j)
-  // {
-  //   for (int i = 0; i < ntrack[j]-1; ++i)
-  //   {
-  //     printf("%le\n", Itot[j][i].dA);
-  //   }
-  // }
-
-  // exit(10);
-
   apply(&FluidState::prim2cons);
   apply(&FluidState::state2flux);
 
+  computeNeighbors();
+
+  movDir_ComputeLambda();   // has to be done before kinematics update (and flux calc)
+  updateKinematics();
   computeFluxes();
   double dt = CFL_ * collect_dt();
 

@@ -60,6 +60,11 @@ class Grid{
 
   // update
   void prepForRun();
+  void computeNeighbors(bool print=false);
+  void assignId(int ind[NUM_D]);
+  void movDir_ComputeLambda();
+  void updateKinematics();
+  void gradients(Cell *c);
   double prepForUpdate();
   void computeFluxes();
   double collect_dt();

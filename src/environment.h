@@ -3,6 +3,7 @@
 
 #include <mpi.h>
 #include <math.h>
+#include <vector>
 #include "err.h"
 
 #define UNUSED(x) (void)(x)
@@ -21,10 +22,13 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 #define NUM_T 1               // tracers
 #define NUM_Q (NUM_C+NUM_T)   // advected variables (tracers are placed at end of list)
 #define NUM_D 2             // number of dimensions
-#define MV x_            // moving dimension
-#define F1 y_            // moving dimension
+#define MV    x_            // moving dimension
+#define F1    y_            // flixed dimension
+#define VI    1.            // interface velocity (units of CD velocity)
 #define GAMMA_  (5./3.)
-#define CFL_    0.2
+#define CFL_    0.1
+
+#define DUMPSTEP_ 10
 
 #define OPEN_MPI_ ENABLED_
 

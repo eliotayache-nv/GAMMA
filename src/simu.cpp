@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-15 16:26:21
+* @Last Modified time: 2020-07-21 07:10:10
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -39,24 +39,33 @@ int Simu::run(){
 
   while (!stop){
 
+    // printf("x y z\n");
+    // for (int j = 0; j < grid.ncell[F1]; ++j)
+    // {
+    //   for (int i = 0; i < grid.nact[j]; ++i)
+    //   {
+    //     printf("%le %le %d\n", grid.C[j][i].G.x[x_], grid.C[j][i].G.x[y_], grid.C[j][i].nde_id);
+    //   }
+    // }
+
     dt = grid.prepForUpdate();
-    // printf("dt = %le\n", dt);
+    // printf("%lf\n", dt);
     grid.update(dt);
 
     t += dt;
     it++;
 
-    if (it == 300){ stop = true; }
+    if (it == 100){ stop = true; }
   }
 
-  grid.print(RHO);
-  // for (int j = 0; j < grid.nde_nax[F1]; ++j)
+  // grid.print(PPP);
+  // printf("x y z\n");
+  // for (int j = 0; j < grid.ncell[F1]; ++j)
   // {
-  //   for (int i = 0; i < grid.ntrack[j]; ++i)
+  //   for (int i = 0; i < grid.nact[j]; ++i)
   //   {
-  //     printf("%le ", grid.Ctot[j][i].G.dV);
+  //     printf("%le %le %le\n", grid.C[j][i].G.x[x_], grid.C[j][i].G.x[y_], grid.C[j][i].S.prim[RHO]);
   //   }
-  //   printf("\n");
   // }
 
   return 0;

@@ -26,8 +26,7 @@ void Cell::update_dt(int dim, double IL_lR, double IR_lL){
   double a = G.dl[dim];
   double dt_cand;
 
-  if (dim != MV)
-  {
+  if (dim != MV){
     if (IR_lL != IL_lR) { dt_cand = a / (IR_lL - IL_lR); }
     else { dt_cand = 1.e15; }
   } 
@@ -41,12 +40,23 @@ void Cell::update_dt(int dim, double IL_lR, double IR_lL){
 }
 
 
-void Cell::update(double dt){
+void Cell::update(double dt, double xL, double xR){
+
+
+  for (int q = 0; q < NUM_Q; ++q){
+    S.cons[q] *= G.dV;
+  }
 
   for (int d = 0; d < NUM_D; ++d){
     for (int q = 0; q < NUM_Q; ++q){
-      S.cons[q] += (flux[0][d][q] - flux[1][d][q]) * dt / G.dV;
+      S.cons[q] += (flux[0][d][q] - flux[1][d][q]) * dt;
     }
+  }
+
+  move(xL, xR);
+
+  for (int q = 0; q < NUM_Q; ++q){
+    S.cons[q] /= G.dV;
   }
 
   S.cons2prim();
