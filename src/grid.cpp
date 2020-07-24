@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-06 09:26:35
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-21 10:40:57
+* @Last Modified time: 2020-07-24 15:31:03
 */
 
 #include "grid.h"
@@ -45,12 +45,9 @@ void Grid::prepForRun(){
 double Grid::prepForUpdate(){
 
   updateGhosts();
-
   apply(&FluidState::prim2cons);
   apply(&FluidState::state2flux);
-
   computeNeighbors();
-
   movDir_ComputeLambda();   // has to be done before kinematics update (and flux calc)
   updateKinematics();
   computeFluxes();

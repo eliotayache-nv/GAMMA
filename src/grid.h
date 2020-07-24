@@ -70,13 +70,14 @@ class Grid{
   double collect_dt();
   void updateGhosts();
   void reconstructStates( int j, int i, int dim, 
+                                int idn=-1,
                                 Interface *Int = NULL );
   void update(double dt);
 
   // toools
-  template <class T> void apply(void (T::*func)());
-                     void apply(void (FluidState::*func)());
-                      // overloading for FluidState
+  void apply(void (Cell::*func)());
+  void apply(void (FluidState::*func)(), bool noborder=false);
+    // overloading for FluidState
 
   void mpi_exchangeGhostTracks();
 

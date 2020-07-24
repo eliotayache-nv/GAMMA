@@ -21,21 +21,53 @@ void Cell::computeAllGeom(){
 
 }
 
-void Cell::update_dt(int dim, double IL_lR, double IR_lL){
+void Cell::resetLocaldt(){
+
+  dt_loc = 1.e15;
+
+}
+
+void Cell::update_dt(int dim, Interface IL, Interface IR){
 
   double a = G.dl[dim];
   double dt_cand;
 
-  if (dim != MV){
-    if (IR_lL != IL_lR) { dt_cand = a / (IR_lL - IL_lR); }
-    else { dt_cand = 1.e15; }
+  if (dim == MV){
+
+    double l, v;
+    double dt_candL, dt_candR;
+    // wave from left side:
+    l = IL.lR;
+    v = IR.v;
+    if (l > v) { dt_candL = a / (l - v); }
+    else { dt_candL = 1.e15; }
+
+    // wave from right side:
+    l = IR.lL;
+    v = IL.v;
+    if (l < v) { dt_candR = a / (v - l); }
+    else { dt_candR = 1.e15; }
+
+    dt_cand = fmin(dt_candL, dt_candR);
   } 
+
   else {
-    dt_cand = a / fmax(fabs(IL_lR), fabs(IR_lL));
+
+    double l;
+    double xI = IL.x[dim];
+    double xC = G.x[dim];
+
+    if (xI < xC){
+      l = IL.lR;
+      if (l > 0) { dt_cand = a/l;  } else { dt_cand = 1.e15; }
+    }
+    else{
+      l = -IL.lL;
+      if (l > 0) { dt_cand = a/l;  } else { dt_cand = 1.e15; }      
+    }
   }
 
-  if (dt_cand < 0) dt_loc = fmin(dt_loc, 1.e15);
-  else dt_loc = fmin(dt_loc, dt_cand);
+  dt_loc = fmin(dt_loc, dt_cand);
 
 }
 

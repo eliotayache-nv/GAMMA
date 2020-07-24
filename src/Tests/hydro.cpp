@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-12 10:49:50
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-25 08:51:37
+* @Last Modified time: 2020-07-24 11:35:38
 */
 
 #include <stdlib.h>
@@ -35,10 +35,10 @@
 // ---------------------------------------------------------------------------------------
 
 #define GAMMA_ (5./3.)
-#define Nx_    256    // power of 2
-#define Ny_    256    // power of 2
+#define Nx_    10    // power of 2
+#define Ny_    10    // power of 2
 #define Ng_    1      // no. of ghost tracks on each side
-#define itmax_ 1000
+#define itmax_ 1
 #define cfl_   0.2
 
 #define SOLVER_   HLLC_ 

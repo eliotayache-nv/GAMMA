@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-16 12:12:04
+* @Last Modified time: 2020-07-24 15:55:07
 */
 
 #include "../environment.h"
@@ -11,22 +11,28 @@
 void loadParams(s_par *par){
 
   par->tini      = 0.;
-  par->ncell[x_] = 100;
-  par->ncell[y_] = 100;
-  par->nmax      = 25;    // max number of cells in MV direction
+  par->ncell[x_] = 20;
+  par->ncell[y_] = 1;
+  par->nmax      = 110;    // max number of cells in MV direction
   par->ngst      = 1;
 
 }
 
 int Grid::initialGeometry(){
 
+  double xmin = -1;
+  double xmax = 1;
+  double ymin = 0;
+  double ymax = 1;
+  double x = xmax - xmin;
+  double y = ymax - ymin;
   for (int j = 0; j < ncell[y_]; ++j){
     for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
-      c->G.x[x_]  = (double) 2.*(i+0.5)/ncell[x_] - 1.;
-      c->G.dl[x_] =          2./ncell[x_];
-      c->G.x[y_]  = (double) 2.*(j+0.5)/ncell[y_] - 1.;
-      c->G.dl[y_] =          2./ncell[y_];
+      c->G.x[x_]  = (double) x*(i+0.5)/ncell[x_] + xmin;
+      c->G.dl[x_] =          x/ncell[x_];
+      c->G.x[y_]  = (double) y*(j+0.5)/ncell[y_] + ymin;
+      c->G.dl[y_] =          y/ncell[y_];
       c->G.dV     = c->G.dl[x_]*c->G.dl[y_];
     }
   }

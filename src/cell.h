@@ -33,7 +33,6 @@ public:
   s_cell_geometry G;
   double flux[2][NUM_D][NUM_Q];   // L and R fluxes in all dimensions and directions
   vector<int> neigh[NUM_D][2];    // neighboring cells in each direction (id)
-  // double grad[NUM_D][NUM_Q];      // gradients in all dimensions
 
   void update(double dt, double xL, double xR);
   void move(double xL, double xR);
@@ -41,7 +40,8 @@ public:
   void computeCentroid();
   void computeAllGeom();
 
-  void update_dt(int dim, double IL_lR, double IR_lL=0);
+  void resetLocaldt();
+  void update_dt(int dim, Interface IL, Interface IR=NULL);
 
 };
 

@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-21 12:37:37
+* @Last Modified time: 2020-07-24 18:09:51
 */
 
 #include "../environment.h"
@@ -178,7 +178,7 @@ void Grid::mpi_exchangeGhostTracks(){
 void Grid::assignId(int ind[NUM_D]){
 
   Cell *c = &Ctot[ind[0]][ind[1]];
-  c->nde_id = ind[0]*nde_nax[F1] + ind[1];
+  c->nde_id = ind[0]*nde_nax[MV] + ind[1];
   for (int d = 0; d < NUM_D; ++d){ c->nde_ind[d] = ind[d]; }
 
 }
@@ -247,29 +247,29 @@ void Grid::updateGhosts(){
 
 }
 
-// #if SPATIAL_RECONSTRUCTION_ == PIECEWISE_LINEAR_
+#if SPATIAL_RECONSTRUCTION_ == PIECEWISE_LINEAR_
 
-//   static double minmod(double a, double b){
+  static double minmod(double a, double b){
 
-//     if (fabs(a) < fabs(b) && a*b > 0){ return(a); }
-//     if (fabs(b) < fabs(a) && a*b > 0){ return(b); }
-//     return(0);
+    if (fabs(a) < fabs(b) && a*b > 0){ return(a); }
+    if (fabs(b) < fabs(a) && a*b > 0){ return(b); }
+    return(0);
 
-//   }
+  }
 
-//   static void grad(Cell cL, Cell cR, int dim, double** grad){
+  static void grad(Cell cL, Cell cR, int dim, double *grad){
 
-//     for (int q = 0; q < NUM_Q; ++q){
-//       double qL = cL.S.cons[q];
-//       double qR = cR.S.cons[q];
-//       double xL = cL.G.cen[dim];
-//       double xR = cR.G.cen[dim];
-//       grad[dim][q] = (qR - qL) / (xR -xL);
-//     }
+    for (int q = 0; q < NUM_Q; ++q){
+      double qL = cL.S.cons[q];
+      double qR = cR.S.cons[q];
+      double xL = cL.G.cen[dim];
+      double xR = cR.G.cen[dim];
+      grad[q] = (qR - qL) / (xR -xL);
+    }
 
-//   }
+  }
 
-// #endif
+#endif
 
 
 // void Grid::gradients(Cell *c){
@@ -287,7 +287,7 @@ void Grid::updateGhosts(){
 // }
 
 
-void Grid::reconstructStates(int j, int i, int dim, Interface *Int){
+void Grid::reconstructStates(int j, int i, int dim, int idn, Interface *Int){
 
   if (Int==NULL){ Int = &Itot[j][i]; }
 
@@ -295,33 +295,59 @@ void Grid::reconstructStates(int j, int i, int dim, Interface *Int){
     if (dim == MV){
       Int->SL = Ctot[j][i  ].S;
       Int->SR = Ctot[j][i+1].S;
+      UNUSED(idn);
     } else {
       Int->SL = Ctot[j][i].S;
-      Int->SR = Ctot[j+1][iplus].S;
+      Int->SR = Ctot[0][idn].S;
     }
   #endif
 
-  // #if SPATIAL_RECONSTRUCTION_ == PIECEWISE_LINEAR_
-  //   double gradL[NUM_Q], gradR[NUM_Q];
-  //   if (dim == MV){
-  //     Cell *cL  = &Ctot[j][i  ];
-  //     Cell *cR  = &Ctot[j][i+1];
-  //     gradients(cL); gradients(cR);
-  //     Int->SL = cL->S;
-  //     Int->SR = cR->S;
-  //     UNUSED(iplus);
-  //   } else {
-  //     Int->SL = Ctot[j][i].S;
-  //     Int->SR = Ctot[j+1][iplus].S;
-  //   }
-  // #endif
+  #if SPATIAL_RECONSTRUCTION_ == PIECEWISE_LINEAR_
+    if (dim == MV){
+
+      Cell *cL  = Ctot[j][i]; 
+      Cell *cLL = Ctot[j][max(i-1,0)]; 
+      Cell *cR  = Ctot[j][i+1]; 
+      Cell *cRR = Ctot[j][min(i+2,ntrack[j]-1)];
+
+      double gradL[NUM_Q], gradR[NUM_Q], gradN[NUM_Q];
+      grad(*cLL, *cL, MV, gradL);
+      grad(*cL,  *cR, MV, gradN);
+      grad(*cR, *cRR, MV, gradR);
+      for (int q = 0; q < NUM_Q; ++q){ gradL[q] = minmod(gradL[q], gradN[q]); }
+      for (int q = 0; q < NUM_Q; ++q){ gradR[q] = minmod(gradR[q], gradN[q]); }
+
+      double *grad[] = {&gradL, &gradR};
+      State *IS[] = {&(Int->SL), &(Int->SR)};
+      for (int s = 0; s < 2; ++s){
+        IS[]
+      }
+
+      UNUSED(idn);
+    } else {
+      Int->SL = Ctot[j][i].S;
+      Int->SR = Ctot[0][idn].S;
+    }
+    // double gradL[NUM_Q], gradR[NUM_Q];
+    // if (dim == MV){
+    //   Cell *cL  = &Ctot[j][i  ];
+    //   Cell *cR  = &Ctot[j][i+1];
+    //   gradients(cL); gradients(cR);
+    //   Int->SL = cL->S;
+    //   Int->SR = cR->S;
+    //   UNUSED(iplus);
+    // } else {
+    //   Int->SL = Ctot[j][i].S;
+    //   Int->SR = Ctot[j+1][iplus].S;
+    // }
+  #endif
 
 }
 
 
 void Grid::computeNeighbors(bool print){
 
-  for (int j = 1; j < nde_nax[F1]-1; ++j){ // can't do it for edges
+  for (int j = 0; j < nde_nax[F1]; ++j){ // can't do it for edges
     int im = 0;
     int ip = 0;
     for (int i = 1; i < ntrack[j]-1; ++i){
@@ -336,23 +362,30 @@ void Grid::computeNeighbors(bool print){
         } else {
           double xjL = c->G.x[MV] - c->G.dl[MV]/2.;
           double xjR = c->G.x[MV] + c->G.dl[MV]/2.;
-          double xm = Itot[j-1][im].x[MV];
-          double xp = Itot[j+1][ip].x[MV];
 
-          if (xm > xjL and im > 0){ 
-            im--; xm = Itot[j-1][im].x[MV];
-          }
-          while (xm < xjR){
-            c->neigh[d][0].push_back(Ctot[j-1][im+1].nde_id);
-            im++; xm = Itot[j-1][im].x[MV];
+          if (j!=0){
+            double xm = Itot[j-1][im].x[MV];
+            if (xm > xjL and im > 0){ 
+              im--; xm = Itot[j-1][im].x[MV];
+            }
+            while (xm < xjR){
+              c->neigh[d][0].push_back(Ctot[j-1][im+1].nde_id);
+              if (im > ntrack[j]-1) break;
+              im++; xm = Itot[j-1][im].x[MV];
+            }            
           }
 
-          if (xp > xjL and ip > 0){ 
-            ip--; xp = Itot[j+1][ip].x[MV];
-            } 
-          while (xp < xjR){
-            c->neigh[d][1].push_back(Ctot[j+1][ip+1].nde_id);
-            ip++; xp = Itot[j+1][ip].x[MV];
+          if (j!=nde_nax[F1]-1){
+            double xp = Itot[j+1][ip].x[MV];
+            if (xp > xjL and ip > 0){ 
+              ip--; xp = Itot[j+1][ip].x[MV];
+              } 
+            while (xp < xjR){
+              c->neigh[d][1].push_back(Ctot[j+1][ip+1].nde_id);
+              ip++; 
+              if (ip > ntrack[j]-1) break;
+              xp = Itot[j+1][ip].x[MV];
+            }
           }
         }
       }
@@ -421,17 +454,14 @@ void Grid::computeFluxes(){
     for (int i = 1; i < ntrack[j]-1; ++i){
       // can't do the edges
       
-      Ctot[j][i].update_dt(MV, Itot[j][i-1].lR, Itot[j][i].lL);
+      Ctot[j][i].update_dt(MV, Itot[j][i-1], Itot[j][i]);
       for (int q = 0; q < NUM_Q; ++q){
         Ctot[j][i].flux[0][MV][q] = Itot[j][i-1].flux[q];
         Ctot[j][i].flux[1][MV][q] = Itot[j][i  ].flux[q];
       }
     }
   }
-  // flux in F1 direction (building the interfaces)
-  // vector of interfaces...
-
-
+  // flux in F1 direction (building the interfaces from neighbor ids)
   for (int j = 0; j < nde_nax[F1]-1; ++j){
     double jpos = ( Ctot[j][1].G.x[F1] + Ctot[j+1][1].G.x[F1] )/2.;
 
@@ -443,18 +473,18 @@ void Grid::computeFluxes(){
       for (int q = 0; q < NUM_Q; ++q){ Ctot[j+1][i].flux[0][F1][q] = 0.; }
     }
 
-    for (int i = 1; i < ntrack[j]-1; ++i){
+    for (int i = 0; i < ntrack[j]; ++i){
       Cell *c0 = &Ctot[j][i];
-      double x0 = c0->G.x[x_];
-      double xL0 = x0 - c0->G.dl[x_]/2.;
-      double xR0 = x0 + c0->G.dl[x_]/2.;
+      double x0 = c0->G.x[MV];
+      double xL0 = x0 - c0->G.dl[MV]/2.;
+      double xR0 = x0 + c0->G.dl[MV]/2.;
 
-      for (int n = 0; n < c0->neigh[F1][1].size(); ++n){
-        idn = neigh[F1][1][n];
+      for (std::vector<int>::size_type n = 0; n < c0->neigh[F1][1].size(); ++n){
+        int idn = c0->neigh[F1][1][n];
         Cell *cn = &Ctot[0][idn];
-        double xn = cn->G.x[x_];
-        double xLn = xn - c0->G.dl[x_]/2.;
-        double xRn = xn + c0->G.dl[x_]/2.;
+        double xn = cn->G.x[MV];
+        double xLn = xn - cn->G.dl[MV]/2.;
+        double xRn = xn + cn->G.dl[MV]/2.;
 
         Interface Int;
         Int.dim   = F1;
@@ -463,91 +493,19 @@ void Grid::computeFluxes(){
         Int.dl[0] = fmax(0, fmin(xR0,xRn) - fmax(xL0,xLn));
         Int.dA = Int.dl[0];
 
-        reconstructStates(j,i,F1,&Int);
+        reconstructStates(j,i,F1,idn,&Int);
         Int.computeLambda();
         Int.computeFlux();
 
-        c0.update_dt(F1, Int.lL);
-        cn.update_dt(F1, Int.lR);
+        c0->update_dt(F1, Int.lL);
+        cn->update_dt(F1, Int.lR);
         for (int q = 0; q < NUM_Q; ++q){
-          c0.flux[1][F1][q] += Int.flux[q];
-          cn.flux[0][F1][q] += Int.flux[q];
+          c0->flux[1][F1][q] += Int.flux[q];
+          cn->flux[0][F1][q] += Int.flux[q];
         }
       }
-
-      // ---------
-      // while (xLjplus < xRj){
-
-      //   double xRjplus = Itot[j+1][iplus].x[MV];
-
-      //   Interface Int;
-      //   Int.dim   = F1;
-      //   Int.x[F1] = jpos;
-      //   Int.x[MV] = ( fmax(xLj,xLjplus) + fmin(xRj,xRjplus) )/2.;
-      //   Int.dl[0] = fmax(0, fmin(xRj,xRjplus) - fmax(xLj,xLjplus));
-      //   Int.dA = Int.dl[0];
-
-      //   reconstructStates(j,i,F1,iplus,&Int);
-      //   Int.computeLambda();
-      //   Int.computeFlux();
-
-      //   Ctot[j  ][i    ].update_dt(F1, Int.lL);
-      //   Ctot[j+1][iplus].update_dt(F1, Int.lR);
-      //   for (int q = 0; q < NUM_Q; ++q){
-      //     Ctot[j  ][i    ].flux[1][F1][q] += Int.flux[q];
-      //     Ctot[j+1][iplus].flux[0][F1][q] += Int.flux[q];
-      //   }
-
-      //   xLjplus = xRjplus;
-      //   iplus++;
-      // }
     }  
   }
-
-  // for (int j = 0; j < nde_nax[F1]-1; ++j){
-  //   int iplus = 1;
-  //   double jpos = ( Ctot[j][1].G.x[F1] + Ctot[j+1][1].G.x[F1] )/2.;
-
-  //   // resetting fluxes
-  //   for (int i = 0; i < ntrack[j]; ++i){
-  //     for (int q = 0; q < NUM_Q; ++q){ Ctot[j][i].flux[1][F1][q] = 0.; }
-  //   }
-  //   for (int i = 0; i < ntrack[j+1]; ++i){
-  //     for (int q = 0; q < NUM_Q; ++q){ Ctot[j+1][i].flux[0][F1][q] = 0.; }
-  //   }
-
-  //   for (int i = 1; i < ntrack[j]-1; ++i){
-  //     double xLj = Ctot[j][i].G.x[MV] - Ctot[j][i].G.dl[MV]/2.;
-  //     double xRj = Ctot[j][i].G.x[MV] + Ctot[j][i].G.dl[MV]/2.;
-  //     double xLjplus = -1.e15;  // unlimited ghost-cell size
-  //     iplus--;  // looking back one cell (in case it was also contributing)
-  //     while (xLjplus < xRj){
-
-  //       double xRjplus = Itot[j+1][iplus].x[MV];
-
-  //       Interface Int;
-  //       Int.dim   = F1;
-  //       Int.x[F1] = jpos;
-  //       Int.x[MV] = ( fmax(xLj,xLjplus) + fmin(xRj,xRjplus) )/2.;
-  //       Int.dl[0] = fmax(0, fmin(xRj,xRjplus) - fmax(xLj,xLjplus));
-  //       Int.dA = Int.dl[0];
-
-  //       reconstructStates(j,i,F1,iplus,&Int);
-  //       Int.computeLambda();
-  //       Int.computeFlux();
-
-  //       Ctot[j  ][i    ].update_dt(F1, Int.lL);
-  //       Ctot[j+1][iplus].update_dt(F1, Int.lR);
-  //       for (int q = 0; q < NUM_Q; ++q){
-  //         Ctot[j  ][i    ].flux[1][F1][q] += Int.flux[q];
-  //         Ctot[j+1][iplus].flux[0][F1][q] += Int.flux[q];
-  //       }
-
-  //       xLjplus = xRjplus;
-  //       iplus++;
-  //     }
-  //   }  
-  // }
 
 }
   
@@ -609,7 +567,7 @@ void Grid::destruct(){
 
 }
 
-template <class T> void Grid::apply(void (T::*func)()){
+void Grid::apply(void (Cell::*func)()){
     
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < nde_nax[MV]; ++i){
@@ -620,10 +578,20 @@ template <class T> void Grid::apply(void (T::*func)()){
 }
 
 // overloading apply for FluidState
-void Grid::apply(void (FluidState::*func)()){
+void Grid::apply(void (FluidState::*func)(), bool noborder){
 
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int i = 0; i < nde_nax[MV]; ++i){
+  int jL, jR;
+  if (noborder){ jL = 1; jR = nde_nax[F1]-1; }
+  else         { jL = 0; jR = nde_nax[F1];   }
+
+  for (int j = jL; j < jR; ++j){
+
+    int iL, iR;
+    if (noborder){ iL = 1; iR = ntrack[j]-1; }
+    else         { iL = 0; iR = ntrack[j];   }
+
+    for (int i = iL; i < iR; ++i){
+      // printf("%d %d\n", j, i);
       (Ctot[j][i].S.*func)();
     }
   }
@@ -700,6 +668,10 @@ void mpi_distribute(Grid *grid){
       grid->Ctot[j][i].nde_id = grid->nde_nax[MV]*j + i;
       grid->Ctot[j][i].nde_ind[0] = j;
       grid->Ctot[j][i].nde_ind[1] = i;
+      // if(j==101) printf("%d %d %d\n",
+      //   grid->Ctot[j][i].nde_id,
+      //   grid->Ctot[j][i].nde_ind[0] = j,
+      //   grid->Ctot[j][i].nde_ind[1] = i);
     }
   }
 

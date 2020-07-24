@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-20 16:34:14
+* @Last Modified time: 2020-07-23 14:59:18
 */
 
 #include "../environment.h"
@@ -11,9 +11,9 @@
 void loadParams(s_par *par){
 
   par->tini      = 0.;
-  par->ncell[x_] = 10;
-  par->ncell[y_] = 10;
-  par->nmax      = 10;    // max number of cells in MV direction
+  par->ncell[x_] = 50;
+  par->ncell[y_] = 200;
+  par->nmax      = 110;    // max number of cells in MV direction
   par->ngst      = 1;
 
 }
@@ -41,14 +41,14 @@ int Grid::initialValues(){
       Cell *c = &Cinit[j][i];
 
       if (c->G.x[x_] >= 0 and c->G.x[y_] >= 0){
-        c->S.prim[RHO] = 0.01;
+        c->S.prim[RHO] = 0.1;
         c->S.prim[VV1] = 0.;
         c->S.prim[VV2] = 0.;
         c->S.prim[PPP] = 0.01;
         c->S.cons[NUM_C] = 1.;
       }
       if (c->G.x[x_] < 0 and c->G.x[y_] >= 0){
-        c->S.prim[RHO] = 0.01;
+        c->S.prim[RHO] = 0.1;
         c->S.prim[VV1] = 0.99;
         c->S.prim[VV2] = 0.;
         c->S.prim[PPP] = 1.;
@@ -62,7 +62,7 @@ int Grid::initialValues(){
         c->S.cons[NUM_C] = 3.;
       }
       if (c->G.x[x_] >= 0 and c->G.x[y_] < 0){
-        c->S.prim[RHO] = 0.01;
+        c->S.prim[RHO] = 0.1;
         c->S.prim[VV1] = 0.;
         c->S.prim[VV2] = 0.99;
         c->S.prim[PPP] = 1.;

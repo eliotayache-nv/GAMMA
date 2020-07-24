@@ -12,6 +12,7 @@ enum{RHO,PPP,UU1,UU2,UU3};  // 3rd dimension optional so must be last
 enum{TP1,TP2,VV1,VV2,VV3};
 enum{DEN,TAU,SS1,SS2,SS3};
 enum{x_,y_,z_};
+enum{X_,Y_,Z_}; // in case of typo
 enum{ENABLED_,DISABLED_};
 
 enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
@@ -26,7 +27,7 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 #define F1    y_            // flixed dimension
 #define VI    1.            // interface velocity (units of CD velocity)
 #define GAMMA_  (5./3.)
-#define CFL_    0.1
+#define CFL_    0.2
 
 #define DUMPSTEP_ 10
 

@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-15 10:30:18
+* @Last Modified time: 2020-07-24 13:24:53
 */
 
 #include "../fluid.h"
@@ -282,7 +282,7 @@ void Interface::computeLambda(){
 
   double delta = pow(Ehll + Fhllm,2.) - 4. * FhllE * mhll;
   lS = ((Ehll + Fhllm) - sqrt(delta)) / (2. * FhllE);
- 
+
 }
 
 
