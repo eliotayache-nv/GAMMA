@@ -33,6 +33,7 @@ public:
   s_cell_geometry G;
   double flux[2][NUM_D][NUM_Q];   // L and R fluxes in all dimensions and directions
   vector<int> neigh[NUM_D][2];    // neighboring cells in each direction (id)
+  double grad_mv[NUM_Q];          // gradient in moving direction
 
   void update(double dt, double xL, double xR);
   void move(double xL, double xR);

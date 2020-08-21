@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-24 18:09:51
+* @Last Modified time: 2020-08-21 15:44:46
 */
 
 #include "../environment.h"
@@ -260,12 +260,34 @@ void Grid::updateGhosts(){
   static void grad(Cell cL, Cell cR, int dim, double *grad){
 
     for (int q = 0; q < NUM_Q; ++q){
-      double qL = cL.S.cons[q];
-      double qR = cR.S.cons[q];
+      // reconstruction using primitive variables
+      double qL = cL.S.prim[q];
+      double qR = cR.S.prim[q];
       double xL = cL.G.cen[dim];
       double xR = cR.G.cen[dim];
       grad[q] = (qR - qL) / (xR -xL);
     }
+
+  }
+
+  static Cell* findNeighbor(Cell *c, int side, double x_mv, Grid *g){
+
+    Cell *c_out;
+    Cell **Ctot = g->Ctot;
+    int n = 0;
+    int idn;
+    int n_neigh = c->neigh[F1][side].size();
+    double xn_mv, dln_mv;
+    do {
+      idn = c->neigh[F1][side][n];
+      c_out  = &Ctot[0][idn];
+      xn_mv  = c_out->G.x[MV];
+      dln_mv = c_out->G.dl[MV];
+      n++;
+    } while (xn_mv + 0.5*dln_mv < x_mv and n < n_neigh);
+      // if no aligned neighbor, we return state from closest left neighbor to the left
+
+    return c_out;
 
   }
 
@@ -305,28 +327,85 @@ void Grid::reconstructStates(int j, int i, int dim, int idn, Interface *Int){
   #if SPATIAL_RECONSTRUCTION_ == PIECEWISE_LINEAR_
     if (dim == MV){
 
-      Cell *cL  = Ctot[j][i]; 
-      Cell *cLL = Ctot[j][max(i-1,0)]; 
-      Cell *cR  = Ctot[j][i+1]; 
-      Cell *cRR = Ctot[j][min(i+2,ntrack[j]-1)];
+      if (i == 0 or i == ntrack[j]-2){
+        Int->SL = Ctot[j][i  ].S;
+        Int->SR = Ctot[j][i+1].S;
+      } 
+      else {
+        Cell *cL  = &Ctot[j][i]; 
+        Cell *cLL = &Ctot[j][max(i-1,0)]; 
+        Cell *cR  = &Ctot[j][i+1]; 
+        Cell *cRR = &Ctot[j][min(i+2,ntrack[j]-1)];
 
-      double gradL[NUM_Q], gradR[NUM_Q], gradN[NUM_Q];
-      grad(*cLL, *cL, MV, gradL);
-      grad(*cL,  *cR, MV, gradN);
-      grad(*cR, *cRR, MV, gradR);
-      for (int q = 0; q < NUM_Q; ++q){ gradL[q] = minmod(gradL[q], gradN[q]); }
-      for (int q = 0; q < NUM_Q; ++q){ gradR[q] = minmod(gradR[q], gradN[q]); }
+        double gradL[NUM_Q], gradR[NUM_Q], gradN[NUM_Q];
+        grad(*cLL, *cL, MV, gradL);
+        grad(*cL,  *cR, MV, gradN);
+        grad(*cR, *cRR, MV, gradR);
+        for (int q = 0; q < NUM_Q; ++q){ 
+          gradL[q] = minmod(gradL[q], gradN[q]);
+          gradR[q] = minmod(gradR[q], gradN[q]);
+          cL->grad_mv[q] = gradL[q];  // gradients stored in cells
+          cR->grad_mv[q] = gradR[q];
+        }
 
-      double *grad[] = {&gradL, &gradR};
-      State *IS[] = {&(Int->SL), &(Int->SR)};
-      for (int s = 0; s < 2; ++s){
-        IS[]
+        Cell *c[] = {cL, cR};
+        FluidState *IS[] = {&(Int->SL), &(Int->SR)};
+        double *grad[] = {gradL, gradR};
+        double xI = Int->x[dim];
+        for (int s = 0; s < 2; ++s){
+          for (int q = 0; q < NUM_Q; ++q){
+            double xc = c[s]->G.x[dim];
+            double Sc = c[s]->S.prim[q];
+            double g = grad[s][q];
+            IS[s]->prim[q] = Sc + g * (xI - xc);
+          }
+          IS[s]->prim2cons();
+          IS[s]->state2flux();
+        }
       }
-
       UNUSED(idn);
+
     } else {
-      Int->SL = Ctot[j][i].S;
-      Int->SR = Ctot[0][idn].S;
+
+      if (j == 0  or j == nde_nax[F1]-2){
+        Int->SL = Ctot[j][i].S;
+        Int->SR = Ctot[0][idn].S;
+      }
+      else {
+        // recover gardients in moving direction and compute states at projected location
+        // careful with the boundaries for LL and RR
+        Cell *cL = &Ctot[j][i]; 
+        Cell *cR = &Ctot[0][idn];
+        Cell *cLL, *cRR;
+        double xm = Int->x[MV]; 
+        double xf = Int->x[F1];
+        cLL = findNeighbor(cL, left_,  xm, this);
+        cRR = findNeighbor(cR, right_, xm, this);
+        double dxmL  = xm - cL->G.x[MV];
+        double dxmR  = xm - cR->G.x[MV];
+        double dxmLL = xm - cLL->G.x[MV];
+        double dxmRR = xm - cRR->G.x[MV];
+        double dxfL  = xf - cL->G.x[F1];
+        double dxfR  = xf - cR->G.x[F1];
+
+        for (int q = 0; q < NUM_Q; ++q){
+          double qL = cL->S.prim[q] + cL->grad_mv[q] * dxmL;
+          double qR = cR->S.prim[q] + cR->grad_mv[q] * dxmR;
+          double qLL = cLL->S.prim[q] + cLL->grad_mv[q] * dxmLL;
+          double qRR = cRR->S.prim[q] + cRR->grad_mv[q] * dxmRR;
+          double gradL = (qL - qLL) / (cL->G.x[F1] - cLL->G.x[F1]);
+          double grad0 = (qR - qL)  / (cR->G.x[F1] - cL->G.x[F1]);
+          double gradR = (qR - qRR) / (cR->G.x[F1] - cRR->G.x[F1]);
+          gradL = minmod(gradL, grad0);
+          gradR = minmod(grad0, gradR);
+          Int->SL.prim[q] = qL + gradL * dxfL;
+          Int->SR.prim[q] = qR + gradR * dxfR;
+          Int->SL.prim2cons();
+          Int->SR.prim2cons();
+          Int->SL.state2flux();
+          Int->SR.state2flux();
+        }
+      }
     }
     // double gradL[NUM_Q], gradR[NUM_Q];
     // if (dim == MV){
@@ -472,7 +551,6 @@ void Grid::computeFluxes(){
     for (int i = 0; i < ntrack[j+1]; ++i){
       for (int q = 0; q < NUM_Q; ++q){ Ctot[j+1][i].flux[0][F1][q] = 0.; }
     }
-
     for (int i = 0; i < ntrack[j]; ++i){
       Cell *c0 = &Ctot[j][i];
       double x0 = c0->G.x[MV];

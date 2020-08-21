@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-24 15:55:33
+* @Last Modified time: 2020-08-21 15:55:39
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -44,8 +44,10 @@ int Simu::run(){
     t += dt;
     it++;
 
+    // printf("t = %lf\n", t);
+
     // if (fabs(grid.C[0][0].S.prim[RHO] - 1.e-2) > 1.e-15){ stop = true; }
-    if (it == 10){ stop = true; }
+    if (it == 1000){ stop = true; }
   }
 
   // grid.print(PPP);

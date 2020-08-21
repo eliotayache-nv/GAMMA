@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-24 13:24:53
+* @Last Modified time: 2020-08-21 10:09:09
 */
 
 #include "../fluid.h"
@@ -249,6 +249,8 @@ void Interface::computeLambda(){
   else if (dim == y_) { u = UU2; s = SS2; }
   else                { u = UU3; s = SS3; }
 
+  wavespeedEstimates();
+  
   double lfacL = SL.lfac();
   double lfacR = SR.lfac();
   double vL = SL.prim[u]/lfacL;
@@ -259,8 +261,6 @@ void Interface::computeLambda(){
   double pR = SR.prim[PPP];
   double EL = SL.cons[TAU]+SL.cons[DEN];
   double ER = SR.cons[TAU]+SR.cons[DEN];
-
-  wavespeedEstimates();
 
   // Setting up temporary variables:
   double AL = lL * EL - mL;

@@ -2,7 +2,7 @@
 // * @Author: eliotayache
 // * @Date:   2020-06-10 11:07:58
 // * @Last Modified by:   Eliot Ayache
-// * @Last Modified time: 2020-07-24 11:27:36
+// * @Last Modified time: 2020-08-21 15:44:19
 // */
 
 #include "../environment.h"
@@ -11,24 +11,24 @@
 
 void Interface::computeFlux(){
 
-  if (0 < lL){
+  if (v < lL){
     S = SL;
     for (int q = 0; q < NUM_Q; ++q){ flux[q] = S.flux[dim][q] - v*S.cons[q]; }
                            // compensate for interface motion --^
   }                     
-  if (lL <= 0 && 0 < lS){
+  if (lL <= v && v < lS){
     S = starState(SL, lL);
     for (int q = 0; q < NUM_Q; ++q){ 
       flux[q] = SL.flux[dim][q] + lL*(S.cons[q] - SL.cons[q]) - v*S.cons[q]; 
     }
   }
-  if (lS <= 0 && 0 < lR){
+  if (lS <= v && v < lR){
     S = starState(SR, lR);
     for (int q = 0; q < NUM_Q; ++q){ 
       flux[q] = SR.flux[dim][q] + lR*(S.cons[q] - SR.cons[q]) - v*S.cons[q];
     }
   }
-  if (lR <= 0 ){
+  if (lR <= v ){
     S = SR;
     for (int q = 0; q < NUM_Q; ++q){ flux[q] = S.flux[dim][q] - v*S.cons[q]; }
   }
