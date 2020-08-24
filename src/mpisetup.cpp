@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 15:59:03
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-06-27 14:24:07
+* @Last Modified time: 2020-08-24 15:35:45
 */
 #include "mpi.h"
 #include "err.h"
@@ -82,6 +82,7 @@ void generate_mpi_cell( MPI_Datatype * cell_mpi ){
   MPI_Type_commit(cell_mpi);
 
 }
+
 
 
 
