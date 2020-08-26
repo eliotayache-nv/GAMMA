@@ -56,6 +56,7 @@ class Grid{
   int  initialValues();
   void destruct();            // free memory
   void print(int var);
+  void printCols(int var);
   void interfaceGeomFromCellPos();
 
   // update

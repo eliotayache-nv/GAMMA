@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-24 15:57:35
+* @Last Modified time: 2020-08-26 09:17:47
 */
 
 #include "../environment.h"
@@ -83,6 +83,15 @@ void Grid::initialise(s_par par){
   Itot  = array_2d<Interface>(nde_nax[F1],nde_nax[MV]-1);
   I     = array_2d_nogst<Interface>(Itot, nde_nax[F1], ngst); // removes ghost to ghost
   C     = array_2d_nogst<Cell>(Ctot, nde_nax[F1], ngst);     
+
+}
+
+
+void Grid::assignId(int ind[NUM_D]){
+
+  Cell *c = &Ctot[ind[0]][ind[1]];
+  c->nde_id = ind[0]*nde_nax[MV] + ind[1];
+  for (int d = 0; d < NUM_D; ++d){ c->nde_ind[d] = ind[d]; }
 
 }
 
@@ -172,14 +181,25 @@ void Grid::mpi_exchangeGhostTracks(){
 
   MPI_Barrier(MPI_COMM_WORLD);
 
-}
+  for (int j = 0; j < ngst; ++j){
+    for (int i = 0; i < nde_nax[MV]; ++i){
 
+      // updating interface positions from communicated cells
+      if (i != nde_nax[MV]-1){ 
+        int jn = nde_nax[F1]-1-j;
+        Itot[j][i].x[MV]  = Ctot[j][i].G.x[MV] + Ctot[j][i].G.dl[MV]/2.;
+        Itot[jn][i].x[MV] = Ctot[jn][i].G.x[MV] + Ctot[jn][i].G.dl[MV]/2.;
+        Itot[j][i].x[F1]  = Ctot[j][i].G.x[F1];
+        Itot[jn][i].x[F1] = Ctot[jn][i].G.x[F1];
+      }
 
-void Grid::assignId(int ind[NUM_D]){
-
-  Cell *c = &Ctot[ind[0]][ind[1]];
-  c->nde_id = ind[0]*nde_nax[MV] + ind[1];
-  for (int d = 0; d < NUM_D; ++d){ c->nde_ind[d] = ind[d]; }
+      // updating IDs
+      int indL[] = {j,i};
+      int indR[] = {nde_nax[F1]-1-j,i};
+      assignId(indL);
+      assignId(indR);
+    }
+  }
 
 }
 
@@ -218,7 +238,7 @@ void Grid::updateGhosts(){
         assignId(ind);
         Ctot[j][i].G.x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dl[F1];
         if (i != ntrack[j]-1){ 
-          Itot[j][i].x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dl[F1]; 
+          Itot[j][i].x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dl[F1];
         }
       }
     }
@@ -241,7 +261,7 @@ void Grid::updateGhosts(){
       assignId(ind);
 
       Itot[j][i-1] = Itot[j][iRbnd[j]-2];
-      Itot[j][i-1].x[MV]   += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dl[MV];
+      Itot[j][i-1].x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dl[MV];
     }
   }
 
@@ -552,6 +572,8 @@ void Grid::computeFluxes(){
       for (int q = 0; q < NUM_Q; ++q){ Ctot[j+1][i].flux[0][F1][q] = 0.; }
     }
     for (int i = 0; i < ntrack[j]; ++i){
+
+
       Cell *c0 = &Ctot[j][i];
       double x0 = c0->G.x[MV];
       double xL0 = x0 - c0->G.dl[MV]/2.;
@@ -711,6 +733,64 @@ void Grid::print(int var){
         printf("%le ", Cdump[j][i].S.prim[var]);
       }
       printf("\n");
+    }
+
+  }else{
+    int size  = nde_nax[F1] * nde_nax[MV];  // size includes MV ghost cells
+    MPI_Send( &size,     1,  MPI_INT, 0, 0, MPI_COMM_WORLD);
+    MPI_Send(origin, NUM_D,  MPI_INT, 0, 1, MPI_COMM_WORLD);
+    s_cell **SC = array_2d<s_cell>(nde_nax[F1],nde_nax[MV]);
+    for (int j = 0; j < nde_nax[F1]; ++j){
+      for (int i = 0; i < nde_nax[MV]; ++i){
+        toStruct(Ctot[j][i], &SC[j][i]);
+      }
+    }
+    MPI_Send(&SC[0][0],  size, cell_mpi, 0, 2, MPI_COMM_WORLD);
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+}
+
+
+void Grid::printCols(int var){
+
+  MPI_Datatype cell_mpi = {0}; 
+  generate_mpi_cell(&cell_mpi);
+
+  if (worldrank == 0){
+
+    int sizes[worldsize];
+    Cell    **Cdump = array_2d<Cell>(nax[F1], nax[MV]);
+    s_cell **SCdump = array_2d<s_cell>(nax[F1], nax[MV]);
+    for (int j = 0; j < nde_nax[F1]; ++j){
+      for (int i = 0; i < nde_nax[MV]; ++i){
+        toStruct(Ctot[j][i], &SCdump[j][i]);
+      }
+    }
+
+    sizes[0] = nde_nax[F1] * nde_nax[MV];
+    std::copy_n(&Ctot[0][0], sizes[0], &Cdump[0][0]);
+
+    for (int j = 1; j < worldsize; ++j){
+      int o[NUM_D]; // origin
+      MPI_Recv(      &sizes[j],        1,  MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(              o,    NUM_D,  MPI_INT, j, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      int i1 = o[F1];
+      int i2 = o[MV];
+      MPI_Recv(&SCdump[i1][i2], sizes[j], cell_mpi, j, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    printf("x, y, z\n");
+    for (int j = ngst; j < ncell[F1]+ngst; ++j){
+      for (int i = ngst; i < ncell[MV]+ngst; ++i) {
+        toClass(SCdump[j][i], &Cdump[j][i]);
+        printf("%le %le %le\n", 
+          Cdump[j][i].G.x[x_],
+          Cdump[j][i].G.x[y_],
+          Cdump[j][i].S.prim[var]);
+      }
     }
 
   }else{

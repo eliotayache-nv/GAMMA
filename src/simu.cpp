@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-21 18:49:27
+* @Last Modified time: 2020-08-26 09:19:36
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -50,15 +50,15 @@ int Simu::run(){
     if (it == 100){ stop = true; }
   }
 
-  // grid.print(PPP);
-  printf("x y z\n");
-  for (int j = 0; j < grid.ncell[F1]; ++j)
-  {
-    for (int i = 0; i < grid.nact[j]; ++i)
-    {
-      printf("%le %le %le\n", grid.C[j][i].G.x[x_], grid.C[j][i].G.x[y_], grid.C[j][i].S.prim[RHO]);
-    }
-  }
+  grid.printCols(PPP);
+  // printf("x y z\n");
+  // for (int j = 0; j < grid.ncell[F1]; ++j)
+  // {
+  //   for (int i = 0; i < grid.nact[j]; ++i)
+  //   {
+  //     printf("%le %le %le\n", grid.C[j][i].G.x[x_], grid.C[j][i].G.x[y_], grid.C[j][i].S.prim[RHO]);
+  //   }
+  // }
 
   return 0;
 
