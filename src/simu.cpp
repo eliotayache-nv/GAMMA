@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-26 09:19:36
+* @Last Modified time: 2020-08-26 09:55:41
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -50,7 +50,7 @@ int Simu::run(){
     if (it == 100){ stop = true; }
   }
 
-  grid.printCols(PPP);
+  grid.printCols(RHO);
   // printf("x y z\n");
   // for (int j = 0; j < grid.ncell[F1]; ++j)
   // {

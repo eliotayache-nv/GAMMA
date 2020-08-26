@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-26 09:17:47
+* @Last Modified time: 2020-08-26 09:54:35
 */
 
 #include "../environment.h"
@@ -613,12 +613,17 @@ void Grid::computeFluxes(){
 double Grid::collect_dt(){
 
   double dt = 1.e15;
+  double local_dt = 1.e15;
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < ntrack[j]; ++i){
-      dt = fmin(dt, Ctot[j][i].dt_loc);
+      local_dt = fmin(local_dt, Ctot[j][i].dt_loc);
       Ctot[j][i].dt_loc = 1.e15;  // resetting dt_loc for next update
     }
   }
+
+  // taking minimum dt accross all processes
+  MPI_Barrier(MPI_COMM_WORLD); // wait until all processes have caught up
+  MPI_Allreduce(&local_dt, &dt, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
 
   return dt;
 
@@ -782,7 +787,7 @@ void Grid::printCols(int var){
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("x, y, z\n");
+    printf("x y z\n");
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
       for (int i = ngst; i < ncell[MV]+ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);

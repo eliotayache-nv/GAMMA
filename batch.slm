@@ -9,7 +9,7 @@
 #SBATCH --error=hydro.e
  
 # set the number of nodes and partition
-#SBATCH --nodes=1
+#SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --partition=batch-devel
 #SBATCH --qos=devel
@@ -25,7 +25,9 @@ module load gsl
 module load intel/mpi
  
 # compile the application
-make
+make -B
+# make
 
 # run the application
-mpirun -np $SLURM_NTASKS ./bin/GAMMA
+# mpirun -np $SLURM_NTASKS ./bin/GAMMA
+mpirun -np $SLURM_NTASKS ./bin/GAMMA > ./results/temp/RHO0.out
