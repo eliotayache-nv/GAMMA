@@ -44,6 +44,9 @@ public:
   void resetLocaldt();
   void update_dt(int dim, Interface IL, Interface IR=NULL);
 
+  // AMR
+  int checkCellForRegrid();
+
 };
 
 #endif

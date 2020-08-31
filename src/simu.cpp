@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-26 09:55:41
+* @Last Modified time: 2020-08-28 18:03:35
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -38,19 +38,19 @@ int Simu::run(){
 
   while (!stop){
 
-    dt = grid.prepForUpdate();
+    dt = grid.prepForUpdate(it);
     grid.update(dt);
 
     t += dt;
     it++;
 
-    // printf("t = %lf\n", t);
+    // printf("it %ld | t = %lf\n", it, t);
 
     // if (fabs(grid.C[0][0].S.prim[RHO] - 1.e-2) > 1.e-15){ stop = true; }
-    if (it == 100){ stop = true; }
+    if (it == 200){ stop = true; }
   }
 
-  grid.printCols(RHO);
+  grid.printCols();
   // printf("x y z\n");
   // for (int j = 0; j < grid.ncell[F1]; ++j)
   // {

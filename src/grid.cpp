@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-06 09:26:35
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-25 22:21:27
+* @Last Modified time: 2020-08-28 17:14:04
 */
 
 #include "grid.h"
@@ -36,14 +36,14 @@ void Grid::prepForRun(){
     }
   }
 
-  // assignStatus();
   interfaceGeomFromCellPos();
   //TBC more to come (ghost cells are not updated here yet)
 
 }
 
-double Grid::prepForUpdate(){
+double Grid::prepForUpdate(int it){
 
+  regrid();
   updateGhosts();
   apply(&FluidState::prim2cons);
   apply(&FluidState::state2flux);
@@ -51,8 +51,10 @@ double Grid::prepForUpdate(){
   movDir_ComputeLambda();   // has to be done before kinematics update (and flux calc)
   updateKinematics();
   computeFluxes();
+  // if(it==8) { printCols(); exit(11); }
   double dt = CFL_ * collect_dt();
 
   return dt;
 
 }
+

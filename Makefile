@@ -1,4 +1,4 @@
-INITIAL    = test
+INITIAL    = test2
 TIMESTEP   = rk3 
 GEOMETRY   = cartesian
 HYDRO      = rel_cart
@@ -43,7 +43,7 @@ SOLVERR    =$(SOURCE)/Solver/$(SOLVER)
 DIMENSIONSS=$(SOURCE)/Dimensions/$(DIMENSIONS)
 
 SOURCES = $(wildcard $(SOURCE)/*.cpp) 
-OBJECTS = $(SOURCES:.cpp=.o) $(INITIALL).o $(GEOMETRYY).o $(SOLVERR).o $(DIMENSIONSS).o
+OBJECTS = $(SOURCES:.cpp=.o) $(INITIALL).o $(GEOMETRYY).o $(HYDROO).o $(SOLVERR).o $(DIMENSIONSS).o
 
 
 all : $(BIN)/GAMMA

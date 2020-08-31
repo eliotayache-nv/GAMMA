@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-26 09:34:09
+* @Last Modified time: 2020-08-28 18:03:24
 */
 
 #include "../environment.h"
@@ -77,3 +77,26 @@ int Grid::initialValues(){
   return 0;
 
 }
+
+
+int Cell::checkCellForRegrid(){
+
+  double split_dl = 0.1;
+  double merge_dl = 0.005;
+
+  if (G.dl[MV] > split_dl) {
+    // printf("split %d %d\n", nde_ind[y_], nde_ind[x_]);
+    return(split_);
+  }
+  if (G.dl[MV] < merge_dl) {
+    // printf("merge %d %d\n", nde_ind[y_], nde_ind[x_]);
+    return(merge_);
+  }
+  return(skip_);
+
+}
+
+
+
+
+

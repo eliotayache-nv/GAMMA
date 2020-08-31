@@ -14,6 +14,7 @@ enum{DEN,TAU,SS1,SS2,SS3};
 enum{x_,y_,z_};
 enum{X_,Y_,Z_}; // in case of typo
 enum{left_,right_};    // left, right
+enum{skip_,merge_,split_};
 enum{ENABLED_,DISABLED_};
 
 enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
@@ -34,7 +35,7 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 
 #define OPEN_MPI_ ENABLED_
 
-#define SPATIAL_RECONSTRUCTION_ PIECEWISE_LINEAR_
+#define SPATIAL_RECONSTRUCTION_ PIECEWISE_LINEAR
 
 // ---------------------------------------------------------------------------------------
 // GLOBAL VARIABLES

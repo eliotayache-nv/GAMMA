@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 15:17:31
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-07-16 11:09:51
+* @Last Modified time: 2020-08-27 15:45:53
 */
 
 
@@ -29,5 +29,12 @@ void Cell::move(double xL, double xR){
   G.dl[MV] = (xR - xL);
   computedV();
   computeCentroid();
+
+}
+
+
+void Interface::computedA(){
+
+    dA = dl[0];
 
 }

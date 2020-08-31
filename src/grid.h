@@ -39,6 +39,7 @@ class Grid{
     int *nact;    // adaptive number of active cells in track
     int *ntrack;  // adaptive number of active and ghost cells in track
     int jLbnd, jRbnd, *iLbnd, *iRbnd; // tot index of first ghost cell out of active grid
+    int *ibig, *ismall; // indexes of biggest and smallest cells along track
 
   #elif NUM_D == 3
     Cell         ***C;
@@ -56,8 +57,9 @@ class Grid{
   int  initialValues();
   void destruct();            // free memory
   void print(int var);
-  void printCols(int var);
+  void printCols();
   void interfaceGeomFromCellPos();
+  void interfaceGeomFromCellPos(int j); // only one track
 
   // update
   void prepForRun();
@@ -66,7 +68,7 @@ class Grid{
   void movDir_ComputeLambda();
   void updateKinematics();
   void gradients(Cell *c);
-  double prepForUpdate();
+  double prepForUpdate(int it);
   void computeFluxes();
   double collect_dt();
   void updateGhosts();
@@ -74,6 +76,13 @@ class Grid{
                                 int idn=-1,
                                 Interface *Int = NULL );
   void update(double dt);
+
+  // AMR
+  void regrid();
+  void targetRegridVictims(int j);
+  void applyRegrid(int j, int i, int action);
+  void split(int j, int i);
+  void merge(int j, int i);
 
   // toools
   void apply(void (Cell::*func)());

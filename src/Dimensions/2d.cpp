@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-26 09:54:35
+* @Last Modified time: 2020-08-28 17:56:41
 */
 
 #include "../environment.h"
@@ -77,6 +77,8 @@ void Grid::initialise(s_par par){
     iLbnd[j] = ngst-1;
     iRbnd[j] = nde_ncell[MV]+ngst;
   }
+  ibig   = new int[nde_nax[F1]];
+  ismall = new int[nde_nax[F1]];
   
   Cinit = array_2d<Cell>(ncell[F1],ncell[MV]);
   Ctot  = array_2d<Cell>(nde_nax[F1],nde_nax[MV]);
@@ -285,7 +287,7 @@ void Grid::updateGhosts(){
       double qR = cR.S.prim[q];
       double xL = cL.G.cen[dim];
       double xR = cR.G.cen[dim];
-      grad[q] = (qR - qL) / (xR -xL);
+      grad[q] = (qR - qL) / (xR-xL);
     }
 
   }
@@ -516,7 +518,174 @@ void Grid::computeNeighbors(bool print){
   }
 
 }
-  
+
+
+void Grid::regrid(){
+
+  for (int j = jLbnd+1; j <= jRbnd-1; ++j){
+    targetRegridVictims(j);  // updating ismall and ibig in track
+    for (int i = iLbnd[j]+2; i <= iRbnd[j]-2; ++i){  // only active cells
+      Cell *c = &Ctot[j][i];
+      int action = c->checkCellForRegrid();
+      if (action != skip_){ applyRegrid(j, i, action); }
+    }
+  }
+
+}
+
+
+void Grid::targetRegridVictims(int j){
+
+  double minVal = 1.e15;
+  double maxVal = 0.;
+  for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
+    double val = Ctot[j][i].G.dl[MV];
+    if (val < minVal){
+      minVal = val;
+      ismall[j] = i;
+    }
+    if (val > maxVal){
+      maxVal = val;
+      ibig[j] = i;
+    }
+  }
+
+}
+
+
+void Grid::applyRegrid(int j, int i, int action){
+
+  // circular regrid: we grab the extra cell somewhere on the track (res stays the same)
+  // And we avoid load-balancing issues
+  if (action == split_){
+    // merge smallest cell in track 
+    int isplit = i;
+    int is = ismall[j];
+    if (i==is) exit(10);    // cell to split can't be the smallest cell in the fluid
+
+    merge(j,is); // merging with smallest neighbour
+    if (i > is) isplit--;
+    split(j,isplit);
+  }
+
+  if (action == merge_){
+    // we can just invert the idexes (i, is) -> (ib, i)
+    int ib = ibig[j];
+    if (i==ib) exit(10);    // cell to split can't be the smallest cell in the fluid
+
+    merge(j,i); // merging with smallest neighbour
+    if (ib > i) ib--;
+    split(j,ib);
+  }
+
+  targetRegridVictims(j);  // updating ismall and ibig
+
+}
+
+
+void Grid::split(int j, int i){
+
+  // freeing space on the right (so we can keep same i)
+  std::copy_backward(&Ctot[j][i+1], &Ctot[j][ntrack[j]],   &Ctot[j][ntrack[j]+1]);
+  std::copy_backward(&Itot[j][i],   &Itot[j][ntrack[j]-1], &Itot[j][ntrack[j]]  );
+  ntrack[j]++; // increasing the number of cells in track
+
+  for (int ii = i; ii < ntrack[j]; ++ii){
+    int ind[]={j,ii};
+    assignId(ind);
+  }
+
+  Cell *c  = &Ctot[j][i];
+  Cell *cR = &Ctot[j][i+1];  // this should be an empty cell as we just freed it  
+
+  // Simple copy so far
+  for (int q = 0; q < NUM_Q; ++q){
+    cR->S.prim[q] = c->S.prim[q];
+  }
+  cR->S.prim2cons();
+  cR->S.state2flux();
+
+  // updating geometry
+  double x_old = c->G.x[MV];
+  double dl_old = c->G.dl[MV];
+
+  c->G.x[MV]  = x_old - dl_old/4.;
+  cR->G.x[MV] = x_old + dl_old/4.;
+  cR->G.x[F1] = c->G.x[F1];
+
+  c->G.dl[MV]  = dl_old/2.;
+  cR->G.dl[MV] = dl_old/2.;
+  cR->G.dl[F1] = c->G.dl[F1];
+
+  c->computeAllGeom();
+  cR->computeAllGeom();
+
+  Itot[j][i].x[MV]  = x_old;
+  Itot[j][i].x[F1]  = c->G.x[F1];
+  Itot[j][i].dl[0] = c->G.dl[F1];
+  Itot[j][i].computedA();
+
+}
+
+
+void Grid::merge(int j, int i){
+
+  Cell *c  = &Ctot[j][i];
+  Cell *cL = &Ctot[j][i-1];
+  Cell *cR = &Ctot[j][i+1];
+  Cell *cVic;
+
+  // identify neigbour victim
+  int side;
+  if (cL->G.dl[MV] < cR->G.dl[MV]){
+    side = left_;
+    cVic = cL;
+  } else {
+    side = right_;
+    cVic = cR;
+  }
+
+  // updating values
+  double dV_loc = c->G.dV;
+  double dV_vic = cVic->G.dV;
+  for (int q = 0; q < NUM_Q; ++q){
+    double Q_loc = c->S.prim[q];
+    double Q_vic = cVic->S.prim[q];
+    c->S.prim[q] = (Q_loc * dV_loc + Q_vic * dV_vic) / (dV_loc + dV_vic);
+  }
+  c->S.prim2cons();
+  c->S.state2flux();
+
+  // updating geometry
+  if (side == left_){
+    c->G.x[MV] = ((cVic->G.x[MV] - cVic->G.dl[MV]/2.) + (c->G.x[MV] + c->G.dl[MV]/2.))/2.;
+  }
+  if (side == right_){
+    c->G.x[MV] = ((cVic->G.x[MV] + cVic->G.dl[MV]/2.) + (c->G.x[MV] - c->G.dl[MV]/2.))/2.;
+  }
+
+  c->G.dl[MV] += cVic->G.dl[MV];
+  c->computeAllGeom();
+
+  // shifting cells and interfaces around
+  if (side==left_){
+    std::copy(&Ctot[j][i], &Ctot[j][ntrack[j]],   &Ctot[j][i-1]);
+    std::copy(&Itot[j][i], &Itot[j][ntrack[j]-1], &Itot[j][i-1]);
+  }
+  if (side==right_){
+    std::copy(&Ctot[j][i+2], &Ctot[j][ntrack[j]],   &Ctot[j][i+1]);
+    std::copy(&Itot[j][i+1], &Itot[j][ntrack[j]-1], &Itot[j][i]  );
+  }
+  ntrack[j]--;  // not as many active cells
+
+  for (int ii = i-1; ii < ntrack[j]; ++ii){
+    int ind[]={j,ii};
+    assignId(ind);
+  }
+
+
+}
+
 
 void Grid::movDir_ComputeLambda(){
 
@@ -658,8 +827,21 @@ void Grid::interfaceGeomFromCellPos(){
       Itot[j][i].x[MV] = (Ctot[j][i].G.x[MV] + Ctot[j][i+1].G.x[MV])/2.;
       Itot[j][i].x[F1] = xj;
       Itot[j][i].dl[0] = Ctot[j][i].G.dl[F1];
-      Itot[j][i].dA = Itot[j][i].dl[0];
+      Itot[j][i].computedA();
     }
+  }
+
+}
+
+
+void Grid::interfaceGeomFromCellPos(int j){
+
+  double xj = Ctot[j][iLbnd[j]+1].G.x[F1];
+  for (int i = 0; i < ntrack[j]-1; ++i){
+    Itot[j][i].x[MV] = Ctot[j][i+1].G.x[MV] - Ctot[j][i+1].G.dl[MV]/2.;
+    Itot[j][i].x[F1] = xj;
+    Itot[j][i].dl[0] = Ctot[j][i].G.dl[F1];
+    Itot[j][i].computedA();
   }
 
 }
@@ -672,6 +854,7 @@ void Grid::destruct(){
 
 }
 
+
 void Grid::apply(void (Cell::*func)()){
     
   for (int j = 0; j < nde_nax[F1]; ++j){
@@ -681,6 +864,7 @@ void Grid::apply(void (Cell::*func)()){
   }
 
 }
+
 
 // overloading apply for FluidState
 void Grid::apply(void (FluidState::*func)(), bool noborder){
@@ -702,6 +886,7 @@ void Grid::apply(void (FluidState::*func)(), bool noborder){
   }
     
 }
+
 
 void Grid::print(int var){
 
@@ -758,7 +943,7 @@ void Grid::print(int var){
 }
 
 
-void Grid::printCols(int var){
+void Grid::printCols(){
 
   MPI_Datatype cell_mpi = {0}; 
   generate_mpi_cell(&cell_mpi);
@@ -787,14 +972,25 @@ void Grid::printCols(int var){
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("x y z\n");
+    printf("j i x y dx dy rho vx vy p D sx sy tau\n");
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
       for (int i = ngst; i < ncell[MV]+ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
-        printf("%le %le %le\n", 
+        printf("%d %d %le %le %le %le %le %le %le %le %le %le %le %le\n", 
+          j,
+          i,
           Cdump[j][i].G.x[x_],
           Cdump[j][i].G.x[y_],
-          Cdump[j][i].S.prim[var]);
+          Cdump[j][i].G.dl[x_],
+          Cdump[j][i].G.dl[y_],
+          Cdump[j][i].S.prim[RHO],
+          Cdump[j][i].S.prim[VV1],
+          Cdump[j][i].S.prim[VV2],
+          Cdump[j][i].S.prim[PPP],
+          Cdump[j][i].S.prim[DEN],
+          Cdump[j][i].S.prim[SS1],
+          Cdump[j][i].S.prim[SS2],
+          Cdump[j][i].S.prim[TAU]);
       }
     }
 

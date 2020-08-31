@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-25 15:30:49
+* @Last Modified time: 2020-08-28 09:21:24
 */
 
 #include "../environment.h"
@@ -75,3 +75,15 @@ int Grid::initialValues(){
   return 0;
 
 }
+
+
+
+int Cell::checkCellForRegrid(){
+
+  return(skip_)
+
+}
+
+
+
+

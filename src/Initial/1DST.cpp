@@ -2,11 +2,12 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-21 11:31:25
+* @Last Modified time: 2020-08-28 09:21:12
 */
 
 #include "../environment.h"
 #include "../grid.h"
+#include "../cell.h"
 
 void loadParams(s_par *par){
 
@@ -67,3 +68,22 @@ int Grid::initialValues(){
   return 0;
 
 }
+
+
+int Cell::checkCellForRegrid(){
+
+  return(skip_)
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
