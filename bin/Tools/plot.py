@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-08-27 09:46:58
+# @Last Modified time: 2020-08-28 18:07:31
 
 
 import numpy as np
@@ -10,6 +10,7 @@ import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.transforms
+from matplotlib.colors import LogNorm
 import glob
 import os
 
@@ -47,7 +48,7 @@ def readData(key, it):
   return(data)
 
 
-def quadMesh(data, key, geometry="cartesian"):
+def quadMesh(data, key, geometry="cartesian", color=None, log=False):
 
   res = 100
 
@@ -64,7 +65,7 @@ def quadMesh(data, key, geometry="cartesian"):
   ymax = np.max(y)
 
   vmin = np.min(z)
-  vmax = np.max(z)
+  vmax = np.max(z[4:,:])
 
   plt.figure()
   for j in range(z.shape[1]-1):
@@ -82,6 +83,16 @@ def quadMesh(data, key, geometry="cartesian"):
     mask[j,:] = 0
     zj = np.ma.masked_array(z, mask>0)
 
-    plt.pcolor(xj, yj, zj, vmin=vmin, vmax=vmax, edgecolors='k')
+    if log==True:
+      plt.pcolor(xj, yj, zj, 
+        norm=LogNorm(vmin=vmin, vmax=vmax), 
+        edgecolors='k', 
+        facecolor=color)
+    else:
+      plt.pcolor(xj, yj, zj, 
+        vmin=vmin, vmax=vmax, 
+        edgecolors='k', 
+        facecolor=color)
+
 
   plt.show()
