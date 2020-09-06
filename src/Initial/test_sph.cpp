@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-06 18:39:26
+* @Last Modified time: 2020-09-06 21:09:24
 */
 
 #include "../environment.h"
@@ -45,13 +45,13 @@ int Grid::initialValues(){
       double y = c->G.x[y_];
       if (x < 3 and fabs(y) < 0.2){
         c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = 0.8;
+        c->S.prim[VV1] = 0.99;
         c->S.prim[VV2] = 0.;
         c->S.prim[PPP] = 0.1;
         c->S.cons[NUM_C] = 1.;
       }
       else{
-        c->S.prim[RHO] = 0.1;
+        c->S.prim[RHO] = 0.01;
         c->S.prim[VV1] = 0.0;
         c->S.prim[VV2] = 0.0;
         c->S.prim[PPP] = 0.01;
@@ -70,7 +70,7 @@ void Grid::userKinematics(){
 
   // setting lower and higher i boundary interface velocities to zero
   for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int n = 0; n < ngst; ++n){
+    for (int n = 0; n <= ngst; ++n){
       int iL = n;
       int iR = nact[j]-2-n;
       Itot[j][iL].v = 0;
@@ -84,12 +84,12 @@ void Grid::userKinematics(){
 void Grid::userBoundaries(){
 
   for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int i = 0; i < iLbnd[j]; ++i){
+    for (int i = 0; i <= iLbnd[j]; ++i){
       Cell *c = &Ctot[j][i];
       double y = c->G.x[y_];
       if (fabs(y) < 0.2){
         c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = 0.8;
+        c->S.prim[VV1] = 0.99;
         c->S.prim[VV2] = 0.;
         c->S.prim[PPP] = 0.1;
         c->S.cons[NUM_C] = 1.;

@@ -4,6 +4,7 @@
 #include <mpi.h>
 #include <math.h>
 #include <vector>
+#include <omp.h>
 #include "err.h"
 
 #define UNUSED(x) (void)(x)

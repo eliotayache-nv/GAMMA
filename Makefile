@@ -1,7 +1,7 @@
-INITIAL    = test2
-TIMESTEP   = rk3 
-GEOMETRY   = cartesian
-HYDRO      = rel_cart
+INITIAL    = test_sph
+TIMESTEP   = rk3
+GEOMETRY   = spherical
+HYDRO      = rel_sph
 SOLVER     = hllc
 DIMENSIONS = 2d
 
@@ -23,7 +23,7 @@ ifeq ($(OS_NAME), darwin)
 # 	CXXFLAGS = -Wall -Wextra -g -std=c++11 -O0  	#run this line on local
 	CXXFLAGS = -Wall -Wextra -Qunused-arguments -std=c++11 -g  	#run this line on local
 # 	LFLAGS = -L/usr/local/lib -fopenmp -lhdf5 -lgsl -lm 		#run this line on local
-	LFLAGS = -L/usr/local/lib -lgsl -lm 	#run this line on local
+	LFLAGS = -L/usr/local/lib -Xpreprocessor -fopenmp -lgsl -lm -lomp	#run this line on local
 endif
 endif
 endif
