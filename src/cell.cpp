@@ -16,6 +16,7 @@ Cell::~Cell(){}
 
 void Cell::computeAllGeom(){
 
+  computedl();
   computedV();
   computeCentroid();
 
@@ -26,6 +27,7 @@ void Cell::resetLocaldt(){
   dt_loc = 1.e15;
 
 }
+
 
 void Cell::update_dt(int dim, Interface IL, Interface IR){
 
@@ -78,20 +80,18 @@ void Cell::update(double dt, double xL, double xR){
     S.cons[q] *= G.dV;
   }
 
-  // std::cout << (flux[0][MV][DEN] - flux[1][MV][DEN]) * dt << std::endl;
   for (int d = 0; d < NUM_D; ++d){
     for (int q = 0; q < NUM_Q; ++q){
       S.cons[q] += (flux[0][d][q] - flux[1][d][q]) * dt;
     }
   }
-
+  sourceTerms(dt);
   move(xL, xR);
 
   for (int q = 0; q < NUM_Q; ++q){
     S.cons[q] /= G.dV;
   }
-
-  S.cons2prim();
+  S.cons2prim(G.x[r_]);
 
 }
 

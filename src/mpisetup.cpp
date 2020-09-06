@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 15:59:03
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-24 15:35:45
+* @Last Modified time: 2020-09-06 15:59:13
 */
 #include "mpi.h"
 #include "err.h"
@@ -46,7 +46,7 @@ void toStruct(Cell c, s_cell * sc){
   sc->status = c.status;
   arrcpy<double>(c.S.prim, sc->prim, NUM_Q);
   arrcpy<double>(c.G.x   , sc->x   , NUM_D);
-  arrcpy<double>(c.G.dl  , sc->dl  , NUM_D);
+  arrcpy<double>(c.G.dx  , sc->dx  , NUM_D);
 
 }
 
@@ -55,10 +55,10 @@ void toClass(s_cell sc, Cell * c){
   c->status = sc.status;
   arrcpy<double>(sc.prim, c->S.prim, NUM_Q);
   arrcpy<double>(sc.x   , c->G.x   , NUM_D);
-  arrcpy<double>(sc.dl  , c->G.dl  , NUM_D);
+  arrcpy<double>(sc.dx  , c->G.dx  , NUM_D);
   c->computeAllGeom();
-  c->S.prim2cons();
-  c->S.state2flux();
+  c->S.prim2cons(c->G.x[x_]);
+  c->S.state2flux(c->G.x[x_]);
 
 }
 

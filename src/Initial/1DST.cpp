@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-28 09:21:12
+* @Last Modified time: 2020-09-05 14:00:32
 */
 
 #include "../environment.h"
@@ -31,10 +31,10 @@ int Grid::initialGeometry(){
     for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
       c->G.x[x_]  = (double) x*(i+0.5)/ncell[x_] + xmin;
-      c->G.dl[x_] =          x/ncell[x_];
+      c->G.dx[x_] =          x/ncell[x_];
       c->G.x[y_]  = (double) y*(j+0.5)/ncell[y_] + ymin;
-      c->G.dl[y_] =          y/ncell[y_];
-      c->G.dV     = c->G.dl[x_]*c->G.dl[y_];
+      c->G.dx[y_] =          y/ncell[y_];
+      c->G.dV     = c->G.dx[x_]*c->G.dx[y_];
     }
   }
   return 0;

@@ -21,7 +21,9 @@ public:
   double x[NUM_D];        // position (in a single direction)
   double v;               // velocity (only in MV dimension) (lab frame)
   double lfac;            // Lorentz factor (only in MV dimension) (lab frame)
-  double dl[NUM_D-1];     // spatial extent
+  double dx[NUM_D-1];     // spatial extent
+                          // for 3D order is either (y,z) - (x,z) - (x,y)
+                          // for 3D order is either (t,p) - (r,p) - (r,t)
   double dA;              // surface area
 
   FluidState S,SL,SR;     

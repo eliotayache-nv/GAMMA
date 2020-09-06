@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-21 10:09:09
+* @Last Modified time: 2020-09-06 15:23:32
 */
 
 #include "../fluid.h"
@@ -10,6 +10,7 @@
 #include "../err.h"
 #include "../constants.h"
 #include "../interface.h"
+#include "../cell.h"
 #include <iostream>
 #include <gsl/gsl_roots.h>   // root finding algorithms
 #include <gsl/gsl_math.h>
@@ -59,7 +60,9 @@ void FluidState::prim2cons(){
 }
 
 
-void FluidState::state2flux(){
+void FluidState::state2flux(double r){
+
+  UNUSED(r);
 
   double p = prim[PPP];
   double u = 0;
@@ -210,10 +213,10 @@ void FluidState::cons2prim(double pin){
 
 void Interface::wavespeedEstimates(){
 
-  int u;
-  if      (dim == x_) { u = UU1; }
-  else if (dim == y_) { u = UU2; }
-  else                { u = UU3; }
+  int u = UU1+dim;
+  // if      (dim == x_) { u = UU1; }
+  // else if (dim == y_) { u = UU2; }
+  // else                { u = UU3; }
 
   double lfacL = SL.lfac();
   double lfacR = SR.lfac();
@@ -244,10 +247,11 @@ void Interface::wavespeedEstimates(){
 
 void Interface::computeLambda(){
 
-  int u,s;
-  if      (dim == x_) { u = UU1; s = SS1; }
-  else if (dim == y_) { u = UU2; s = SS2; }
-  else                { u = UU3; s = SS3; }
+  int u = UU1+dim;
+  int s = SS1+dim;
+  // if      (dim == x_) { u = UU1; s = SS1; }
+  // else if (dim == y_) { u = UU2; s = SS2; }
+  // else                { u = UU3; s = SS3; }
 
   wavespeedEstimates();
   
@@ -290,22 +294,22 @@ FluidState Interface::starState(FluidState Sin, double lbda){
 
   int u,s, uu[2], ss[2];
   if (dim == x_) {
-    u = UU1;
-    s = SS1;
-    uu[0] = UU2; uu[1] = UU3;
-    ss[0] = SS2; ss[1] = SS3;
+    u = UU1 + x_;
+    s = SS1 + x_;
+    uu[0] = UU1 + y_; uu[1] = UU1 + z_;
+    ss[0] = SS1 + y_; ss[1] = SS1 + z_;
   }
   else if (dim == y_) {
-    u = UU2;
-    s = SS2;
-    uu[0] = UU1; uu[1] = UU3;
-    ss[0] = SS1; ss[1] = SS3;
+    u = UU1 + y_;
+    s = SS1 + y_;
+    uu[0] = UU1 + x_; uu[1] = UU1 + z_;
+    ss[0] = SS1 + x_; ss[1] = SS1 + z_;
   }
   else {
-    u = UU3;
-    s = SS3;
-    uu[0] = UU1; uu[1] = UU2;
-    ss[0] = SS1; ss[1] = SS2;
+    u = UU1 + z_;
+    s = SS1 + z_;
+    uu[0] = UU1 + x_; uu[1] = UU1 + y_;
+    ss[0] = SS1 + x_; ss[1] = SS1 + y_;
   }
 
   double lfac = Sin.lfac();
@@ -331,6 +335,13 @@ FluidState Interface::starState(FluidState Sin, double lbda){
 
   return Sout;
   // no need to compute the flux, will be done in the solver function
+
+}
+
+
+void Cell::sourceTerms(double dt){
+
+  return;
 
 }
 

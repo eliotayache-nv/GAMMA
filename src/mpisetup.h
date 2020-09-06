@@ -11,7 +11,7 @@ struct s_cell
   int status;
   double prim[NUM_Q];
   double x[NUM_D];
-  double dl[NUM_D];
+  double dx[NUM_D];
 };
 
 void mpi_init(int *argc, char **argv[]);

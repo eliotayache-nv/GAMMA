@@ -67,6 +67,7 @@ class Grid{
   void assignId(int ind[NUM_D]);
   void movDir_ComputeLambda();
   void updateKinematics();
+  void userKinematics();
   void gradients(Cell *c);
   double prepForUpdate(int it);
   void computeFluxes();
@@ -85,6 +86,8 @@ class Grid{
   void merge(int j, int i);
 
   // toools
+  void prim2cons();
+  void state2flux();
   void apply(void (Cell::*func)());
   void apply(void (FluidState::*func)(), bool noborder=false);
     // overloading for FluidState

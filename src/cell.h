@@ -14,6 +14,7 @@ struct s_cell_geometry{
 
   double dV;              // volume
   double x[NUM_D];        // position 
+  double dx[NUM_D];       // width in every dimension
   double dl[NUM_D];       // width in every dimension
   double cen[NUM_D];      // centroid 
 
@@ -37,7 +38,9 @@ public:
 
   void update(double dt, double xL, double xR);
   void move(double xL, double xR);
+  void sourceTerms(double dt);
   void computedV();
+  void computedl();
   void computeCentroid();
   void computeAllGeom();
 

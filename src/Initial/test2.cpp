@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-28 18:03:24
+* @Last Modified time: 2020-09-05 14:00:32
 */
 
 #include "../environment.h"
@@ -24,10 +24,11 @@ int Grid::initialGeometry(){
     for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
       c->G.x[x_]  = (double) 2.*(i+0.5)/ncell[x_] - 1.;
-      c->G.dl[x_] =          2./ncell[x_];
+      c->G.dx[x_] =          2./ncell[x_];
       c->G.x[y_]  = (double) 2.*(j+0.5)/ncell[y_] - 1.001;
-      c->G.dl[y_] =          2./ncell[y_];
-      c->G.dV     = c->G.dl[x_]*c->G.dl[y_];
+      c->G.dx[y_] =          2./ncell[y_];
+      c->G.dV     = c->G.dx[x_]*c->G.dx[y_];
+      // printf("%d %d %le %le\n", j, i, Cinit[j][i].G.x[F1], Cinit[j][i].G.x[MV]);
     }
   }
   return 0;
@@ -84,11 +85,11 @@ int Cell::checkCellForRegrid(){
   double split_dl = 0.1;
   double merge_dl = 0.005;
 
-  if (G.dl[MV] > split_dl) {
+  if (G.dx[MV] > split_dl) {
     // printf("split %d %d\n", nde_ind[y_], nde_ind[x_]);
     return(split_);
   }
-  if (G.dl[MV] < merge_dl) {
+  if (G.dx[MV] < merge_dl) {
     // printf("merge %d %d\n", nde_ind[y_], nde_ind[x_]);
     return(merge_);
   }

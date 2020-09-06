@@ -13,9 +13,9 @@ public:
   double cons[NUM_Q];
   double flux[NUM_D][NUM_Q];
 
-  void prim2cons();
-  void cons2prim(double pin = 0);
-  void state2flux();
+  void prim2cons(double r);
+  void cons2prim(double r, double pin = 0);
+  void state2flux(double r);
 
   double lfac();
 

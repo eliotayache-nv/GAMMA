@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-28 17:56:41
+* @Last Modified time: 2020-09-06 17:01:50
 */
 
 #include "../environment.h"
@@ -189,8 +189,8 @@ void Grid::mpi_exchangeGhostTracks(){
       // updating interface positions from communicated cells
       if (i != nde_nax[MV]-1){ 
         int jn = nde_nax[F1]-1-j;
-        Itot[j][i].x[MV]  = Ctot[j][i].G.x[MV] + Ctot[j][i].G.dl[MV]/2.;
-        Itot[jn][i].x[MV] = Ctot[jn][i].G.x[MV] + Ctot[jn][i].G.dl[MV]/2.;
+        Itot[j][i].x[MV]  = Ctot[j][i].G.x[MV] + Ctot[j][i].G.dx[MV]/2.;
+        Itot[jn][i].x[MV] = Ctot[jn][i].G.x[MV] + Ctot[jn][i].G.dx[MV]/2.;
         Itot[j][i].x[F1]  = Ctot[j][i].G.x[F1];
         Itot[jn][i].x[F1] = Ctot[jn][i].G.x[F1];
       }
@@ -221,9 +221,10 @@ void Grid::updateGhosts(){
       for (int i = 0; i < ntrack[j]; ++i){
         int ind[] = {j,i};
         assignId(ind);
-        Ctot[j][i].G.x[F1] -= (jLbnd-j+1)*C[0][0].G.dl[F1];
+        Ctot[j][i].G.x[F1] -= (jLbnd-j+1)*C[0][0].G.dx[F1];
+        Ctot[j][i].computeAllGeom();
         if (i != ntrack[j]-1){ 
-          Itot[j][i].x[F1] -= (jLbnd-j+1)*C[0][0].G.dl[F1]; 
+          Itot[j][i].x[F1] -= (jLbnd-j+1)*C[0][0].G.dx[F1]; 
         }
       }
     }
@@ -238,9 +239,10 @@ void Grid::updateGhosts(){
       for (int i = 0; i < ntrack[j]; ++i){
         int ind[] = {j,i};
         assignId(ind);
-        Ctot[j][i].G.x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dl[F1];
+        Ctot[j][i].G.x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dx[F1];
+        Ctot[j][i].computeAllGeom();
         if (i != ntrack[j]-1){ 
-          Itot[j][i].x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dl[F1];
+          Itot[j][i].x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dx[F1];
         }
       }
     }
@@ -249,21 +251,23 @@ void Grid::updateGhosts(){
   {
     for (int i = 0; i <= iLbnd[j]; ++i){
       Ctot[j][i] = Ctot[j][iLbnd[j]+1];
-      Ctot[j][i].G.x[MV] -= (iLbnd[j]-i+1) * Ctot[j][iLbnd[j]+1].G.dl[MV];
+      Ctot[j][i].G.x[MV] -= (iLbnd[j]-i+1) * Ctot[j][iLbnd[j]+1].G.dx[MV];
+      Ctot[j][i].computeAllGeom();
       int ind[] = {j,i};
       assignId(ind);
 
       Itot[j][i] = Itot[j][iLbnd[j]+1];
-      Itot[j][i].x[MV]   -= (iLbnd[j]-i+1) * Ctot[j][iLbnd[j]+1].G.dl[MV];
+      Itot[j][i].x[MV]   -= (iLbnd[j]-i+1) * Ctot[j][iLbnd[j]+1].G.dx[MV];
     }
     for (int i = iRbnd[j]; i < nde_nax[MV]; ++i){
       Ctot[j][i] = Ctot[j][iRbnd[j]-1];
-      Ctot[j][i].G.x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dl[MV];
+      Ctot[j][i].G.x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dx[MV];
+      Ctot[j][i].computeAllGeom();
       int ind[] = {j,i};
       assignId(ind);
 
       Itot[j][i-1] = Itot[j][iRbnd[j]-2];
-      Itot[j][i-1].x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dl[MV];
+      Itot[j][i-1].x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dx[MV];
     }
   }
 
@@ -304,7 +308,7 @@ void Grid::updateGhosts(){
       idn = c->neigh[F1][side][n];
       c_out  = &Ctot[0][idn];
       xn_mv  = c_out->G.x[MV];
-      dln_mv = c_out->G.dl[MV];
+      dln_mv = c_out->G.dx[MV];
       n++;
     } while (xn_mv + 0.5*dln_mv < x_mv and n < n_neigh);
       // if no aligned neighbor, we return state from closest left neighbor to the left
@@ -381,23 +385,27 @@ void Grid::reconstructStates(int j, int i, int dim, int idn, Interface *Int){
             double g = grad[s][q];
             IS[s]->prim[q] = Sc + g * (xI - xc);
           }
-          IS[s]->prim2cons();
-          IS[s]->state2flux();
+          IS[s]->prim2cons(Int->x[x_]);
+          IS[s]->state2flux(Int->x[x_]);
         }
       }
       UNUSED(idn);
 
     } else {
 
-      if (j == 0  or j == nde_nax[F1]-2){
+      Cell *cL = &Ctot[j][i]; 
+      Cell *cR = &Ctot[0][idn];
+
+      if (j == 0  
+          or j == nde_nax[F1]-2
+          or cL->neigh[F1][0].size() == 0
+          or cR->neigh[F1][0].size() == 0){
         Int->SL = Ctot[j][i].S;
         Int->SR = Ctot[0][idn].S;
       }
       else {
         // recover gardients in moving direction and compute states at projected location
         // careful with the boundaries for LL and RR
-        Cell *cL = &Ctot[j][i]; 
-        Cell *cR = &Ctot[0][idn];
         Cell *cLL, *cRR;
         double xm = Int->x[MV]; 
         double xf = Int->x[F1];
@@ -422,10 +430,10 @@ void Grid::reconstructStates(int j, int i, int dim, int idn, Interface *Int){
           gradR = minmod(grad0, gradR);
           Int->SL.prim[q] = qL + gradL * dxfL;
           Int->SR.prim[q] = qR + gradR * dxfR;
-          Int->SL.prim2cons();
-          Int->SR.prim2cons();
-          Int->SL.state2flux();
-          Int->SR.state2flux();
+          Int->SL.prim2cons(Int->x[x_]);
+          Int->SR.prim2cons(Int->x[x_]);
+          Int->SL.state2flux(Int->x[x_]);
+          Int->SR.state2flux(Int->x[x_]);
         }
       }
     }
@@ -461,8 +469,8 @@ void Grid::computeNeighbors(bool print){
           c->neigh[d][0].push_back(Ctot[j][i-1].nde_id);
           c->neigh[d][1].push_back(Ctot[j][i+1].nde_id);
         } else {
-          double xjL = c->G.x[MV] - c->G.dl[MV]/2.;
-          double xjR = c->G.x[MV] + c->G.dl[MV]/2.;
+          double xjL = c->G.x[MV] - c->G.dx[MV]/2.;
+          double xjR = c->G.x[MV] + c->G.dx[MV]/2.;
 
           if (j!=0){
             double xm = Itot[j-1][im].x[MV];
@@ -539,7 +547,7 @@ void Grid::targetRegridVictims(int j){
   double minVal = 1.e15;
   double maxVal = 0.;
   for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
-    double val = Ctot[j][i].G.dl[MV];
+    double val = Ctot[j][i].G.dx[MV];
     if (val < minVal){
       minVal = val;
       ismall[j] = i;
@@ -602,27 +610,28 @@ void Grid::split(int j, int i){
   for (int q = 0; q < NUM_Q; ++q){
     cR->S.prim[q] = c->S.prim[q];
   }
-  cR->S.prim2cons();
-  cR->S.state2flux();
 
   // updating geometry
   double x_old = c->G.x[MV];
-  double dl_old = c->G.dl[MV];
+  double dl_old = c->G.dx[MV];
 
   c->G.x[MV]  = x_old - dl_old/4.;
   cR->G.x[MV] = x_old + dl_old/4.;
   cR->G.x[F1] = c->G.x[F1];
 
-  c->G.dl[MV]  = dl_old/2.;
-  cR->G.dl[MV] = dl_old/2.;
-  cR->G.dl[F1] = c->G.dl[F1];
+  c->G.dx[MV]  = dl_old/2.;
+  cR->G.dx[MV] = dl_old/2.;
+  cR->G.dx[F1] = c->G.dx[F1];
 
   c->computeAllGeom();
   cR->computeAllGeom();
 
+  cR->S.prim2cons(cR->G.x[r_]);
+  cR->S.state2flux(cR->G.x[r_]);
+
   Itot[j][i].x[MV]  = x_old;
   Itot[j][i].x[F1]  = c->G.x[F1];
-  Itot[j][i].dl[0] = c->G.dl[F1];
+  Itot[j][i].dx[0] = c->G.dx[F1];
   Itot[j][i].computedA();
 
 }
@@ -637,7 +646,7 @@ void Grid::merge(int j, int i){
 
   // identify neigbour victim
   int side;
-  if (cL->G.dl[MV] < cR->G.dl[MV]){
+  if (cL->G.dx[MV] < cR->G.dx[MV]){
     side = left_;
     cVic = cL;
   } else {
@@ -653,19 +662,20 @@ void Grid::merge(int j, int i){
     double Q_vic = cVic->S.prim[q];
     c->S.prim[q] = (Q_loc * dV_loc + Q_vic * dV_vic) / (dV_loc + dV_vic);
   }
-  c->S.prim2cons();
-  c->S.state2flux();
 
   // updating geometry
   if (side == left_){
-    c->G.x[MV] = ((cVic->G.x[MV] - cVic->G.dl[MV]/2.) + (c->G.x[MV] + c->G.dl[MV]/2.))/2.;
+    c->G.x[MV] = ((cVic->G.x[MV] - cVic->G.dx[MV]/2.) + (c->G.x[MV] + c->G.dx[MV]/2.))/2.;
   }
   if (side == right_){
-    c->G.x[MV] = ((cVic->G.x[MV] + cVic->G.dl[MV]/2.) + (c->G.x[MV] - c->G.dl[MV]/2.))/2.;
+    c->G.x[MV] = ((cVic->G.x[MV] + cVic->G.dx[MV]/2.) + (c->G.x[MV] - c->G.dx[MV]/2.))/2.;
   }
 
-  c->G.dl[MV] += cVic->G.dl[MV];
+  c->G.dx[MV] += cVic->G.dx[MV];
   c->computeAllGeom();
+
+  c->S.prim2cons(c->G.x[r_]);
+  c->S.state2flux(c->G.x[r_]);
 
   // shifting cells and interfaces around
   if (side==left_){
@@ -708,6 +718,7 @@ void Grid::updateKinematics(){
       Itot[j][i].lfac = lfac;
     }
   }  
+  userKinematics();   // overriding with user preferences
 
 }
 
@@ -733,6 +744,7 @@ void Grid::computeFluxes(){
   for (int j = 0; j < nde_nax[F1]-1; ++j){
     double jpos = ( Ctot[j][1].G.x[F1] + Ctot[j+1][1].G.x[F1] )/2.;
 
+
     // resetting fluxes
     for (int i = 0; i < ntrack[j]; ++i){
       for (int q = 0; q < NUM_Q; ++q){ Ctot[j][i].flux[1][F1][q] = 0.; }
@@ -742,29 +754,31 @@ void Grid::computeFluxes(){
     }
     for (int i = 0; i < ntrack[j]; ++i){
 
-
       Cell *c0 = &Ctot[j][i];
       double x0 = c0->G.x[MV];
-      double xL0 = x0 - c0->G.dl[MV]/2.;
-      double xR0 = x0 + c0->G.dl[MV]/2.;
+      double xL0 = x0 - c0->G.dx[MV]/2.;
+      double xR0 = x0 + c0->G.dx[MV]/2.;
 
       for (std::vector<int>::size_type n = 0; n < c0->neigh[F1][1].size(); ++n){
         int idn = c0->neigh[F1][1][n];
         Cell *cn = &Ctot[0][idn];
         double xn = cn->G.x[MV];
-        double xLn = xn - cn->G.dl[MV]/2.;
-        double xRn = xn + cn->G.dl[MV]/2.;
+        double xLn = xn - cn->G.dx[MV]/2.;
+        double xRn = xn + cn->G.dx[MV]/2.;
 
         Interface Int;
         Int.dim   = F1;
+        Int.v     = 0;
         Int.x[F1] = jpos;
         Int.x[MV] = ( fmax(xL0,xLn) + fmin(xR0,xRn) )/2.;
-        Int.dl[0] = fmax(0, fmin(xR0,xRn) - fmax(xL0,xLn));
-        Int.dA = Int.dl[0];
+        Int.dx[0] = fmax(0, fmin(xR0,xRn) - fmax(xL0,xLn));
+        Int.computedA();
+        // if (j==jLbnd) printf("%le\n", Int.dA);
 
         reconstructStates(j,i,F1,idn,&Int);
         Int.computeLambda();
         Int.computeFlux();
+        // if (j==jLbnd) printf("%le\n", Int.flux[DEN]);
 
         c0->update_dt(F1, Int.lL);
         cn->update_dt(F1, Int.lR);
@@ -811,11 +825,9 @@ void Grid::update(double dt){
     for (int i = 1; i < ntrack[j]-1; ++i){
       double xL = Itot[j][i-1].x[MV];
       double xR = Itot[j][i].x[MV];
-      // printf("%d %d\n", j, i);
       Ctot[j][i].update(dt,xL,xR);
     }
   }
-
 }
 
 
@@ -826,7 +838,7 @@ void Grid::interfaceGeomFromCellPos(){
     for (int i = 0; i < ntrack[j]-1; ++i){
       Itot[j][i].x[MV] = (Ctot[j][i].G.x[MV] + Ctot[j][i+1].G.x[MV])/2.;
       Itot[j][i].x[F1] = xj;
-      Itot[j][i].dl[0] = Ctot[j][i].G.dl[F1];
+      Itot[j][i].dx[0] = Ctot[j][i].G.dx[F1];
       Itot[j][i].computedA();
     }
   }
@@ -838,9 +850,9 @@ void Grid::interfaceGeomFromCellPos(int j){
 
   double xj = Ctot[j][iLbnd[j]+1].G.x[F1];
   for (int i = 0; i < ntrack[j]-1; ++i){
-    Itot[j][i].x[MV] = Ctot[j][i+1].G.x[MV] - Ctot[j][i+1].G.dl[MV]/2.;
+    Itot[j][i].x[MV] = Ctot[j][i+1].G.x[MV] - Ctot[j][i+1].G.dx[MV]/2.;
     Itot[j][i].x[F1] = xj;
-    Itot[j][i].dl[0] = Ctot[j][i].G.dl[F1];
+    Itot[j][i].dx[0] = Ctot[j][i].G.dx[F1];
     Itot[j][i].computedA();
   }
 
@@ -880,11 +892,44 @@ void Grid::apply(void (FluidState::*func)(), bool noborder){
     else         { iL = 0; iR = ntrack[j];   }
 
     for (int i = iL; i < iR; ++i){
-      // printf("%d %d\n", j, i);
       (Ctot[j][i].S.*func)();
     }
   }
     
+}
+
+
+void Grid::prim2cons(){
+
+  int jL = 0; 
+  int jR = nde_nax[F1];
+
+  for (int j = jL; j < jR; ++j){
+    int iL = 0;
+    int iR = ntrack[j];
+    for (int i = iL; i < iR; ++i){
+      double r = Ctot[j][i].G.x[r_];
+      Ctot[j][i].S.prim2cons(r);
+    }
+  }
+
+}
+
+
+void Grid::state2flux(){
+
+  int jL = 0; 
+  int jR = nde_nax[F1];
+
+  for (int j = jL; j < jR; ++j){
+    int iL = 0;
+    int iR = ntrack[j];
+    for (int i = iL; i < iR; ++i){
+      double r = Ctot[j][i].G.x[r_];
+      Ctot[j][i].S.state2flux(r);
+    }
+  }
+
 }
 
 
@@ -972,25 +1017,27 @@ void Grid::printCols(){
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("j i x y dx dy rho vx vy p D sx sy tau\n");
+    printf("j i x y dx dy dlx dly rho vx vy p D sx sy tau\n");
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
       for (int i = ngst; i < ncell[MV]+ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
-        printf("%d %d %le %le %le %le %le %le %le %le %le %le %le %le\n", 
+        printf("%d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
           j,
           i,
           Cdump[j][i].G.x[x_],
           Cdump[j][i].G.x[y_],
+          Cdump[j][i].G.dx[x_],
+          Cdump[j][i].G.dx[y_],
           Cdump[j][i].G.dl[x_],
           Cdump[j][i].G.dl[y_],
           Cdump[j][i].S.prim[RHO],
-          Cdump[j][i].S.prim[VV1],
-          Cdump[j][i].S.prim[VV2],
+          Cdump[j][i].S.prim[UU1],
+          Cdump[j][i].S.prim[UU2],
           Cdump[j][i].S.prim[PPP],
-          Cdump[j][i].S.prim[DEN],
-          Cdump[j][i].S.prim[SS1],
-          Cdump[j][i].S.prim[SS2],
-          Cdump[j][i].S.prim[TAU]);
+          Cdump[j][i].S.cons[DEN],
+          Cdump[j][i].S.cons[SS1],
+          Cdump[j][i].S.cons[SS2],
+          Cdump[j][i].S.cons[TAU]);
       }
     }
 

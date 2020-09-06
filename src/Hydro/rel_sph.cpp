@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-08-21 10:09:09
+* @Last Modified time: 2020-09-06 16:24:02
 */
 
 #include "../fluid.h"
@@ -10,6 +10,7 @@
 #include "../err.h"
 #include "../constants.h"
 #include "../interface.h"
+#include "../cell.h"
 #include <iostream>
 #include <gsl/gsl_roots.h>   // root finding algorithms
 #include <gsl/gsl_math.h>
@@ -33,7 +34,7 @@ FluidState::FluidState(){
 FluidState::~FluidState(){}
 
 
-void FluidState::prim2cons(){
+void FluidState::prim2cons(double r){
 
   double rho = prim[RHO];
   double p   = prim[PPP];
@@ -55,11 +56,12 @@ void FluidState::prim2cons(){
   cons[DEN] = D;
   cons[TAU] = tau;
   for (int i = 0; i < NUM_D; ++i) cons[SS1+i] = ss[i];
+  cons[SS1+t_] *= r;
 
 }
 
 
-void FluidState::state2flux(){
+void FluidState::state2flux(double r){
 
   double p = prim[PPP];
   double u = 0;
@@ -71,9 +73,10 @@ void FluidState::state2flux(){
   }
   u = sqrt(u);
   double lfac = sqrt(1+u*u);
-  double D   = cons[DEN];
+  double D = cons[DEN];
   double ss[NUM_D];
   for (int i = 0; i < NUM_D; ++i) ss[i] = cons[SS1+i];
+  ss[t_] /= r;
 
   for (int n = 0; n < NUM_D; ++n){
     flux[n][DEN] = D*uu[n]/lfac;
@@ -81,6 +84,7 @@ void FluidState::state2flux(){
       if (i==n) flux[n][SS1+i] = ss[i]*uu[n]/lfac + p;
       else flux[n][SS1+i] = ss[i]*uu[n]/lfac;
     }
+    flux[n][SS1+t_] *= r; // spherical coords
     flux[n][TAU] = ss[n] - D*uu[n]/lfac;
     for (int t = 0; t < NUM_T; ++t) flux[n][NUM_C+t] = cons[NUM_C+t]*uu[n]/lfac;
   }
@@ -115,13 +119,14 @@ static double f(double p, void *params){
 
 }
 
-void FluidState::cons2prim(double pin){
+void FluidState::cons2prim(double r, double pin){
 
   double  lfac,E,S,D;  // (computed from conserved variables)
   int     status;
   int     iter = 0, max_iter = 1000000;
-  double  r;
+  double  res;
   double  p_lo, p_hi,p;
+  double  ss[NUM_D];
   struct  f_params                params;
   const   gsl_root_fsolver_type   *T;
   gsl_root_fsolver                *s;
@@ -133,7 +138,9 @@ void FluidState::cons2prim(double pin){
   // setting initial parameters
   D = cons[DEN];
   S = 0.;
-  for (int i = 0; i < NUM_D; ++i) S += cons[SS1+i]*cons[SS1+i];
+  for (int d = 0; d < NUM_D; ++d) ss[d] = cons[SS1+d];
+  ss[t_] /= r;
+  for (int d = 0; d < NUM_D; ++d) S += ss[d]*ss[d];
   S = sqrt(S);
   E = cons[TAU]+cons[DEN];
 
@@ -176,7 +183,7 @@ void FluidState::cons2prim(double pin){
     do {
       iter++;
       status = gsl_root_fsolver_iterate (s);
-      r = gsl_root_fsolver_root (s);
+      res = gsl_root_fsolver_root (s);
       p_lo = gsl_root_fsolver_x_lower (s);
       p_hi = gsl_root_fsolver_x_upper (s);
       status = gsl_root_test_interval (p_lo, p_hi,
@@ -185,7 +192,7 @@ void FluidState::cons2prim(double pin){
     while (status == GSL_CONTINUE && iter < max_iter);
 
     gsl_root_fsolver_free (s);
-    p = r;
+    p = res;
   }
 
   lfac = 1./sqrt(1.-(S*S)/((E+p)*(E+p)));
@@ -193,28 +200,22 @@ void FluidState::cons2prim(double pin){
   prim[PPP] = p;
   prim[RHO] = D/lfac;
 
-  // printf("%le\n", (S*S)/((E+p)*(E+p)));
-
-  if (S == 0.)    
-    for (int i = 0; i < NUM_D; ++i) prim[UU1+i] = 0;
+  if (S < 1.e-13)    
+    for (int d = 0; d < NUM_D; ++d) prim[UU1+d] = 0;
   else
   {
     double v = sqrt(1.- 1./(lfac*lfac));
-    for (int i = 0; i < NUM_D; ++i) prim[UU1+i] = lfac*v*(cons[SS1+i]/S);
-    // Mignone (2006) eq. 3
+    for (int d = 0; d < NUM_D; ++d) prim[UU1+d] = lfac*v*(ss[d]/S);
+      // Mignone (2006) eq. 3
   }
 
-  prim2cons(); // for consistency
+  prim2cons(r); // for consistency
   
 }
 
 void Interface::wavespeedEstimates(){
 
-  int u;
-  if      (dim == x_) { u = UU1; }
-  else if (dim == y_) { u = UU2; }
-  else                { u = UU3; }
-
+  int    u = UU1+dim;
   double lfacL = SL.lfac();
   double lfacR = SR.lfac();
   double vL = SL.prim[u]/lfacL;
@@ -244,10 +245,11 @@ void Interface::wavespeedEstimates(){
 
 void Interface::computeLambda(){
 
-  int u,s;
-  if      (dim == x_) { u = UU1; s = SS1; }
-  else if (dim == y_) { u = UU2; s = SS2; }
-  else                { u = UU3; s = SS3; }
+  int    u = UU1+dim;
+  int    s = SS1+dim;
+  double d;
+  if (dim == t_) d = x[r_];
+  else           d = 1.;
 
   wavespeedEstimates();
   
@@ -255,8 +257,8 @@ void Interface::computeLambda(){
   double lfacR = SR.lfac();
   double vL = SL.prim[u]/lfacL;
   double vR = SR.prim[u]/lfacR;
-  double mL = SL.cons[s];
-  double mR = SR.cons[s];
+  double mL = SL.cons[s]/d;
+  double mR = SR.cons[s]/d;
   double pL = SL.prim[PPP];
   double pR = SR.prim[PPP];
   double EL = SL.cons[TAU]+SL.cons[DEN];
@@ -275,7 +277,7 @@ void Interface::computeLambda(){
   double Fhllm = (lL * BR - lR * BL) / (lR - lL);
   double mhll  = (BR - BL) / (lR - lL);
 
-  if (FhllE == 0){
+  if (FhllE < 1.e-13){
     lS = mhll / (Ehll + Fhllm);
     return;
   }
@@ -290,27 +292,32 @@ FluidState Interface::starState(FluidState Sin, double lbda){
 
   int u,s, uu[2], ss[2];
   if (dim == x_) {
-    u = UU1;
-    s = SS1;
-    uu[0] = UU2; uu[1] = UU3;
-    ss[0] = SS2; ss[1] = SS3;
+    u = UU1 + x_;
+    s = SS1 + x_;
+    uu[0] = UU1 + y_; uu[1] = UU1 + z_;
+    ss[0] = SS1 + y_; ss[1] = SS1 + z_;
   }
   else if (dim == y_) {
-    u = UU2;
-    s = SS2;
-    uu[0] = UU1; uu[1] = UU3;
-    ss[0] = SS1; ss[1] = SS3;
+    u = UU1 + y_;
+    s = SS1 + y_;
+    uu[0] = UU1 + x_; uu[1] = UU1 + z_;
+    ss[0] = SS1 + x_; ss[1] = SS1 + z_;
   }
   else {
-    u = UU3;
-    s = SS3;
-    uu[0] = UU1; uu[1] = UU2;
-    ss[0] = SS1; ss[1] = SS2;
+    u = UU1 + z_;
+    s = SS1 + z_;
+    uu[0] = UU1 + x_; uu[1] = UU1 + y_;
+    ss[0] = SS1 + x_; ss[1] = SS1 + y_;
   }
+
+  double r = x[r_];
+  double mm[NUM_D];
+  for (int d = 0; d < NUM_D; ++d) mm[d] = Sin.cons[SS1+d];
+  mm[t_] /= r;
 
   double lfac = Sin.lfac();
   double v = Sin.prim[u]/lfac;
-  double m = Sin.cons[s];
+  double m = mm[dim];
   double p = Sin.prim[PPP];
   double D = Sin.cons[DEN];
   double E = Sin.cons[TAU]+Sin.cons[DEN];
@@ -325,7 +332,8 @@ FluidState Interface::starState(FluidState Sin, double lbda){
   double k = (lbda-v) / (lbda - lS);
   Sout.cons[DEN] = D * k;
   Sout.cons[s]   = (m * (lbda-v) + pS - p) / (lbda-lS); 
-  for (int n = 0; n < NUM_D-1; ++n){ Sout.cons[ss[n]] = Sin.cons[ss[n]] * k; }
+  for (int n = 0; n < NUM_D-1; ++n){ Sout.cons[ss[n]] = mm[ss[n]-SS1] * k; }
+  Sout.cons[SS1+t_] *= r;
   Sout.cons[TAU] = (E * (lbda-v) + pS * lS - p * v) / (lbda - lS) - D*k;
       // Mignone (2006) eq. 16 (-D)
 
@@ -333,4 +341,43 @@ FluidState Interface::starState(FluidState Sin, double lbda){
   // no need to compute the flux, will be done in the solver function
 
 }
+
+
+void Cell::sourceTerms(double dt){
+
+  double rho = S.prim[RHO];
+  double ut  = S.prim[UU1+t_];
+  double p   = S.prim[PPP];
+  double h   = 1.+p*GAMMA_/(GAMMA_-1.)/rho; // look at this expression
+  double r   = G.x[r_];
+  double dr  = G.dx[r_];
+  double th  = G.x[t_];
+  double dth = G.dx[t_];
+  double dV  = G.dV;
+  double r1  = r-dr/2.;
+  double r2  = r+dr/2.;
+  double th1 = th-dth/2.;
+  double th2 = th+dth/2.;
+
+  // printf("%le %le\n", S.cons[SS1], (rho*h*ut*ut + 2*p) / r * dV * dt);
+  // printf("%le %le\n", S.cons[SS2], p*cos(th)/fabs(sin(th)) * dV * dt);
+
+  S.cons[SS1] += (rho*h*ut*ut + 2*p) / r * dV * dt;
+  // S.cons[SS2] += p*cos(th)/fabs(sin(th)) * dV * dt;
+    // fabs to cope with negative thetas (ghost cells)
+  S.cons[SS2] += 2./3.* PI * p * (r2*r2*r2 - r1*r1*r1) * (sin(th2) - sin(th1)) * dt;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
