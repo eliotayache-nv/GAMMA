@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-06 18:11:20
+* @Last Modified time: 2020-09-06 18:29:44
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -48,7 +48,7 @@ int Simu::run(){
     // printf("it %ld | t = %lf\n", it, t);
 
     // if (fabs(grid.C[0][0].S.prim[RHO] - 1.e-2) > 1.e-15){ stop = true; }
-    if (it == 300){ stop = true; }
+    if (it == 50){ stop = true; }
   }
 
   grid.printCols();

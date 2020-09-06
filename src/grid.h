@@ -73,6 +73,7 @@ class Grid{
   void computeFluxes();
   double collect_dt();
   void updateGhosts();
+  void userBoundaries();
   void reconstructStates( int j, int i, int dim, 
                                 int idn=-1,
                                 Interface *Int = NULL );

@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-06 18:17:18
+* @Last Modified time: 2020-09-06 18:39:26
 */
 
 #include "../environment.h"
@@ -83,14 +83,33 @@ void Grid::userKinematics(){
 
 void Grid::userBoundaries(){
 
-    
-  
+  for (int j = 0; j < nde_nax[F1]; ++j){
+    for (int i = 0; i < iLbnd[j]; ++i){
+      Cell *c = &Ctot[j][i];
+      double y = c->G.x[y_];
+      if (fabs(y) < 0.2){
+        c->S.prim[RHO] = 0.1;
+        c->S.prim[VV1] = 0.8;
+        c->S.prim[VV2] = 0.;
+        c->S.prim[PPP] = 0.1;
+        c->S.cons[NUM_C] = 1.;
+      }
+      else{
+        c->S.prim[RHO] = 0.1;
+        c->S.prim[VV1] = 0.0;
+        c->S.prim[VV2] = 0.0;
+        c->S.prim[PPP] = 0.01;
+        c->S.cons[NUM_C] = 2.;
+      }
+    }
+  }  
+
 }
 
 
 int Cell::checkCellForRegrid(){
 
-  double split_dl = 1;
+  double split_dl = 0.3;
   double merge_dl = 0.01;
 
   if (G.dx[MV] > split_dl) {

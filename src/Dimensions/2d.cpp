@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-06 17:01:50
+* @Last Modified time: 2020-09-06 18:26:33
 */
 
 #include "../environment.h"
@@ -217,7 +217,7 @@ void Grid::updateGhosts(){
       std::copy_n(&Ctot[jLbnd+1][0], ntrack[jLbnd+1],   &Ctot[j][0]);
       std::copy_n(&Itot[jLbnd+1][0], ntrack[jLbnd+1]-1, &Itot[j][0]);
 
-      // udating ghost positions, ids and indexes
+      // updating ghost positions, ids and indexes
       for (int i = 0; i < ntrack[j]; ++i){
         int ind[] = {j,i};
         assignId(ind);
@@ -270,6 +270,7 @@ void Grid::updateGhosts(){
       Itot[j][i-1].x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dx[MV];
     }
   }
+  userBoundaries(); // overiding with user-specific boundary conditions
 
 }
 
