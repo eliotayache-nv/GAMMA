@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-08-28 18:07:31
+# @Last Modified time: 2020-09-07 17:38:01
 
 
 import numpy as np
@@ -48,9 +48,13 @@ def readData(key, it):
   return(data)
 
 
-def quadMesh(data, key, geometry="cartesian", color=None, log=False):
-
-  res = 100
+def quadMesh(data, key, 
+  geometry="cartesian", 
+  quiver=False, 
+  color=None, 
+  log=False, 
+  edges='None',
+  r2=False):
 
   z = data.pivot(index='j', columns='i', values=key).to_numpy()
 
@@ -58,6 +62,12 @@ def quadMesh(data, key, geometry="cartesian", color=None, log=False):
   dx = data.pivot(index='j', columns='i', values='dx').to_numpy()
   y  = data.pivot(index='j', columns='i', values='y').to_numpy()
   dy = data.pivot(index='j', columns='i', values='dy').to_numpy()
+
+  if (quiver):
+    vx = data.pivot(index='j', columns='i', values='vx').to_numpy()
+
+  if r2:
+    z*=x**2
 
   xmin = np.min(x)
   xmax = np.max(x)
@@ -68,7 +78,7 @@ def quadMesh(data, key, geometry="cartesian", color=None, log=False):
   vmax = np.max(z[4:,:])
 
   plt.figure()
-  for j in range(z.shape[1]-1):
+  for j in range(z.shape[0]-1):
     xj = x - dx/2.
     yj = y - dy/2.
     xj[j+1,:] = xj[j,:]
@@ -86,13 +96,22 @@ def quadMesh(data, key, geometry="cartesian", color=None, log=False):
     if log==True:
       plt.pcolor(xj, yj, zj, 
         norm=LogNorm(vmin=vmin, vmax=vmax), 
-        edgecolors='k', 
+        edgecolors=edges, 
         facecolor=color)
     else:
       plt.pcolor(xj, yj, zj, 
         vmin=vmin, vmax=vmax, 
-        edgecolors='k', 
+        edgecolors=edges, 
         facecolor=color)
 
+  plt.colorbar()
+
+  if (quiver):
+    if (geometry=='polar'):
+      xx = x * np.cos(y)
+      yy = x * np.sin(y)
+      u = vx * np.cos(y)
+      v = vx * np.sin(y)
+      q = plt.quiver(xx,yy,u,v, alpha=0.2)
 
   plt.show()
