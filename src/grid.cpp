@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-06 09:26:35
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-06 16:03:52
+* @Last Modified time: 2020-09-07 16:47:11
 */
 
 #include "grid.h"
@@ -44,7 +44,7 @@ void Grid::prepForRun(){
 double Grid::prepForUpdate(int it){
 
   regrid();
-  updateGhosts();
+  updateGhosts(it);
   prim2cons();
   state2flux();
   computeNeighbors();

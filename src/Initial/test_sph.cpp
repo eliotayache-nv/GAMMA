@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-06 21:09:24
+* @Last Modified time: 2020-09-07 16:50:55
 */
 
 #include "../environment.h"
@@ -12,9 +12,9 @@
 void loadParams(s_par *par){
 
   par->tini      = 0.;
-  par->ncell[x_] = 300;
+  par->ncell[x_] = 150;
   par->ncell[y_] = 50;
-  par->nmax      = 310;    // max number of cells in MV direction
+  par->nmax      = 160;    // max number of cells in MV direction
   par->ngst      = 2;
 
 }
@@ -40,7 +40,6 @@ int Grid::initialValues(){
   for (int j = 0; j < ncell[F1]; ++j){
     for (int i = 0; i < ncell[MV]; ++i){
       Cell *c = &Cinit[j][i];
-
       double x = c->G.x[x_];
       double y = c->G.x[y_];
       if (x < 3 and fabs(y) < 0.2){
@@ -58,7 +57,12 @@ int Grid::initialValues(){
         c->S.cons[NUM_C] = 2.;
       }
     }
-
+    Cell *c0 = &Cinit[j][0];
+    c0->S.prim[RHO] = 0.1;
+    c0->S.prim[VV1] = 0.;
+    c0->S.prim[VV2] = 0.;
+    c0->S.prim[PPP] = 0.01;
+    c0->S.cons[NUM_C] = 1.;
   }
 
   return 0;
@@ -81,28 +85,29 @@ void Grid::userKinematics(){
 }
 
 
-void Grid::userBoundaries(){
+void Grid::userBoundaries(int it){
 
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int i = 0; i <= iLbnd[j]; ++i){
-      Cell *c = &Ctot[j][i];
-      double y = c->G.x[y_];
-      if (fabs(y) < 0.2){
-        c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = 0.99;
-        c->S.prim[VV2] = 0.;
-        c->S.prim[PPP] = 0.1;
-        c->S.cons[NUM_C] = 1.;
-      }
-      else{
-        c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = 0.0;
-        c->S.prim[VV2] = 0.0;
-        c->S.prim[PPP] = 0.01;
-        c->S.cons[NUM_C] = 2.;
-      }
-    }
-  }  
+  UNUSED(it);
+  // for (int j = 0; j < nde_nax[F1]; ++j){
+  //   for (int i = 0; i <= iLbnd[j]; ++i){
+  //     Cell *c = &Ctot[j][i];
+  //     double y = c->G.x[y_];
+  //     if (fabs(y) < 0.2){
+  //       c->S.prim[RHO] = 0.1;
+  //       c->S.prim[VV1] = 0.0;
+  //       c->S.prim[VV2] = 0.;
+  //       c->S.prim[PPP] = 0.01;
+  //       c->S.cons[NUM_C] = 1.;
+  //     }
+  //     else{
+  //       c->S.prim[RHO] = 0.1;
+  //       c->S.prim[VV1] = 0.0;
+  //       c->S.prim[VV2] = 0.0;
+  //       c->S.prim[PPP] = 0.01;
+  //       c->S.cons[NUM_C] = 2.;
+  //     }
+  //   }
+  // }  
 
 }
 

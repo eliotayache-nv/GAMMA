@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-06 22:11:35
+* @Last Modified time: 2020-09-07 16:47:23
 */
 
 #include "../environment.h"
@@ -206,7 +206,7 @@ void Grid::mpi_exchangeGhostTracks(){
 }
 
 
-void Grid::updateGhosts(){
+void Grid::updateGhosts(int it){
 
   if (worldsize>1) { mpi_exchangeGhostTracks(); }
 
@@ -270,7 +270,7 @@ void Grid::updateGhosts(){
       Itot[j][i-1].x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dx[MV];
     }
   }
-  userBoundaries(); // overiding with user-specific boundary conditions
+  userBoundaries(it); // overiding with user-specific boundary conditions
 
 }
 
