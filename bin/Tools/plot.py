@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-09-07 17:38:01
+# @Last Modified time: 2020-09-08 12:18:07
 
 
 import numpy as np
@@ -11,6 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.transforms
 from matplotlib.colors import LogNorm
+import matplotlib.cm as cm
 import glob
 import os
 
@@ -43,12 +44,18 @@ def tricontour(name, it, key,):
   return x,y,z
 
 
-def readData(key, it):
-  data = pd.read_csv('../../results/temp/%s%d.out'  %(key,it), sep=" ")
+def readData(key, it, sequence=False):
+  if sequence:
+    filename = '../../results/%s%010d.out'  %(key,it)
+  else:
+    filename = '../../results/%s%d.out'  %(key,it)
+  data = pd.read_csv(filename, sep=" ")
   return(data)
 
 
 def quadMesh(data, key, 
+  key2=None,
+  log2=False,
   geometry="cartesian", 
   quiver=False, 
   color=None, 
@@ -57,11 +64,13 @@ def quadMesh(data, key,
   r2=False):
 
   z = data.pivot(index='j', columns='i', values=key).to_numpy()
-
   x  = data.pivot(index='j', columns='i', values='x').to_numpy()
   dx = data.pivot(index='j', columns='i', values='dx').to_numpy()
   y  = data.pivot(index='j', columns='i', values='y').to_numpy()
   dy = data.pivot(index='j', columns='i', values='dy').to_numpy()
+
+  if key2:
+    z2 = data.pivot(index='j', columns='i', values=key2).to_numpy()
 
   if (quiver):
     vx = data.pivot(index='j', columns='i', values='vx').to_numpy()
@@ -76,8 +85,16 @@ def quadMesh(data, key,
 
   vmin = np.min(z)
   vmax = np.max(z[4:,:])
+  if key2:
+    vmin2 = np.min(z2)
+    vmax2 = np.max(z2[4:,:])
 
-  plt.figure()
+  if (key2):
+    f, (ax2, ax) = plt.subplots(1,2, sharey=True)
+  else:
+    f = plt.figure()
+    ax = plt.gca()
+
   for j in range(z.shape[0]-1):
     xj = x - dx/2.
     yj = y - dy/2.
@@ -92,19 +109,31 @@ def quadMesh(data, key,
     mask = np.zeros(z.shape)+1
     mask[j,:] = 0
     zj = np.ma.masked_array(z, mask>0)
+    zj2 = np.ma.masked_array(z2, mask>0)
 
     if log==True:
-      plt.pcolor(xj, yj, zj, 
+      im = ax.pcolor(yj, xj, zj, 
         norm=LogNorm(vmin=vmin, vmax=vmax), 
-        edgecolors=edges, 
+        edgecolors=edges,
         facecolor=color)
     else:
-      plt.pcolor(xj, yj, zj, 
+      im = ax.pcolor(yj, xj, zj, 
         vmin=vmin, vmax=vmax, 
         edgecolors=edges, 
         facecolor=color)
 
-  plt.colorbar()
+    if key2:  
+      if log2==True:
+        im2 = ax2.pcolor(-yj, xj, zj2, 
+          norm=LogNorm(vmin=vmin2, vmax=vmax2), 
+          edgecolors=edges,
+          facecolor=color)
+      else:
+        im2 = ax2.pcolor(-yj, xj, zj2, 
+          vmin=vmin2, vmax=vmax2, 
+          edgecolors=edges, 
+          facecolor=color)
+
 
   if (quiver):
     if (geometry=='polar'):
@@ -114,4 +143,18 @@ def quadMesh(data, key,
       v = vx * np.sin(y)
       q = plt.quiver(xx,yy,u,v, alpha=0.2)
 
-  plt.show()
+  ax.set_aspect('equal')
+  ax2.set_aspect('equal')
+  f.colorbar(im, ax=ax)
+  # f.colorbar(im2, ax=ax2)
+  cb = plt.colorbar(im2,ax=[ax2],location='left')
+  # f.tight_layout()
+
+
+def loopFigs(dir, key, **kwargs):
+  for filename in os.listdir("../../results/%s" %dir):
+    print("../../results/%s/%s" %(dir,filename))
+    data = readData("%s/%d" %(dir,filename))
+    quadMesh(data)
+
+
