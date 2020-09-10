@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 13:56:26
+* @Last Modified time: 2020-09-10 14:56:09
 */
 
 #include "../environment.h"
@@ -830,10 +830,14 @@ void Grid::update(double dt){
 
   #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]; ++j){
+    // int proc = omp_get_thread_num();
+    // int nthrd = omp_get_num_threads();
     for (int i = 0; i < ntrack[j]-1; ++i){
+      // printf("%d from %d of %d on node %d of %d\n", j,proc, nthrd, worldrank, worldsize);
       Itot[j][i].move(dt);
     }
   }
+  // exit(10);
   // do not update border cells because can lead to non-physical states
   #pragma omp parallel for default(shared)
   for (int j = 1; j < nde_nax[F1]-1; ++j){
@@ -1012,6 +1016,7 @@ void Grid::print(int var){
 
 void Grid::printCols(int it){
 
+  MPI_Barrier(MPI_COMM_WORLD);
   MPI_Datatype cell_mpi = {0}; 
   generate_mpi_cell(&cell_mpi);
 
@@ -1037,8 +1042,6 @@ void Grid::printCols(int it){
       int i2 = o[MV];
       MPI_Recv(&SCdump[i1][i2], sizes[j], cell_mpi, j, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
-
-    MPI_Barrier(MPI_COMM_WORLD);
 
     std::stringstream ss;
     ss << std::setw(10) << std::setfill('0') << it;

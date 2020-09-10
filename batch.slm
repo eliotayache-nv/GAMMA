@@ -31,5 +31,4 @@ module load openmpi/gcc/2.0.0   # for compatible versions
 make
 
 # run the application
-# mpirun -np $SLURM_NTASKS ./bin/GAMMA
 mpirun -np $SLURM_NTASKS ./bin/GAMMA
