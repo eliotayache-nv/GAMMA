@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 15:09:01
+* @Last Modified time: 2020-09-10 16:34:40
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -40,7 +40,7 @@ int Simu::run(){
 
     // auto start = std::chrono::high_resolution_clock::now();
     
-    dt = grid.prepForUpdate(it);
+    dt = grid.prepForUpdate(it, t);
     grid.update(dt);
 
     t += dt;
@@ -50,8 +50,8 @@ int Simu::run(){
     // std::chrono::duration<double> elapsed = finish - start;
     // std::cout << "Elapsed time: " << elapsed.count() << " s\n";
 
-    if (it%30 == 0){ grid.printCols(it); }
-    if (it == 5000){ stop = true; }
+    if (it%1 == 0){ grid.printCols(it); }
+    if (it == 10){ stop = true; }
   }
 
   return 0;

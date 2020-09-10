@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 15:30:29
+* @Last Modified time: 2020-09-10 16:32:57
 */
 
 #include "../environment.h"
@@ -79,7 +79,7 @@ void Grid::userKinematics(){
 }
 
 
-void Grid::userBoundaries(int it){
+void Grid::userBoundaries(int it, double t){
 
   UNUSED(it);
   for (int j = 0; j < nde_nax[F1]; ++j){
