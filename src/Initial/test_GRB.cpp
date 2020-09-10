@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 18:30:43
+* @Last Modified time: 2020-09-10 19:25:58
 */
 
 #include "../environment.h"
@@ -16,7 +16,7 @@ static double n0    = 1.e0;    // cm-3
 static double lfac0 = 100;
 static double theta0= 0.1;     // rad: jet opening angle
 static double r0    = 1.e12;   // cm : begining of the box at startup
-static double r1    = 1.e13;   // cm : end of the box at startup
+static double r1    = 3.e12;   // cm : end of the box at startup
 static double dtheta= (PI/6.);   // rad; grid opening angle
 
 void loadParams(s_par *par){
@@ -74,7 +74,7 @@ int Grid::initialValues(){
       double r    = c->G.x[r_];
       double th   = c->G.x[t_];
       double r2   = r*r;
-      double rho1 = Edot / (4*PI*r2*vr1*lfac02*c2*(1 + eta*(k - 1./lfac02)) );
+      double rho1 = Edot / (4*PI*r2*vr1*c_*lfac02*c2*(1 + eta*(k - 1./lfac02)) );
       double p1   = eta*rho1;
 
       if (fabs(th) < theta0 and i==0){
@@ -132,7 +132,7 @@ void Grid::userBoundaries(int it, double t){
       double r    = c->G.x[r_];
       double th   = c->G.x[t_];
       double r2   = r*r;
-      double rho1 = Edot / (4*PI*r2*vr1*lfac02*c2*(1 + eta*(k - 1./lfac02)) );
+      double rho1 = Edot / (4*PI*r2*vr1*c_*lfac02*c2*(1 + eta*(k - 1./lfac02)) );
       double p1   = eta*rho1;
 
       if (fabs(th) < theta0 and t < t90*c_){
@@ -142,7 +142,14 @@ void Grid::userBoundaries(int it, double t){
         c->S.prim[PPP] = p1;
         c->S.cons[NUM_C] = 1.;
       }
-      else{
+      else if (fabs(th) < theta0 and t < 10*t90*c_) {
+        c->S.prim[RHO] = rho0;
+        c->S.prim[VV1] = vr1;
+        c->S.prim[VV2] = 0.0;
+        c->S.prim[PPP] = p0;
+        c->S.cons[NUM_C] = 2.;    
+      }
+      else if (fabs(th) > theta0) {
         c->S.prim[RHO] = rho0;
         c->S.prim[VV1] = 0.0;
         c->S.prim[VV2] = 0.0;
@@ -158,7 +165,7 @@ void Grid::userBoundaries(int it, double t){
 int Cell::checkCellForRegrid(){
 
   double split_ratio = 1.e-1;
-  double merge_ratio = 1.e-3;
+  double merge_ratio = 1.e-4;
   double r  = G.x[MV];
   double dl = G.dl[MV];
   double split_dl = split_ratio * r;
@@ -178,13 +185,15 @@ int Cell::checkCellForRegrid(){
 
 void Cell::userConstraints(){
 
-  double rho = S.prim[RHO];
-  double p = S.prim[PPP];
-  double rho0 = n0*mp_;
-  double p0   = eta*rho0;
+  // double rho = S.prim[RHO];
+  // double p = S.prim[PPP];
+  // double rho0 = n0*mp_;
+  // double p0   = eta*rho0;
 
-  if (p < 1.e-4*p0){ S.prim[PPP] = 1.e-4*p0; }
-  if (rho < 1.e-4*rho0){ S.prim[RHO] = 1.e-4*rho0; }
+  // if (p < 1.e-2*p0){ S.prim[PPP] = 1.e-2*p0; }
+  // if (rho < 1.e-2*rho0){ S.prim[RHO] = 1.e-2*rho0; }
+
+  return;
 
 }
 
