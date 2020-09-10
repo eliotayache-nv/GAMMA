@@ -10,8 +10,8 @@ HOST_NAME := $(shell hostname | cut -c-6)s
 
 ifeq ($(HOME), /home/t/ehra20)
 	CXX     = mpicxx
-	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 		#run this line on distant
-	LFLAGS = -lgsl -lgslcblas -lm	#run this line on distant
+	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 -fopenmp 		#run this line on distant
+	LFLAGS = -fopenmp -lgsl -lgslcblas -lm	#run this line on distant
 else
 ifeq ($(OS_NAME), linux)
 	CXX     = /usr/bin/g++

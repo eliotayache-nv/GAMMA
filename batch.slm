@@ -13,21 +13,23 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --partition=batch-devel
 #SBATCH --qos=devel
- 
+#SBATCH --cpus-per-task=16
 # set max wallclock time
 #SBATCH --time=00:10:00
  
 # send mail to this address
 #SBATCH --mail-user=ehra20@bath.ac.uk
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
  
 # Load dependant modules
 module load gsl
-module load intel/mpi
+module load openmpi/gcc/2.0.0   # for compatible versions
  
 # compile the application
-make -B
-# make
+# make -B
+make
 
 # run the application
 # mpirun -np $SLURM_NTASKS ./bin/GAMMA
-mpirun -np $SLURM_NTASKS ./bin/GAMMA > ./results/temp/RHO0.out
+mpirun -np $SLURM_NTASKS ./bin/GAMMA
