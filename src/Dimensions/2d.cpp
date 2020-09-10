@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-07 16:47:23
+* @Last Modified time: 2020-09-07 18:07:29
 */
 
 #include "../environment.h"
@@ -12,6 +12,13 @@
 #include "../array_tools.h"
 #include "../mpisetup.h"
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
+#include <iostream>
+#include <string.h>
+#include <stdio.h>
+#include <fstream>
+#include <cstring>
 
 
 template <> Interface** array_2d_nogst<Interface>(Interface** in, int nj, const int ngst){
@@ -990,7 +997,7 @@ void Grid::print(int var){
 }
 
 
-void Grid::printCols(){
+void Grid::printCols(int it){
 
   MPI_Datatype cell_mpi = {0}; 
   generate_mpi_cell(&cell_mpi);
@@ -1019,11 +1026,19 @@ void Grid::printCols(){
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("j i x y dx dy dlx dly rho vx vy p D sx sy tau\n");
+
+    std::stringstream ss;
+    ss << std::setw(10) << std::setfill('0') << it;
+    std::string s = "../results/Last/phys" + ss.str() + ".out";
+    const char* strfout = s.c_str();
+    FILE* fout = fopen(strfout, "w");
+
+    fprintf(fout, "j i x y dx dy dlx dly rho vx vy p D sx sy tau\n");
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
       for (int i = ngst; i < ncell[MV]+ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
-        printf("%d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
+        double lfac = Cdump[j][i].S.lfac();
+        fprintf(fout, "%d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
           j,
           i,
           Cdump[j][i].G.x[x_],
@@ -1033,8 +1048,8 @@ void Grid::printCols(){
           Cdump[j][i].G.dl[x_],
           Cdump[j][i].G.dl[y_],
           Cdump[j][i].S.prim[RHO],
-          Cdump[j][i].S.prim[UU1],
-          Cdump[j][i].S.prim[UU2],
+          Cdump[j][i].S.prim[UU1]/lfac,
+          Cdump[j][i].S.prim[UU2]/lfac,
           Cdump[j][i].S.prim[PPP],
           Cdump[j][i].S.cons[DEN],
           Cdump[j][i].S.cons[SS1],
@@ -1042,6 +1057,7 @@ void Grid::printCols(){
           Cdump[j][i].S.cons[TAU]);
       }
     }
+    fclose(fout);
 
   }else{
     int size  = nde_nax[F1] * nde_nax[MV];  // size includes MV ghost cells

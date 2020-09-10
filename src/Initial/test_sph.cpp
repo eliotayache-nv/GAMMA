@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-07 16:50:55
+* @Last Modified time: 2020-09-09 10:37:20
 */
 
 #include "../environment.h"
@@ -26,8 +26,8 @@ int Grid::initialGeometry(){
       Cell *c = &Cinit[j][i];
       c->G.x[x_]  = (double) 20*(i+0.5)/ncell[x_] + 1.;
       c->G.dx[x_] =          20./ncell[x_];
-      c->G.x[y_]  = (double) PI/6.*(j+0.5)/ncell[y_];
-      c->G.dx[y_] =          PI/6./ncell[y_];
+      c->G.x[y_]  = (double) PI/3.*(j+0.5)/ncell[y_];
+      c->G.dx[y_] =          PI/3./ncell[y_];
       c->computeAllGeom();
     }
   }
@@ -42,27 +42,21 @@ int Grid::initialValues(){
       Cell *c = &Cinit[j][i];
       double x = c->G.x[x_];
       double y = c->G.x[y_];
-      if (x < 3 and fabs(y) < 0.2){
+      if (x < 1.2 and fabs(y) < 0.2){
         c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = 0.99;
+        c->S.prim[VV1] = 0.999;
         c->S.prim[VV2] = 0.;
-        c->S.prim[PPP] = 0.1;
+        c->S.prim[PPP] = 1.0;
         c->S.cons[NUM_C] = 1.;
       }
       else{
-        c->S.prim[RHO] = 0.01;
+        c->S.prim[RHO] = 0.1;
         c->S.prim[VV1] = 0.0;
         c->S.prim[VV2] = 0.0;
         c->S.prim[PPP] = 0.01;
         c->S.cons[NUM_C] = 2.;
       }
     }
-    Cell *c0 = &Cinit[j][0];
-    c0->S.prim[RHO] = 0.1;
-    c0->S.prim[VV1] = 0.;
-    c0->S.prim[VV2] = 0.;
-    c0->S.prim[PPP] = 0.01;
-    c0->S.cons[NUM_C] = 1.;
   }
 
   return 0;
@@ -88,26 +82,26 @@ void Grid::userKinematics(){
 void Grid::userBoundaries(int it){
 
   UNUSED(it);
-  // for (int j = 0; j < nde_nax[F1]; ++j){
-  //   for (int i = 0; i <= iLbnd[j]; ++i){
-  //     Cell *c = &Ctot[j][i];
-  //     double y = c->G.x[y_];
-  //     if (fabs(y) < 0.2){
-  //       c->S.prim[RHO] = 0.1;
-  //       c->S.prim[VV1] = 0.0;
-  //       c->S.prim[VV2] = 0.;
-  //       c->S.prim[PPP] = 0.01;
-  //       c->S.cons[NUM_C] = 1.;
-  //     }
-  //     else{
-  //       c->S.prim[RHO] = 0.1;
-  //       c->S.prim[VV1] = 0.0;
-  //       c->S.prim[VV2] = 0.0;
-  //       c->S.prim[PPP] = 0.01;
-  //       c->S.cons[NUM_C] = 2.;
-  //     }
-  //   }
-  // }  
+  for (int j = 0; j < nde_nax[F1]; ++j){
+    for (int i = 0; i <= iLbnd[j]; ++i){
+      Cell *c = &Ctot[j][i];
+      double y = c->G.x[y_];
+      if (fabs(y) < 0.2){
+        c->S.prim[RHO] = 0.1;
+        c->S.prim[VV1] = 0.999;
+        c->S.prim[VV2] = 0.;
+        c->S.prim[PPP] = 1.0;
+        c->S.cons[NUM_C] = 1.;
+      }
+      else{
+        c->S.prim[RHO] = 0.1;
+        c->S.prim[VV1] = 0.0;
+        c->S.prim[VV2] = 0.0;
+        c->S.prim[PPP] = 0.01;
+        c->S.cons[NUM_C] = 2.;
+      }
+    }
+  }  
 
 }
 

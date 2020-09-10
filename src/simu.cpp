@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-07 16:47:00
+* @Last Modified time: 2020-09-09 10:15:50
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -42,10 +42,10 @@ int Simu::run(){
 
     t += dt;
     it++;
-    if (it == 100){ stop = true; }
-  }
 
-  grid.printCols();
+    if (it%30 == 0){ grid.printCols(it); }
+    if (it == 5000){ stop = true; }
+  }
 
   return 0;
 
