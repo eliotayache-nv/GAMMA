@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-09-10 19:17:26
+# @Last Modified time: 2020-09-10 19:20:41
 
 
 import numpy as np
@@ -107,7 +107,7 @@ def quadMesh(data, key,
   if v1min:
     vmin = v1min
   if v2min:
-    vmin = v2min
+    vmin2 = v2min
 
   if (key2):
     f, (ax2, ax) = plt.subplots(1,2, sharey=True)
