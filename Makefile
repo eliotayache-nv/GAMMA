@@ -1,4 +1,4 @@
-INITIAL    = test_sph
+INITIAL    = test_GRB
 TIMESTEP   = rk3
 GEOMETRY   = spherical
 HYDRO      = rel_sph
