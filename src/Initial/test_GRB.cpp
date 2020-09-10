@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 17:10:22
+* @Last Modified time: 2020-09-10 17:40:06
 */
 
 #include "../environment.h"
@@ -15,8 +15,8 @@ static double eta   = 1.e-3;
 static double n0    = 1.e0;    // cm-3
 static double lfac0 = 100;
 static double theta0= 0.1;     // rad: jet opening angle
-static double r0    = 1.e10;   // cm : begining of the box at startup
-static double r1    = 1.e11;   // cm : end of the box at startup
+static double r0    = 1.e12;   // cm : begining of the box at startup
+static double r1    = 1.e13;   // cm : end of the box at startup
 static double dtheta= (PI/6.);   // rad; grid opening angle
 
 void loadParams(s_par *par){
@@ -136,8 +136,8 @@ void Grid::userBoundaries(int it, double t){
 
 int Cell::checkCellForRegrid(){
 
-  double split_ratio = 1.e-2;
-  double merge_ratio = 0.e-4;
+  double split_ratio = 1.e-1;
+  double merge_ratio = 1.e-3;
   double r  = G.x[MV];
   double dl = G.dl[MV];
   double split_dl = split_ratio * r;
