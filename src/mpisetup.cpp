@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 15:59:03
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-06 22:40:59
+* @Last Modified time: 2020-09-10 10:48:05
 */
 #include "mpi.h"
 #include "err.h"
@@ -18,7 +18,7 @@
 void mpi_init(int *argc, char **argv[]){
 
   int provided;
-  MPI_Init_thread(argc, argv, MPI_THREAD_FUNNELED, &provided);
+  MPI_Init(argc, argv);
   MPI_Comm_size(MPI_COMM_WORLD, &worldsize);
   MPI_Comm_rank(MPI_COMM_WORLD, &worldrank);
   MPI_Barrier(MPI_COMM_WORLD); // wait until all cores have caught up

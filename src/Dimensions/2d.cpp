@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-07 18:07:29
+* @Last Modified time: 2020-09-10 12:01:07
 */
 
 #include "../environment.h"
@@ -254,6 +254,7 @@ void Grid::updateGhosts(int it){
       }
     }
   }
+  #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]; ++j)
   {
     for (int i = 0; i <= iLbnd[j]; ++i){
@@ -538,6 +539,7 @@ void Grid::computeNeighbors(bool print){
 
 void Grid::regrid(){
 
+  #pragma omp parallel for default(shared)
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
     targetRegridVictims(j);  // updating ismall and ibig in track
     for (int i = iLbnd[j]+2; i <= iRbnd[j]-2; ++i){  // only active cells
@@ -707,6 +709,7 @@ void Grid::merge(int j, int i){
 
 void Grid::movDir_ComputeLambda(){
 
+  #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < ntrack[j]-1; ++i){
       reconstructStates(j,i,MV);
@@ -718,6 +721,7 @@ void Grid::movDir_ComputeLambda(){
 
 void Grid::updateKinematics(){
 
+  #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < ntrack[j]-1; ++i){
       double v = VI * Itot[j][i].lS;
@@ -732,6 +736,7 @@ void Grid::updateKinematics(){
 
 void Grid::computeFluxes(){
 
+  #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]; ++j){
 
     // flux in MV direction (looping over interfaces)
@@ -749,6 +754,7 @@ void Grid::computeFluxes(){
     }
   }
   // flux in F1 direction (building the interfaces from neighbor ids)
+  #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]-1; ++j){
     double jpos = ( Ctot[j][1].G.x[F1] + Ctot[j+1][1].G.x[F1] )/2.;
 
@@ -781,12 +787,10 @@ void Grid::computeFluxes(){
         Int.x[MV] = ( fmax(xL0,xLn) + fmin(xR0,xRn) )/2.;
         Int.dx[0] = fmax(0, fmin(xR0,xRn) - fmax(xL0,xLn));
         Int.computedA();
-        // if (j==jLbnd) printf("%le\n", Int.dA);
 
         reconstructStates(j,i,F1,idn,&Int);
         Int.computeLambda();
         Int.computeFlux();
-        // if (j==jLbnd) printf("%le\n", Int.flux[DEN]);
 
         c0->update_dt(F1, Int.lL);
         cn->update_dt(F1, Int.lR);
@@ -805,6 +809,7 @@ double Grid::collect_dt(){
 
   double dt = 1.e15;
   double local_dt = 1.e15;
+  #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < ntrack[j]; ++i){
       local_dt = fmin(local_dt, Ctot[j][i].dt_loc);
@@ -823,13 +828,18 @@ double Grid::collect_dt(){
 
 void Grid::update(double dt){
 
+  #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < ntrack[j]-1; ++i){
       Itot[j][i].move(dt);
     }
   }
   // do not update border cells because can lead to non-physical states
+  #pragma omp parallel for default(shared)
   for (int j = 1; j < nde_nax[F1]-1; ++j){
+    // int proc = omp_get_thread_num();
+    // int nthread = omp_get_num_threads();
+    // printf("%d hello from %d of %d on node %d from %d\n",j, proc, nthread, worldrank, worldsize );
     for (int i = 1; i < ntrack[j]-1; ++i){
       double xL = Itot[j][i-1].x[MV];
       double xR = Itot[j][i].x[MV];
@@ -842,6 +852,7 @@ void Grid::update(double dt){
 
 void Grid::interfaceGeomFromCellPos(){
 
+  #pragma omp parallel for default(shared)
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
     double xj = Ctot[j][iLbnd[j]+1].G.x[F1];
     for (int i = 0; i < ntrack[j]-1; ++i){
@@ -913,6 +924,7 @@ void Grid::prim2cons(){
   int jL = 0; 
   int jR = nde_nax[F1];
 
+  #pragma omp parallel for default(shared)
   for (int j = jL; j < jR; ++j){
     int iL = 0;
     int iR = ntrack[j];
@@ -930,6 +942,7 @@ void Grid::state2flux(){
   int jL = 0; 
   int jR = nde_nax[F1];
 
+  #pragma omp parallel for default(shared)
   for (int j = jL; j < jR; ++j){
     int iL = 0;
     int iR = ntrack[j];

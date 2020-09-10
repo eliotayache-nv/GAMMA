@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-06 21:29:53
+* @Last Modified time: 2020-09-10 13:13:46
 */
 
 #include <iostream>
@@ -25,6 +25,8 @@ int main(int argc, char *argv[]){
 
     int status;
     Simu simu;
+
+    // omp_set_num_threads(1);
 
     chbindir(argv[0]);
     mpi_init(&argc, &argv);

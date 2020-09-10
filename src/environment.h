@@ -5,6 +5,7 @@
 #include <math.h>
 #include <vector>
 #include <omp.h>
+#include <chrono>
 #include "err.h"
 
 #define UNUSED(x) (void)(x)
@@ -37,7 +38,8 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 
 #define DUMPSTEP_ 10
 
-#define OPEN_MPI_ ENABLED_
+#define MPI_ ENABLED_
+#define OMP_ ENABLED_
 
 #define SPATIAL_RECONSTRUCTION_ PIECEWISE_LINEAR_
 
