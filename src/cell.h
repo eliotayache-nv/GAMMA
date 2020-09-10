@@ -50,6 +50,9 @@ public:
   // AMR
   int checkCellForRegrid();
 
+  // user
+  void userConstraints();
+
 };
 
 #endif

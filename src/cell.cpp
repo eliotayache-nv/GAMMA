@@ -92,6 +92,7 @@ void Cell::update(double dt, double xL, double xR){
     S.cons[q] /= G.dV;
   }
   S.cons2prim(G.x[r_]);
+  userConstraints();
 
 }
 

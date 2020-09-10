@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 18:14:36
+* @Last Modified time: 2020-09-10 18:30:43
 */
 
 #include "../environment.h"
@@ -176,5 +176,16 @@ int Cell::checkCellForRegrid(){
 
 
 
+void Cell::userConstraints(){
+
+  double rho = S.prim[RHO];
+  double p = S.prim[PPP];
+  double rho0 = n0*mp_;
+  double p0   = eta*rho0;
+
+  if (p < 1.e-4*p0){ S.prim[PPP] = 1.e-4*p0; }
+  if (rho < 1.e-4*rho0){ S.prim[RHO] = 1.e-4*rho0; }
+
+}
 
 
