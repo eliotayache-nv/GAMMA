@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 17:55:37
+* @Last Modified time: 2020-09-10 18:14:36
 */
 
 #include "../environment.h"
@@ -60,7 +60,7 @@ int Grid::initialGeometry(){
 int Grid::initialValues(){
 
   double rho0 = n0*mp_;
-  double p0   = eta*rho0 / (c_*c_);
+  double p0   = eta*rho0;
   double lfac02 = lfac0*lfac0;
   double vr1  = sqrt(1-1./(lfac0*lfac0));
   double Edot = Eiso/t90;
@@ -118,7 +118,7 @@ void Grid::userBoundaries(int it, double t){
 
   UNUSED(it);
   double rho0 = n0*mp_;
-  double p0   = eta*rho0 / (c_*c_); // to normalise
+  double p0   = eta*rho0;
   double lfac02 = lfac0*lfac0;
   double vr1  = sqrt(1-1./(lfac0*lfac0));
   double Edot = Eiso/t90;
@@ -135,7 +135,7 @@ void Grid::userBoundaries(int it, double t){
       double rho1 = Edot / (4*PI*r2*vr1*lfac02*c2*(1 + eta*(k - 1./lfac02)) );
       double p1   = eta*rho1;
 
-      if (fabs(th) < theta0 and t<t90){
+      if (fabs(th) < theta0 and t < t90*c_){
         c->S.prim[RHO] = rho1;
         c->S.prim[VV1] = vr1;
         c->S.prim[VV2] = 0.;
