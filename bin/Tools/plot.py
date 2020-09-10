@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-09-09 00:21:31
+# @Last Modified time: 2020-09-10 19:17:26
 
 
 import numpy as np
@@ -65,12 +65,14 @@ def readData(key, it=None, sequence=False):
 
 
 def quadMesh(data, key, 
+  log=False, 
   key2=None,
   log2=False,
+  v1min=None,
+  v2min=None,
   geometry="cartesian", 
   quiver=False, 
   color=None, 
-  log=False, 
   edges='None',
   r2=False,
   cmap='magma',
@@ -102,6 +104,10 @@ def quadMesh(data, key,
   if key2:
     vmin2 = np.min(z2)
     vmax2 = np.max(z2[4:,:])
+  if v1min:
+    vmin = v1min
+  if v2min:
+    vmin = v2min
 
   if (key2):
     f, (ax2, ax) = plt.subplots(1,2, sharey=True)
