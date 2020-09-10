@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 17:43:21
+* @Last Modified time: 2020-09-10 17:51:12
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -43,9 +43,9 @@ int Simu::run(){
     dt = grid.prepForUpdate(it, t);
     grid.update(dt);
 
+    printf("t = %le\n", t);
     t += dt;
     it++;
-    printf("t = %le\n", t);
 
     // auto finish = std::chrono::high_resolution_clock::now();
     // std::chrono::duration<double> elapsed = finish - start;

@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 16:15:11
+* @Last Modified time: 2020-09-10 17:53:03
 */
 
 #include "../environment.h"
@@ -809,7 +809,6 @@ double Grid::collect_dt(){
 
   double dt = 1.e15;
   double local_dt = 1.e15;
-  #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < ntrack[j]; ++i){
       local_dt = fmin(local_dt, Ctot[j][i].dt_loc);

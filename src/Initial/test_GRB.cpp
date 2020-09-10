@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 17:40:06
+* @Last Modified time: 2020-09-10 17:55:37
 */
 
 #include "../environment.h"
@@ -61,15 +61,36 @@ int Grid::initialValues(){
 
   double rho0 = n0*mp_;
   double p0   = eta*rho0 / (c_*c_);
+  double lfac02 = lfac0*lfac0;
+  double vr1  = sqrt(1-1./(lfac0*lfac0));
+  double Edot = Eiso/t90;
+  double k = GAMMA_/(GAMMA_-1);
+  double c2 = c_*c_;
 
   for (int j = 0; j < ncell[F1]; ++j){
     for (int i = 0; i < ncell[MV]; ++i){
       Cell *c = &Cinit[j][i];
-      c->S.prim[RHO] = rho0;
-      c->S.prim[VV1] = 0.0;
-      c->S.prim[VV2] = 0.0;
-      c->S.prim[PPP] = p0;
-      c->S.cons[NUM_C] = 2.;    
+
+      double r    = c->G.x[r_];
+      double th   = c->G.x[t_];
+      double r2   = r*r;
+      double rho1 = Edot / (4*PI*r2*vr1*lfac02*c2*(1 + eta*(k - 1./lfac02)) );
+      double p1   = eta*rho1;
+
+      if (fabs(th) < theta0 and i==0){
+        c->S.prim[RHO] = rho1;
+        c->S.prim[VV1] = vr1;
+        c->S.prim[VV2] = 0.;
+        c->S.prim[PPP] = p1;
+        c->S.cons[NUM_C] = 1.;
+      }
+      else{
+        c->S.prim[RHO] = rho0;
+        c->S.prim[VV1] = 0.0;
+        c->S.prim[VV2] = 0.0;
+        c->S.prim[PPP] = p0;
+        c->S.cons[NUM_C] = 2.;            
+      }
     }
   }
 
