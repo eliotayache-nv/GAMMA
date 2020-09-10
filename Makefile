@@ -21,9 +21,11 @@ else
 ifeq ($(OS_NAME), darwin)
 	CXX     = /usr/local/bin/mpic++
 # 	CXXFLAGS = -Wall -Wextra -g -std=c++11 -O0  	#run this line on local
-	CXXFLAGS = -Wall -Wextra -Qunused-arguments -std=c++11 -g  	#run this line on local
+# 	CXXFLAGS = -Wall -Wextra -Qunused-arguments -std=c++11 -g  	#run this line on local
+	CXXFLAGS = -Wall -Wextra -std=c++11 -g -fopenmp	#run this line on local
 # 	LFLAGS = -L/usr/local/lib -fopenmp -lhdf5 -lgsl -lm 		#run this line on local
-	LFLAGS = -L/usr/local/lib -Xpreprocessor -fopenmp -lgsl -lm -lomp	#run this line on local
+	LFLAGS = -L/usr/local/lib -fopenmp -lgsl -lm	#run this line on local
+	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
 endif
 endif
 endif
