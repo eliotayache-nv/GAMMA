@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 16:34:04
+* @Last Modified time: 2020-09-10 16:52:34
 */
 
 #include "../environment.h"
@@ -16,7 +16,7 @@ static double n0    = 1.e0;    // cm-3
 static double lfac0 = 100;
 static double theta0= 0.1;     // rad: jet opening angle
 static double r0    = 1.e10;   // cm : begining of the box at startup
-static double r1    = 2.e11;   // cm : end of the box at startup
+static double r1    = 1.e11;   // cm : end of the box at startup
 static double dtheta= (PI/6.);   // rad; grid opening angle
 
 void loadParams(s_par *par){
@@ -46,8 +46,8 @@ int Grid::initialGeometry(){
   for (int j = 0; j < ncell[y_]; ++j){
     for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
-      c->G.x[x_]  = (double) dr*(i+0.5)/ncell[x_] + 1.;
-      c->G.dx[x_] =          dr./ncell[x_];
+      c->G.x[x_]  = (double) dr*(i+0.5)/ncell[x_] + r0;
+      c->G.dx[x_] =          dr/ncell[x_];
       c->G.x[y_]  = (double) dtheta*(j+0.5)/ncell[y_];
       c->G.dx[y_] =          dtheta/ncell[y_];
       c->computeAllGeom();
@@ -65,8 +65,6 @@ int Grid::initialValues(){
   for (int j = 0; j < ncell[F1]; ++j){
     for (int i = 0; i < ncell[MV]; ++i){
       Cell *c = &Cinit[j][i];
-      double x = c->G.x[x_];
-      double y = c->G.x[y_];
       c->S.prim[RHO] = rho0;
       c->S.prim[VV1] = 0.0;
       c->S.prim[VV2] = 0.0;
@@ -103,7 +101,7 @@ void Grid::userBoundaries(int it, double t){
   double lfac02 = lfac0*lfac0;
   double vr1  = sqrt(1-1./(lfac0*lfac0));
   double Edot = Eiso/t90;
-  double k = GAMMA_/(GAMMA_-1)
+  double k = GAMMA_/(GAMMA_-1);
 
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i <= iLbnd[j]; ++i){
@@ -137,13 +135,17 @@ void Grid::userBoundaries(int it, double t){
 
 int Cell::checkCellForRegrid(){
 
-  double split_dl = 0.3;
-  double merge_dl = 0.01;
+  double split_ratio = 1.e-2;
+  double merge_ratio = 0.e-4;
+  double r  = G.x[MV];
+  double dl = G.dl[MV];
+  double split_dl = split_ratio * r;
+  double merge_dl = merge_ratio * r;
 
-  if (G.dx[MV] > split_dl) {
+  if (dl > split_dl) {
     return(split_);
   }
-  if (G.dx[MV] < merge_dl) {
+  if (dl < merge_dl) {
     return(merge_);
   }
   return(skip_);

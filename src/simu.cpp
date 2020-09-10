@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 16:34:40
+* @Last Modified time: 2020-09-10 16:49:21
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -39,7 +39,9 @@ int Simu::run(){
   while (!stop){
 
     // auto start = std::chrono::high_resolution_clock::now();
-    
+    grid.printCols(it);
+
+
     dt = grid.prepForUpdate(it, t);
     grid.update(dt);
 
