@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-09-08 12:18:07
+# @Last Modified time: 2020-09-09 00:21:31
 
 
 import numpy as np
@@ -14,6 +14,15 @@ from matplotlib.colors import LogNorm
 import matplotlib.cm as cm
 import glob
 import os
+import string
+import glob
+
+# plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+plt.rc('xtick', labelsize='x-large')
+plt.rc('ytick', labelsize='x-large')
+plt.rcParams['savefig.dpi'] = 200
+
 
 def plot(key, it, contour=False):
   f = plt.figure()
@@ -44,9 +53,11 @@ def tricontour(name, it, key,):
   return x,y,z
 
 
-def readData(key, it, sequence=False):
+def readData(key, it=None, sequence=False):
   if sequence:
-    filename = '../../results/%s%010d.out'  %(key,it)
+    filename = '../../results/%s/phys%010d.out'  %(key,it)
+  elif it==None:
+    filename = '../../results/%s'  %(key)
   else:
     filename = '../../results/%s%d.out'  %(key,it)
   data = pd.read_csv(filename, sep=" ")
@@ -61,7 +72,10 @@ def quadMesh(data, key,
   color=None, 
   log=False, 
   edges='None',
-  r2=False):
+  r2=False,
+  cmap='magma',
+  tlayout=True,
+  colorbar=True):
 
   z = data.pivot(index='j', columns='i', values=key).to_numpy()
   x  = data.pivot(index='j', columns='i', values='x').to_numpy()
@@ -109,17 +123,20 @@ def quadMesh(data, key,
     mask = np.zeros(z.shape)+1
     mask[j,:] = 0
     zj = np.ma.masked_array(z, mask>0)
-    zj2 = np.ma.masked_array(z2, mask>0)
+    if key2:
+      zj2 = np.ma.masked_array(z2, mask>0)
 
     if log==True:
       im = ax.pcolor(yj, xj, zj, 
         norm=LogNorm(vmin=vmin, vmax=vmax), 
         edgecolors=edges,
+        cmap=cmap,
         facecolor=color)
     else:
       im = ax.pcolor(yj, xj, zj, 
         vmin=vmin, vmax=vmax, 
         edgecolors=edges, 
+        cmap=cmap,
         facecolor=color)
 
     if key2:  
@@ -127,11 +144,13 @@ def quadMesh(data, key,
         im2 = ax2.pcolor(-yj, xj, zj2, 
           norm=LogNorm(vmin=vmin2, vmax=vmax2), 
           edgecolors=edges,
+          cmap=cmap,
           facecolor=color)
       else:
         im2 = ax2.pcolor(-yj, xj, zj2, 
           vmin=vmin2, vmax=vmax2, 
           edgecolors=edges, 
+          cmap=cmap,
           facecolor=color)
 
 
@@ -141,20 +160,31 @@ def quadMesh(data, key,
       yy = x * np.sin(y)
       u = vx * np.cos(y)
       v = vx * np.sin(y)
-      q = plt.quiver(xx,yy,u,v, alpha=0.2)
+      q = plt.quiver(yy[:,::5],xx[:,::5],v[:,::5],u[:,::5], headwidth=10, headlength=10)
 
   ax.set_aspect('equal')
-  ax2.set_aspect('equal')
-  f.colorbar(im, ax=ax)
-  # f.colorbar(im2, ax=ax2)
-  cb = plt.colorbar(im2,ax=[ax2],location='left')
-  # f.tight_layout()
+  if key2:
+    ax2.set_aspect('equal')
+
+  if colorbar:
+    cb = f.colorbar(im, ax=ax, orientation='horizontal')
+    cb.set_label(key, fontsize=18)
+    if key2:
+      cb2 = f.colorbar(im2, ax=ax2, orientation='horizontal')
+      cb2.set_label(key2, fontsize=18)
+
+  if tlayout:
+    f.tight_layout()
 
 
 def loopFigs(dir, key, **kwargs):
-  for filename in os.listdir("../../results/%s" %dir):
-    print("../../results/%s/%s" %(dir,filename))
-    data = readData("%s/%d" %(dir,filename))
-    quadMesh(data)
+  if not os.path.exists("../../results/%s/figs" %dir):
+    os.mkdir("../../results/%s/figs" %dir)
+  for filename in glob.glob("../../results/%s/*.out" %dir):
+    print(filename.split("results/")[1])
+    data = readData(filename.split("results/")[1])
+    quadMesh(data, key, **kwargs)
+    plt.savefig("../../results/%s/figs/%s.png" %(dir,filename.rstrip(".out").split(dir)[1]))
+    plt.clf()
 
 
