@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-11 21:51:51
+* @Last Modified time: 2020-09-11 22:12:13
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -52,7 +52,7 @@ int Simu::run(){
     // std::cout << "Elapsed time: " << elapsed.count() << " s\n";
 
     if (it%50 == 0){ grid.printCols(it); }
-    if (it == 15000){ stop = true; }
+    if (it == 8000){ stop = true; }
   }
 
   return 0;

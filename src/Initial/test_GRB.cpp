@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-11 19:10:00
+* @Last Modified time: 2020-09-11 22:26:51
 */
 
 #include "../environment.h"
@@ -113,9 +113,9 @@ void Grid::userKinematics(){
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int n = 0; n <= ngst; ++n){
       int iL = n;
-      int iR = nact[j]-2-n;
-      Itot[j][iL].v = 0;
-      Itot[j][iR].v = 0;
+      int iR = ntrack[j]-2-n;
+      Itot[j][iL].v = 0.9;
+      Itot[j][iR].v = 1.1;
     }
   }
 
