@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-06 16:24:02
+* @Last Modified time: 2020-09-11 11:45:51
 */
 
 #include "../fluid.h"
@@ -112,7 +112,7 @@ static double f(double p, void *params){
   double  E = par->E;
   double  gamma = par->gamma;
 
-  lfac = 1. / sqrt(1. - (S * S) / ((E + p) * (E + p)));
+  lfac = 1. / sqrt(fabs(1. - (S * S) / ((E + p) * (E + p))));
 
   return (E + p - D * lfac - (gamma * p * lfac * lfac) / (gamma - 1.));
     // Mignone (2006) eq. 5
@@ -152,9 +152,8 @@ void FluidState::cons2prim(double r, double pin){
   if (pin != 0) p = pin;
   else p = prim[PPP];
 
-  // Looking for pressure only if current one doesn't work;
   double f_init = f(p, &params);
-
+  // Looking for pressure only if current one doesn't work;
   if (fabs(f_init) > 1.e-14) {
 
     T = gsl_root_fsolver_brent;
@@ -177,9 +176,8 @@ void FluidState::cons2prim(double r, double pin){
         p_hi *= 10;
       }
     }
-    gsl_root_fsolver_set (s, &F, p_lo, p_hi);
 
-    // Iterating for root finding:            
+    gsl_root_fsolver_set (s, &F, p_lo, p_hi);
     do {
       iter++;
       status = gsl_root_fsolver_iterate (s);
@@ -188,27 +186,25 @@ void FluidState::cons2prim(double r, double pin){
       p_hi = gsl_root_fsolver_x_upper (s);
       status = gsl_root_test_interval (p_lo, p_hi,
                        0, 1.e-13);
-    }                
-    while (status == GSL_CONTINUE && iter < max_iter);
-
+    } while (status == GSL_CONTINUE && iter < max_iter);
     gsl_root_fsolver_free (s);
     p = res;
   }
 
-  lfac = 1./sqrt(1.-(S*S)/((E+p)*(E+p)));
+  lfac = 1./sqrt(fabs(1.-(S*S)/((E+p)*(E+p)))); // fabs in case of non-physical state
 
   prim[PPP] = p;
   prim[RHO] = D/lfac;
 
   if (S < 1.e-13)    
     for (int d = 0; d < NUM_D; ++d) prim[UU1+d] = 0;
-  else
-  {
+  else {
     double v = sqrt(1.- 1./(lfac*lfac));
     for (int d = 0; d < NUM_D; ++d) prim[UU1+d] = lfac*v*(ss[d]/S);
       // Mignone (2006) eq. 3
   }
 
+  cons2prim_user();
   prim2cons(r); // for consistency
   
 }

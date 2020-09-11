@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 19:25:58
+* @Last Modified time: 2020-09-11 12:37:18
 */
 
 #include "../environment.h"
@@ -15,16 +15,18 @@ static double eta   = 1.e-3;
 static double n0    = 1.e0;    // cm-3
 static double lfac0 = 100;
 static double theta0= 0.1;     // rad: jet opening angle
-static double r0    = 1.e12;   // cm : begining of the box at startup
-static double r1    = 3.e12;   // cm : end of the box at startup
+static double rmin  = 5.e9;  // cm : begining of the box at startup
+static double rmax  = 6.e11;   // cm : end of the box at startup
+static double r0    = 4.e10;  // cm : back of shell
+static double r1    = 10.e10;   // cm : head of shell
 static double dtheta= (PI/6.);   // rad; grid opening angle
 
 void loadParams(s_par *par){
 
   par->tini      = 0.;
-  par->ncell[x_] = 300;
+  par->ncell[x_] = 400;
   par->ncell[y_] = 100;
-  par->nmax      = 320;    // max number of cells in MV direction
+  par->nmax      = 420;    // max number of cells in MV direction
   par->ngst      = 2;
 
 }
@@ -42,11 +44,11 @@ void loadParams(s_par *par){
 
 int Grid::initialGeometry(){
 
-  double dr = r1 - r0;
+  double dr = rmax - rmin;
   for (int j = 0; j < ncell[y_]; ++j){
     for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
-      c->G.x[x_]  = (double) dr*(i+0.5)/ncell[x_] + r0;
+      c->G.x[x_]  = (double) dr*(i+0.5)/ncell[x_] + rmin;
       c->G.dx[x_] =          dr/ncell[x_];
       c->G.x[y_]  = (double) dtheta*(j+0.5)/ncell[y_];
       c->G.dx[y_] =          dtheta/ncell[y_];
@@ -77,7 +79,7 @@ int Grid::initialValues(){
       double rho1 = Edot / (4*PI*r2*vr1*c_*lfac02*c2*(1 + eta*(k - 1./lfac02)) );
       double p1   = eta*rho1;
 
-      if (fabs(th) < theta0 and i==0){
+      if (fabs(th) < theta0 and r0 < r and r < r1){
         c->S.prim[RHO] = rho1;
         c->S.prim[VV1] = vr1;
         c->S.prim[VV2] = 0.;
@@ -117,47 +119,48 @@ void Grid::userKinematics(){
 void Grid::userBoundaries(int it, double t){
 
   UNUSED(it);
-  double rho0 = n0*mp_;
-  double p0   = eta*rho0;
-  double lfac02 = lfac0*lfac0;
-  double vr1  = sqrt(1-1./(lfac0*lfac0));
-  double Edot = Eiso/t90;
-  double k = GAMMA_/(GAMMA_-1);
-  double c2 = c_*c_;
+  UNUSED(t);
+  // double rho0 = n0*mp_;
+  // double p0   = eta*rho0;
+  // double lfac02 = lfac0*lfac0;
+  // double vr1  = sqrt(1-1./(lfac0*lfac0));
+  // double Edot = Eiso/t90;
+  // double k = GAMMA_/(GAMMA_-1);
+  // double c2 = c_*c_;
 
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int i = 0; i <= iLbnd[j]; ++i){
-      Cell *c = &Ctot[j][i];
+  // for (int j = 0; j < nde_nax[F1]; ++j){
+  //   for (int i = 0; i <= iLbnd[j]; ++i){
+  //     Cell *c = &Ctot[j][i];
 
-      double r    = c->G.x[r_];
-      double th   = c->G.x[t_];
-      double r2   = r*r;
-      double rho1 = Edot / (4*PI*r2*vr1*c_*lfac02*c2*(1 + eta*(k - 1./lfac02)) );
-      double p1   = eta*rho1;
+  //     double r    = c->G.x[r_];
+  //     double th   = c->G.x[t_];
+  //     double r2   = r*r;
+  //     double rho1 = Edot / (4*PI*r2*vr1*c_*lfac02*c2*(1 + eta*(k - 1./lfac02)) );
+  //     double p1   = eta*rho1;
 
-      if (fabs(th) < theta0 and t < t90*c_){
-        c->S.prim[RHO] = rho1;
-        c->S.prim[VV1] = vr1;
-        c->S.prim[VV2] = 0.;
-        c->S.prim[PPP] = p1;
-        c->S.cons[NUM_C] = 1.;
-      }
-      else if (fabs(th) < theta0 and t < 10*t90*c_) {
-        c->S.prim[RHO] = rho0;
-        c->S.prim[VV1] = vr1;
-        c->S.prim[VV2] = 0.0;
-        c->S.prim[PPP] = p0;
-        c->S.cons[NUM_C] = 2.;    
-      }
-      else if (fabs(th) > theta0) {
-        c->S.prim[RHO] = rho0;
-        c->S.prim[VV1] = 0.0;
-        c->S.prim[VV2] = 0.0;
-        c->S.prim[PPP] = p0;
-        c->S.cons[NUM_C] = 2.;    
-      }
-    }
-  }  
+  //     if (fabs(th) < theta0 and t < t90*c_){
+  //       c->S.prim[RHO] = rho1;
+  //       c->S.prim[VV1] = vr1;
+  //       c->S.prim[VV2] = 0.;
+  //       c->S.prim[PPP] = p1;
+  //       c->S.cons[NUM_C] = 1.;
+  //     }
+  //     else if (fabs(th) < theta0 and t < 10*t90*c_) {
+  //       c->S.prim[RHO] = rho0;
+  //       c->S.prim[VV1] = vr1;
+  //       c->S.prim[VV2] = 0.0;
+  //       c->S.prim[PPP] = p0;
+  //       c->S.cons[NUM_C] = 2.;    
+  //     }
+  //     else if (fabs(th) > theta0) {
+  //       c->S.prim[RHO] = rho0;
+  //       c->S.prim[VV1] = 0.0;
+  //       c->S.prim[VV2] = 0.0;
+  //       c->S.prim[PPP] = p0;
+  //       c->S.cons[NUM_C] = 2.;    
+  //     }
+  //   }
+  // }  
 
 }
 
@@ -165,7 +168,7 @@ void Grid::userBoundaries(int it, double t){
 int Cell::checkCellForRegrid(){
 
   double split_ratio = 1.e-1;
-  double merge_ratio = 1.e-4;
+  double merge_ratio = 1.e-3;
   double r  = G.x[MV];
   double dl = G.dl[MV];
   double split_dl = split_ratio * r;
@@ -183,15 +186,15 @@ int Cell::checkCellForRegrid(){
 
 
 
-void Cell::userConstraints(){
+void FluidState::cons2prim_user(){
 
-  // double rho = S.prim[RHO];
-  // double p = S.prim[PPP];
-  // double rho0 = n0*mp_;
-  // double p0   = eta*rho0;
+  double rho = prim[RHO];
+  double p = prim[PPP];
+  double rho0 = n0*mp_;
+  double p0   = eta*rho0;
 
-  // if (p < 1.e-2*p0){ S.prim[PPP] = 1.e-2*p0; }
-  // if (rho < 1.e-2*rho0){ S.prim[RHO] = 1.e-2*rho0; }
+  if (p < 1.e-6*p0){ prim[PPP] = 1.e-6*p0; }
+  if (rho < 1.e-6*rho0){ prim[RHO] = 1.e-6*rho0; }
 
   return;
 
