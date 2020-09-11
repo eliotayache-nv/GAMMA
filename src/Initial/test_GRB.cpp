@@ -2,14 +2,14 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-11 12:37:18
+* @Last Modified time: 2020-09-11 19:10:00
 */
 
 #include "../environment.h"
 #include "../grid.h"
 #include "../constants.h"
 
-static double Eiso  = 1.e51;   // erg
+static double Eiso  = 1.e50;   // erg
 static double t90   = 2;       // s
 static double eta   = 1.e-3;    
 static double n0    = 1.e0;    // cm-3
@@ -43,15 +43,21 @@ void loadParams(s_par *par){
 // Simulation functions
 
 int Grid::initialGeometry(){
+  // log grid
+  double logrmin = log(rmin);
+  double logrmax = log(rmax);
+  double dlogr = (logrmax - logrmin);
 
-  double dr = rmax - rmin;
   for (int j = 0; j < ncell[y_]; ++j){
     for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
-      c->G.x[x_]  = (double) dr*(i+0.5)/ncell[x_] + rmin;
-      c->G.dx[x_] =          dr/ncell[x_];
+      double r  = (double) dlogr*(i+0.5)/ncell[x_] + logrmin;
+      double rL = (double) dlogr*(i  )/ncell[x_] + logrmin;
+      double rR = (double) dlogr*(i+1)/ncell[x_] + logrmin;
+      c->G.x[x_]  = exp(r);
+      c->G.dx[x_] = exp(rR) - exp(rL);
       c->G.x[y_]  = (double) dtheta*(j+0.5)/ncell[y_];
-      c->G.dx[y_] =          dtheta/ncell[y_];
+      c->G.dx[y_] = dtheta/ncell[y_];
       c->computeAllGeom();
     }
   }
@@ -186,15 +192,15 @@ int Cell::checkCellForRegrid(){
 
 
 
-void FluidState::cons2prim_user(){
+void FluidState::cons2prim_user(double *rho, double *p, double *uu){
 
-  double rho = prim[RHO];
-  double p = prim[PPP];
+  UNUSED(uu);
   double rho0 = n0*mp_;
   double p0   = eta*rho0;
+  double ratio = 1.e-5;
 
-  if (p < 1.e-6*p0){ prim[PPP] = 1.e-6*p0; }
-  if (rho < 1.e-6*rho0){ prim[RHO] = 1.e-6*rho0; }
+  *p = fmax(*p, ratio*p0);
+  *rho = fmax(*rho, ratio*rho0);
 
   return;
 

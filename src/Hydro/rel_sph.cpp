@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-11 11:45:51
+* @Last Modified time: 2020-09-11 21:51:34
 */
 
 #include "../fluid.h"
@@ -97,6 +97,71 @@ void FluidState::state2flux(double r){
  *
  */
 
+// // This is the function we need to set to zero:
+// static double f_eval(double p, double *f, double *dfdp, double D, double S2, double E){
+
+//   double g = GAMMA_;
+//   double Ep2 = (E+p)*(E+p);
+//   double v2 = S2/Ep2;
+//   double rhoe = E*(1.-v2) - D*sqrt(fabs(1.-v2)) - p*v2;
+//   double pNew = (g-1.)*rhoe;
+
+//   double oe = 1./(sqrt(fabs(1.-v2))*E/D - 1. - p/D*v2/sqrt(fabs(1.-v2)) );
+//   double c2 = (g-1.)/(1.+oe/g);
+
+//   *f = pNew - p;
+//   *dfdp = v2*c2 - 1.;
+
+// }
+
+// void FluidState::cons2prim(double r, double pin){
+
+//   UNUSED(pin);
+
+//   double D = cons[DEN];
+//   double tau = cons[TAU];
+//   double E = D+tau;
+//   double ss[NUM_D];
+//   double S2 = 0.;
+
+//   for (int d = 0; d < NUM_D; ++d) ss[d] = cons[SS1+d];
+//   ss[t_] /= r;
+//   for (int d = 0; d < NUM_D; ++d) S2 += ss[d]*ss[d];
+
+//   double p = prim[PPP];
+//   double f, dfdp;
+//   f_eval(p, &f, &dfdp, D, S2, E);
+//   int iter = 0;
+//   while (fabs(f/p) > 1.e-13 and iter < 100){
+//     p -= f/dfdp;
+//     f_eval(p, &f, &dfdp, D, S2, E);
+//     iter++;
+//   }
+
+//   double Ep2 = (E+p)*(E+p);
+//   double v2 = S2/Ep2;
+//   double lfac = 1./sqrt(fabs(1.-v2));
+//   double rho = D/lfac;
+
+//   double uu[NUM_D];
+//   for (int d = 0; d < NUM_D; ++d){ 
+//     double v = (ss[d]/(E+p));
+//     uu[d] = lfac*v;
+//   }
+
+//   cons2prim_user(&rho, &p, uu);
+
+//   prim[RHO] = rho;
+//   prim[PPP] = p;
+//   for (int d = 0; d < NUM_D; ++d){ 
+//     prim[UU1+d] = uu[d];
+//   }
+
+//   prim2cons(r); 
+//   state2flux(r);
+
+// }
+
 struct f_params{
   double D,S,E,gamma;
 };
@@ -112,21 +177,19 @@ static double f(double p, void *params){
   double  E = par->E;
   double  gamma = par->gamma;
 
-  lfac = 1. / sqrt(fabs(1. - (S * S) / ((E + p) * (E + p))));
+  lfac = 1. / sqrt(fabs(1. - (S*S) / ((E+p) * (E+p))));
 
-  return (E + p - D * lfac - (gamma * p * lfac * lfac) / (gamma - 1.));
+  return( (E + p - D * lfac - (gamma * p * lfac * lfac) / (gamma - 1.)) );
     // Mignone (2006) eq. 5
 
 }
 
+
 void FluidState::cons2prim(double r, double pin){
 
-  double  lfac,E,S,D;  // (computed from conserved variables)
   int     status;
-  int     iter = 0, max_iter = 1000000;
+  int     iter = 0, max_iter = 100;
   double  res;
-  double  p_lo, p_hi,p;
-  double  ss[NUM_D];
   struct  f_params                params;
   const   gsl_root_fsolver_type   *T;
   gsl_root_fsolver                *s;
@@ -136,75 +199,92 @@ void FluidState::cons2prim(double r, double pin){
   F.params = &params;
 
   // setting initial parameters
-  D = cons[DEN];
-  S = 0.;
+  double D = cons[DEN];
+  double tau = cons[TAU];
+  double E = D+tau;
+  double ss[NUM_D];
+  double S2 = 0.;
+
   for (int d = 0; d < NUM_D; ++d) ss[d] = cons[SS1+d];
   ss[t_] /= r;
-  for (int d = 0; d < NUM_D; ++d) S += ss[d]*ss[d];
-  S = sqrt(S);
-  E = cons[TAU]+cons[DEN];
+  for (int d = 0; d < NUM_D; ++d) S2 += ss[d]*ss[d];
+
+  double S = sqrt(S2);
 
   params.D = D;
   params.S = S;
   params.E = E;
   params.gamma = GAMMA_;
 
-  if (pin != 0) p = pin;
-  else p = prim[PPP];
+  double pCand;
+  if (pin != 0) pCand = pin;
+  else pCand = prim[PPP];
 
-  double f_init = f(p, &params);
   // Looking for pressure only if current one doesn't work;
-  if (fabs(f_init) > 1.e-14) {
+  double f_init = f(pCand, &params);
+  if (fabs(f_init) > 1.e-13) {
 
+    double p_lo, p_hi;
     T = gsl_root_fsolver_brent;
     s = gsl_root_fsolver_alloc (T);
 
     // setting boundaries
     // f(p_lo) has to be positive. No solution otherwise
     // hence, f(p_hi) has to be negative
-
-    p_lo = fmax(0., (1. + 1e-13) * fabs(S) - E);
+    p_lo = fmax(0., (1. + 1e-13) * S - E);
+      // the endpoints not straddling can come from here (when p_lo is set to zero)
+    bool find_p = true;
+    if (f(p_lo, &params)<0) { find_p = false; } // no solution
 
     if (f_init < 0){
-      p_hi = 1.*p;
+      p_hi = 1.*pCand;
     }
     else {
-      int i = 0;
-      p_hi = p;
-      while (f(p_hi, &params) > 0) {
-        i++;
-        p_hi *= 10;
-      }
+      p_hi = pCand;
+      while (f(p_hi, &params) > 0) {p_hi *= 10; }
     }
 
-    gsl_root_fsolver_set (s, &F, p_lo, p_hi);
-    do {
-      iter++;
-      status = gsl_root_fsolver_iterate (s);
-      res = gsl_root_fsolver_root (s);
-      p_lo = gsl_root_fsolver_x_lower (s);
-      p_hi = gsl_root_fsolver_x_upper (s);
-      status = gsl_root_test_interval (p_lo, p_hi,
-                       0, 1.e-13);
-    } while (status == GSL_CONTINUE && iter < max_iter);
-    gsl_root_fsolver_free (s);
-    p = res;
+    if (p_hi<p_lo) {find_p = false; } // no solution
+
+    if (find_p){
+      gsl_root_fsolver_set (s, &F, p_lo, p_hi);
+      do {
+        iter++;
+        status = gsl_root_fsolver_iterate (s);
+        res = gsl_root_fsolver_root (s);
+        p_lo = gsl_root_fsolver_x_lower (s);
+        p_hi = gsl_root_fsolver_x_upper (s);
+        status = gsl_root_test_interval (p_lo, p_hi, 1.e-13, 1.e-13);
+      } while (status == GSL_CONTINUE && iter < max_iter);
+      gsl_root_fsolver_free (s);
+      pCand = res;
+    }
   }
 
-  lfac = 1./sqrt(fabs(1.-(S*S)/((E+p)*(E+p)))); // fabs in case of non-physical state
+  double p = pCand;
+  double Ep2 = (E+p)*(E+p);
+  double v2 = S2/Ep2;
+  double lfac = 1./sqrt(fabs(1.-v2)); // fabs in case of non-physical state
+  double rho = D/lfac;
 
-  prim[PPP] = p;
-  prim[RHO] = D/lfac;
-
-  if (S < 1.e-13)    
-    for (int d = 0; d < NUM_D; ++d) prim[UU1+d] = 0;
+  double uu[NUM_D];
+  if (S < 1.e-14) {
+    for (int d = 0; d < NUM_D; ++d) uu[d] = 0;
+  }
   else {
     double v = sqrt(1.- 1./(lfac*lfac));
-    for (int d = 0; d < NUM_D; ++d) prim[UU1+d] = lfac*v*(ss[d]/S);
+    for (int d = 0; d < NUM_D; ++d) uu[d] = lfac*v*(ss[d]/S);
       // Mignone (2006) eq. 3
   }
 
-  cons2prim_user();
+  cons2prim_user(&rho, &p, uu);
+
+  prim[PPP] = p;
+  prim[RHO] = rho;
+  for (int d = 0; d < NUM_D; ++d){ 
+    prim[UU1+d] = uu[d];
+  }
+
   prim2cons(r); // for consistency
   
 }

@@ -15,7 +15,7 @@ public:
 
   void prim2cons(double r);
   void cons2prim(double r, double pin = 0);
-  void cons2prim_user();
+  void cons2prim_user(double *rho, double *p, double *u);
   void state2flux(double r);
 
   double lfac();
