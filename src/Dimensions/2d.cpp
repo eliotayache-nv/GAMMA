@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 17:53:03
+* @Last Modified time: 2020-09-12 11:29:46
 */
 
 #include "../environment.h"
@@ -543,8 +543,7 @@ void Grid::regrid(){
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
     targetRegridVictims(j);  // updating ismall and ibig in track
     for (int i = iLbnd[j]+2; i <= iRbnd[j]-2; ++i){  // only active cells
-      Cell *c = &Ctot[j][i];
-      int action = c->checkCellForRegrid();
+      int action = checkCellForRegrid(j, i);
       if (action != skip_){ applyRegrid(j, i, action); }
     }
   }
@@ -557,7 +556,8 @@ void Grid::targetRegridVictims(int j){
   double minVal = 1.e15;
   double maxVal = 0.;
   for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
-    double val = Ctot[j][i].G.dx[MV];
+    Cell c = Ctot[j][i];
+    double val = c.regridVal();
     if (val < minVal){
       minVal = val;
       ismall[j] = i;
@@ -593,7 +593,7 @@ void Grid::applyRegrid(int j, int i, int action){
 
     merge(j,i); // merging with smallest neighbour
     if (ib > i) ib--;
-    split(j,ib);
+    split(j,ib);      
   }
 
   targetRegridVictims(j);  // updating ismall and ibig

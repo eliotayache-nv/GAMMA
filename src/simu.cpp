@@ -2,11 +2,12 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-11 22:12:13
+* @Last Modified time: 2020-09-12 12:48:21
 */
 #include "simu.h"
 #include "mpisetup.h"
 #include "environment.h"
+#include "constants.h"
 
 Simu::Simu(){
 
@@ -39,6 +40,7 @@ int Simu::run(){
   while (!stop){
 
     // auto start = std::chrono::high_resolution_clock::now();
+    // grid.printCols(it);
 
     dt = grid.prepForUpdate(it, t);
     grid.update(dt);
@@ -51,8 +53,9 @@ int Simu::run(){
     // std::chrono::duration<double> elapsed = finish - start;
     // std::cout << "Elapsed time: " << elapsed.count() << " s\n";
 
-    if (it%50 == 0){ grid.printCols(it); }
-    if (it == 8000){ stop = true; }
+    if (it%500 == 0){ grid.printCols(it); }
+    // if (it == 500){ stop = true; }
+    if (t/c_ > 1.e10){ stop = true; }
   }
 
   return 0;

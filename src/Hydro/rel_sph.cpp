@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-11 21:51:34
+* @Last Modified time: 2020-09-12 00:08:31
 */
 
 #include "../fluid.h"
@@ -188,7 +188,7 @@ static double f(double p, void *params){
 void FluidState::cons2prim(double r, double pin){
 
   int     status;
-  int     iter = 0, max_iter = 100;
+  int     iter = 0, max_iter = 1000000;
   double  res;
   struct  f_params                params;
   const   gsl_root_fsolver_type   *T;

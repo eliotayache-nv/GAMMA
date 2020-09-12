@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 15:17:31
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-06 11:58:53
+* @Last Modified time: 2020-09-12 00:02:29
 */
 
 
@@ -89,3 +89,11 @@ void Interface::computedA(){
   }
 
 }
+
+
+double Cell::regridVal(){
+
+  return(G.x[r_] * G.dx[r_]);
+
+}
+

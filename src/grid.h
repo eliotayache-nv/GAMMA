@@ -82,6 +82,7 @@ class Grid{
   // AMR
   void regrid();
   void targetRegridVictims(int j);
+   int checkCellForRegrid(int j, int i);
   void applyRegrid(int j, int i, int action);
   void split(int j, int i);
   void merge(int j, int i);
