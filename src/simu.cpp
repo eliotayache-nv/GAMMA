@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-13 20:45:04
+* @Last Modified time: 2020-09-13 21:49:20
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -53,9 +53,9 @@ int Simu::run(){
     // std::chrono::duration<double> elapsed = finish - start;
     // std::cout << "Elapsed time: " << elapsed.count() << " s\n";
 
-    if (it%1000 == 0){ printf("it: %ld time: %le\n", it, t);}
-    // if (it%1 == 0){ grid.printCols(it); }
-    if (it == 5000){ stop = true; }
+    if ((worldrank == 0) and (it%1000 == 0)){ printf("it: %ld time: %le\n", it, t);}
+    if (it%2000 == 0){ grid.printCols(it); }
+    // if (it == 5000){ stop = true; }
     if (t > 1.e10){ stop = true; }
   }
 

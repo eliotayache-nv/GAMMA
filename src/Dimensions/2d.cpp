@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-13 15:50:11
+* @Last Modified time: 2020-09-13 21:28:37
 */
 
 #include "../environment.h"
@@ -1052,12 +1052,12 @@ void Grid::printCols(int it){
     const char* strfout = s.c_str();
     FILE* fout = fopen(strfout, "w");
 
-    fprintf(fout, "j i x y dx dy dlx dly rho vx vy p D sx sy tau\n");
+    fprintf(fout, "j i x y dx dy dlx dly rho vx vy p D sx sy tau trac\n");
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
       for (int i = ngst; i < ncell[MV]+ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
         double lfac = Cdump[j][i].S.lfac();
-        fprintf(fout, "%d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
+        fprintf(fout, "%d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
           j,
           i,
           Cdump[j][i].G.x[x_],
@@ -1073,7 +1073,8 @@ void Grid::printCols(int it){
           Cdump[j][i].S.cons[DEN],
           Cdump[j][i].S.cons[SS1],
           Cdump[j][i].S.cons[SS2],
-          Cdump[j][i].S.cons[TAU]);
+          Cdump[j][i].S.cons[TAU],
+          Cdump[j][i].S.cons[NUM_C]);
       }
     }
     fclose(fout);

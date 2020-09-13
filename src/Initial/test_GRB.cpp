@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-13 20:46:35
+* @Last Modified time: 2020-09-13 21:47:50
 */
 
 #include "../environment.h"
@@ -19,7 +19,7 @@ static double rmin  = 5.e11;  // cm : begining of the box at startup
 static double rmax  = 1.e13;   // cm : end of the box at startup
 static double r0    = 4.e12;  // cm : back of shell
 static double r1    = 5.e12;   // cm : head of shell
-static double dtheta= 0.2;   // rad; grid opening angle
+static double dtheta= 0.25;   // rad; grid opening angle
 
 static double rho0  = n0*mp_;
 static double p0    = rho0*c_*c_*eta;
@@ -129,19 +129,19 @@ void Grid::userKinematics(){
 
   // setting lower and higher i boundary interface velocities to zero
   int check_dist = 90;
-  double vIn     = 1.5;     // can't be lower than 1 for algo to work
-  double vOut    = 1.2;     
-  double vInlim  = 0.5;     // threshold to detect back of the ejecta
+  double vIn     = 1.;     // can't be lower than 1 for algo to work
+  double vOut    = 1.;     
+  double rhoInlim = 1.e3;     // threshold to detect back of the ejecta
   double vOutlim = 0.1;
 
   int moveInner = 1;
   int moveOuter = 0;
   for (int j = 0; j < nde_nax[F1]; ++j){
 
-    Interface Iin  = Itot[j][iLbnd[j]+check_dist];
+    Cell      Cin  = Ctot[j][iLbnd[j]+check_dist];
     Interface Iout = Itot[j][iRbnd[j]-check_dist];
 
-    if (Iin.v  > vInlim)  moveInner = 0;
+    if (Cin.S.prim[RHO] > rhoInlim)  moveInner = 0;
     if (Iout.v > vOutlim) moveOuter = 1;
 
   }
@@ -186,8 +186,8 @@ int Grid::checkCellForRegrid(int j, int i){
   // We allow dx in [0.1, 10] around target uniform resolution
 
   Cell c = Ctot[j][i];
-  double split_ratio = 10;    // relative to target resolution
-  double merge_ratio = 0.1;   // relative to target resolution
+  double split_ratio = 20;    // relative to target resolution
+  double merge_ratio = 0.05;   // relative to target resolution
   // double r  = c.G.x[MV];
   double dl = c.G.dl[MV];
   double rmin = Ctot[j][iLbnd[j]+1].G.x[r_];
