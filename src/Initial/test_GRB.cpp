@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-13 10:53:57
+* @Last Modified time: 2020-09-13 20:46:35
 */
 
 #include "../environment.h"
@@ -10,7 +10,7 @@
 #include "../constants.h"
 
 static double Eiso  = 1.e52;   // erg
-static double t90   = 100;       // s
+static double t90   = 100;     // s
 static double eta   = 1.e-3;    
 static double n0    = 1.e0;    // cm-3
 static double lfac0 = 100;
@@ -20,6 +20,14 @@ static double rmax  = 1.e13;   // cm : end of the box at startup
 static double r0    = 4.e12;  // cm : back of shell
 static double r1    = 5.e12;   // cm : head of shell
 static double dtheta= 0.2;   // rad; grid opening angle
+
+static double rho0  = n0*mp_;
+static double p0    = rho0*c_*c_*eta;
+
+static double rhoNorm = rho0;
+static double lNorm = c_;
+static double vNorm = c_;
+static double pNorm = rhoNorm*vNorm*vNorm;
 
 void loadParams(s_par *par){
 
@@ -51,13 +59,18 @@ int Grid::initialGeometry(){
   for (int j = 0; j < ncell[y_]; ++j){
     for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
-      double r  = (double) dlogr*(i+0.5)/ncell[x_] + logrmin;
-      double rL = (double) dlogr*(i  )/ncell[x_] + logrmin;
-      double rR = (double) dlogr*(i+1)/ncell[x_] + logrmin;
-      c->G.x[x_]  = exp(r);
-      c->G.dx[x_] = exp(rR) - exp(rL);
-      c->G.x[y_]  = (double) dtheta*(j+0.5)/ncell[y_];
-      c->G.dx[y_] = dtheta/ncell[y_];
+      double rlog  = (double) dlogr*(i+0.5)/ncell[x_] + logrmin;
+      double rlogL = (double) dlogr*(i  )/ncell[x_] + logrmin;
+      double rlogR = (double) dlogr*(i+1)/ncell[x_] + logrmin;
+      double r   = exp(rlog);
+      double dr  = exp(rlogR) - exp(rlogL);
+      double th  = (double) dtheta*(j+0.5)/ncell[y_];
+      double dth = dtheta/ncell[y_];
+
+      c->G.x[x_]  = r / lNorm;
+      c->G.dx[x_] = dr / lNorm;
+      c->G.x[y_]  = th;
+      c->G.dx[y_] = dth;
       c->computeAllGeom();
     }
   }
@@ -67,10 +80,8 @@ int Grid::initialGeometry(){
 
 int Grid::initialValues(){
 
-  double rho0 = n0*mp_;
-  double p0   = eta*rho0;
   double lfac02 = lfac0*lfac0;
-  double vr1  = sqrt(1-1./(lfac0*lfac0));
+  double vr1  = sqrt(1-1./(lfac02)) * c_;
   double Edot = Eiso/t90;
   double k = GAMMA_/(GAMMA_-1);
   double c2 = c_*c_;
@@ -79,24 +90,31 @@ int Grid::initialValues(){
     for (int i = 0; i < ncell[MV]; ++i){
       Cell *c = &Cinit[j][i];
 
-      double r    = c->G.x[r_];
+      double r    = c->G.x[r_]*lNorm; // deNormalise for calculation
       double th   = c->G.x[t_];
       double r2   = r*r;
-      double rho1 = Edot / (4*PI*r2*vr1*c_*lfac02*c2*(1 + eta*(k - 1./lfac02)) );
-      double p1   = eta*rho1;
+      double rho1 = Edot / (4*PI*r2*vr1*lfac02*c2*(1 + eta*(k - 1./lfac02)) );
+      double p1   = eta*rho1*c2;
+
+      // normalisation
+      double rho0_norm = rho0/rhoNorm;
+      double p0_norm = p0/(pNorm);
+      double rho1_norm = rho1/rhoNorm;
+      double p1_norm = p1/(pNorm);
+      double vr1_norm = vr1/vNorm;
 
       if (fabs(th) < theta0 and r0 < r and r < r1){
-        c->S.prim[RHO] = rho1;
-        c->S.prim[VV1] = vr1;
+        c->S.prim[RHO] = rho1_norm;
+        c->S.prim[VV1] = vr1_norm;
         c->S.prim[VV2] = 0.;
-        c->S.prim[PPP] = p1;
+        c->S.prim[PPP] = p1_norm;
         c->S.cons[NUM_C] = 1.;
       }
       else{
-        c->S.prim[RHO] = rho0;
+        c->S.prim[RHO] = rho0_norm;
         c->S.prim[VV1] = 0.0;
         c->S.prim[VV2] = 0.0;
-        c->S.prim[PPP] = p0;
+        c->S.prim[PPP] = p0_norm;
         c->S.cons[NUM_C] = 2.;            
       }
     }
@@ -191,12 +209,10 @@ int Grid::checkCellForRegrid(int j, int i){
 void FluidState::cons2prim_user(double *rho, double *p, double *uu){
 
   UNUSED(uu);
-  double rho0 = n0*mp_;
-  double p0   = eta*rho0;
-  double ratio = 1.e-8;
+  double ratio = 1.e-5;
 
-  *p = fmax(*p, ratio*p0);
-  *rho = fmax(*rho, ratio*rho0);
+  *p = fmax(*p, ratio*p0/pNorm);
+  *rho = fmax(*rho, ratio*rho0/rhoNorm);
 
   return;
 
