@@ -11,11 +11,11 @@
 # set the number of nodes and partition
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
-#SBATCH --partition=batch
-#SBATCH --qos=free
+#SBATCH --partition=batch-devel
+#SBATCH --qos=devel
 #SBATCH --cpus-per-task=16
 # set max wallclock time
-#SBATCH --time=06:00:00
+#SBATCH --time=00:10:00
  
 # send mail to this address
 #SBATCH --mail-user=ehra20@bath.ac.uk
