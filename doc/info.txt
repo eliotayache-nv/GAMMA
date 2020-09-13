@@ -1,0 +1,9 @@
+
+
+      ___|     \      \  |   \  |     \            \  |  __ \  
+     |        _ \    |\/ |  |\/ |    _ \          |\/ |  |   | 
+     |   |   ___ \   |   |  |   |   ___ \ _____|  |   |  |   | 
+    \____| _/    _\ _|  _| _|  _| _/    _\       _|  _| ____/                                                         
+                                   
+    Grid Adapatation and Moving Mesh for Astrophysics   v1.0
+    Multi-D version!
