@@ -2,24 +2,24 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-12 17:53:30
+* @Last Modified time: 2020-09-13 10:53:57
 */
 
 #include "../environment.h"
 #include "../grid.h"
 #include "../constants.h"
 
-static double Eiso  = 1.e50;   // erg
-static double t90   = 2;       // s
+static double Eiso  = 1.e52;   // erg
+static double t90   = 100;       // s
 static double eta   = 1.e-3;    
 static double n0    = 1.e0;    // cm-3
 static double lfac0 = 100;
 static double theta0= 0.1;     // rad: jet opening angle
-static double rmin  = 5.e9;  // cm : begining of the box at startup
-static double rmax  = 2.e11;   // cm : end of the box at startup
-static double r0    = 4.e10;  // cm : back of shell
-static double r1    = 1.e11;   // cm : head of shell
-static double dtheta= (PI/8.);   // rad; grid opening angle
+static double rmin  = 5.e11;  // cm : begining of the box at startup
+static double rmax  = 1.e13;   // cm : end of the box at startup
+static double r0    = 4.e12;  // cm : back of shell
+static double r1    = 5.e12;   // cm : head of shell
+static double dtheta= 0.2;   // rad; grid opening angle
 
 void loadParams(s_par *par){
 
@@ -110,8 +110,8 @@ int Grid::initialValues(){
 void Grid::userKinematics(){
 
   // setting lower and higher i boundary interface velocities to zero
-  int check_dist = 20;
-  double vIn     = 1.2;     // can't be lower than 1 for algo to work
+  int check_dist = 90;
+  double vIn     = 1.5;     // can't be lower than 1 for algo to work
   double vOut    = 1.2;     
   double vInlim  = 0.5;     // threshold to detect back of the ejecta
   double vOutlim = 0.1;
@@ -169,7 +169,7 @@ int Grid::checkCellForRegrid(int j, int i){
 
   Cell c = Ctot[j][i];
   double split_ratio = 10;    // relative to target resolution
-  double merge_ratio = 0.05;   // relative to target resolution
+  double merge_ratio = 0.1;   // relative to target resolution
   // double r  = c.G.x[MV];
   double dl = c.G.dl[MV];
   double rmin = Ctot[j][iLbnd[j]+1].G.x[r_];

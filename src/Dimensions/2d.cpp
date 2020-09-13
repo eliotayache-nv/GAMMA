@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-12 11:29:46
+* @Last Modified time: 2020-09-13 15:50:11
 */
 
 #include "../environment.h"
@@ -150,6 +150,7 @@ void Grid::mpi_exchangeGhostTracks(){
                    SCin , nin , cell_mpi, rR, tag2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       for (int i = 0; i < nin; ++i) { toClass(SCin[i], &Ctot[jin][i]); }          
     }
+    delete(SCin); delete(SCout);
   }
 
   // sending to higher node, receiving from lower node
@@ -186,6 +187,7 @@ void Grid::mpi_exchangeGhostTracks(){
                    SCin , nin , cell_mpi, rL, tag2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       for (int i = 0; i < nin; ++i) { toClass(SCin[i], &Ctot[jin][i]); }          
     }
+    delete(SCin); delete(SCout);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
@@ -472,7 +474,9 @@ void Grid::computeNeighbors(bool print){
       Cell *c = &Ctot[j][i];
       for (int d = 0; d < NUM_D; ++d){
         c->neigh[d][0].clear(); // resetting neighbors
+        c->neigh[d][0].shrink_to_fit(); // resetting capacity
         c->neigh[d][1].clear();
+        c->neigh[d][1].shrink_to_fit();
 
         if (d == MV){
           c->neigh[d][0].push_back(Ctot[j][i-1].nde_id);
@@ -1074,6 +1078,9 @@ void Grid::printCols(int it){
     }
     fclose(fout);
 
+    delete_array_2d<Cell>(Cdump);
+    delete_array_2d<s_cell>(SCdump);
+
   }else{
     int size  = nde_nax[F1] * nde_nax[MV];  // size includes MV ghost cells
     MPI_Send( &size,     1,  MPI_INT, 0, 0, MPI_COMM_WORLD);
@@ -1085,6 +1092,7 @@ void Grid::printCols(int it){
       }
     }
     MPI_Send(&SC[0][0],  size, cell_mpi, 0, 2, MPI_COMM_WORLD);
+    delete_array_2d<s_cell>(SC);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
