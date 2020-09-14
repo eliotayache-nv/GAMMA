@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-13 21:47:50
+* @Last Modified time: 2020-09-14 13:42:05
 */
 
 #include "../environment.h"
@@ -15,10 +15,10 @@ static double eta   = 1.e-3;
 static double n0    = 1.e0;    // cm-3
 static double lfac0 = 100;
 static double theta0= 0.1;     // rad: jet opening angle
-static double rmin  = 5.e11;  // cm : begining of the box at startup
-static double rmax  = 1.e13;   // cm : end of the box at startup
-static double r0    = 4.e12;  // cm : back of shell
-static double r1    = 5.e12;   // cm : head of shell
+static double rmin  = 3.e13;  // cm : begining of the box at startup
+static double rmax  = 6.e13;   // cm : end of the box at startup
+static double r0    = 4.e13;  // cm : back of shell
+static double r1    = 4.1e13;   // cm : head of shell
 static double dtheta= 0.25;   // rad; grid opening angle
 
 static double rho0  = n0*mp_;
@@ -129,22 +129,22 @@ void Grid::userKinematics(){
 
   // setting lower and higher i boundary interface velocities to zero
   int check_dist = 90;
-  double vIn     = 1.;     // can't be lower than 1 for algo to work
-  double vOut    = 1.;     
-  double rhoInlim = 1.e3;     // threshold to detect back of the ejecta
-  double vOutlim = 0.1;
+  double vIn     = 0.8;     // can't be lower than 1 for algo to work
+  double vOut    = 1.2;     
+  // double rhoInlim = 1.e3;     // threshold to detect back of the ejecta
+  // double vOutlim = 0.1;
 
-  int moveInner = 1;
-  int moveOuter = 0;
-  for (int j = 0; j < nde_nax[F1]; ++j){
+  int moveInner = 1.;
+  int moveOuter = 1.;
+  // for (int j = 0; j < nde_nax[F1]; ++j){
 
-    Cell      Cin  = Ctot[j][iLbnd[j]+check_dist];
-    Interface Iout = Itot[j][iRbnd[j]-check_dist];
+  //   Cell      Cin  = Ctot[j][iLbnd[j]+check_dist];
+  //   Interface Iout = Itot[j][iRbnd[j]-check_dist];
 
-    if (Cin.S.prim[RHO] > rhoInlim)  moveInner = 0;
-    if (Iout.v > vOutlim) moveOuter = 1;
+  //   if (Cin.S.prim[RHO] > rhoInlim)  moveInner = 0;
+  //   if (Iout.v > vOutlim) moveOuter = 1;
 
-  }
+  // }
 
   // communicating to all nodes
   double allmoveInner;
@@ -186,7 +186,7 @@ int Grid::checkCellForRegrid(int j, int i){
   // We allow dx in [0.1, 10] around target uniform resolution
 
   Cell c = Ctot[j][i];
-  double split_ratio = 20;    // relative to target resolution
+  double split_ratio = 50;    // relative to target resolution
   double merge_ratio = 0.05;   // relative to target resolution
   // double r  = c.G.x[MV];
   double dl = c.G.dl[MV];

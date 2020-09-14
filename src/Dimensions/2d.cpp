@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-13 21:28:37
+* @Last Modified time: 2020-09-14 13:32:18
 */
 
 #include "../environment.h"
@@ -559,7 +559,7 @@ void Grid::targetRegridVictims(int j){
 
   double minVal = 1.e15;
   double maxVal = 0.;
-  for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
+  for (int i = iLbnd[j]+2; i <= iRbnd[j]-2; ++i){   // not allowing edges to be victims
     Cell c = Ctot[j][i];
     double val = c.regridVal();
     if (val < minVal){
