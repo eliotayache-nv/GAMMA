@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-23 19:05:39
+* @Last Modified time: 2020-09-23 19:34:33
 */
 
 #include "../environment.h"
@@ -29,7 +29,7 @@ static double lNorm = c_;
 static double vNorm = c_;
 static double pNorm = rhoNorm*vNorm*vNorm;
 
-static double ejecta_regrid_ratio = 0.01;
+static double ejecta_regrid_ratio = 0.05;
 static double csm_regrid_ratio    = 10;
 
 void loadParams(s_par *par){

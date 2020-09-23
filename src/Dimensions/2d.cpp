@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-23 17:25:31
+* @Last Modified time: 2020-09-23 19:43:10
 */
 
 #include "../environment.h"
@@ -559,7 +559,7 @@ void Grid::regrid(){
 
 void Grid::targetRegridVictims(int j){
 
-  double minVal = 1.e15;
+  double minVal = 1.e20;
   double maxVal = 0.;
   for (int i = iLbnd[j]+2; i <= iRbnd[j]-2; ++i){   // not allowing edges to be victims
     Cell c = Ctot[j][i];
@@ -586,7 +586,10 @@ void Grid::applyRegrid(int j, int i, int action){
     // merge smallest cell in track 
     int isplit = i;
     int is = ismall[j];
-    if (i==is) exit(10);    // cell to split can't be the smallest cell in the fluid
+    if (i==is) {
+      printf("%d\n", i);
+      exit(10);    // cell to split can't be the smallest cell in the fluid
+    }
 
     merge(j,is); // merging with smallest neighbour
     if (i > is) isplit--;
@@ -596,7 +599,10 @@ void Grid::applyRegrid(int j, int i, int action){
   if (action == merge_){
     // we can just invert the idexes (i, is) -> (ib, i)
     int ib = ibig[j];
-    if (i==ib) exit(10);    // cell to split can't be the smallest cell in the fluid
+    if (i==ib){
+      printf("%d\n", i);
+      exit(10);    // cell to split can't be the smallest cell in the fluid
+    }
 
     merge(j,i); // merging with smallest neighbour
     if (ib > i) ib--;
