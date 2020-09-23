@@ -49,6 +49,7 @@ public:
 
   // AMR
   double regridVal();
+  void user_regridVal(double *res);
 
 };
 

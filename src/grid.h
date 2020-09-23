@@ -75,13 +75,13 @@ class Grid{
   void updateGhosts(int it, double t);
   void userBoundaries(int it, double t);
   void reconstructStates( int j, int i, int dim, 
-                                int idn=-1,
-                                Interface *Int = NULL );
+                          int idn=-1,
+                          Interface *Int = NULL );
   void update(double dt);
 
   // AMR
   void regrid();
-  void targetRegridVictims(int j);
+  void targetRegridVictims( int j);
    int checkCellForRegrid(int j, int i);
   void applyRegrid(int j, int i, int action);
   void split(int j, int i);

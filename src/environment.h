@@ -28,6 +28,7 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 #define NUM_C 4               // conserved (changes with number of dimensions)
 #define NUM_T 1               // tracers
 #define NUM_Q (NUM_C+NUM_T)   // advected variables (tracers are placed at end of list)
+#define TR1   NUM_C         // index of first tracer 
 #define NUM_D 2             // number of dimensions
 #define MV    r_            // moving dimension
 #define F1    t_            // fixed dimension 1

@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-14 13:32:18
+* @Last Modified time: 2020-09-23 17:25:31
 */
 
 #include "../environment.h"
@@ -545,10 +545,12 @@ void Grid::regrid(){
 
   #pragma omp parallel for default(shared)
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
-    targetRegridVictims(j);  // updating ismall and ibig in track
+    targetRegridVictims(j); // updating ismall and ibig
     for (int i = iLbnd[j]+2; i <= iRbnd[j]-2; ++i){  // only active cells
       int action = checkCellForRegrid(j, i);
-      if (action != skip_){ applyRegrid(j, i, action); }
+      if (action != skip_){ 
+        applyRegrid(j, i, action); 
+      }
     }
   }
 
@@ -561,6 +563,7 @@ void Grid::targetRegridVictims(int j){
   double maxVal = 0.;
   for (int i = iLbnd[j]+2; i <= iRbnd[j]-2; ++i){   // not allowing edges to be victims
     Cell c = Ctot[j][i];
+
     double val = c.regridVal();
     if (val < minVal){
       minVal = val;
@@ -600,7 +603,7 @@ void Grid::applyRegrid(int j, int i, int action){
     split(j,ib);      
   }
 
-  targetRegridVictims(j);  // updating ismall and ibig
+  // targetRegridVictims(j);  // updating ismall and ibig
 
 }
 
@@ -1074,7 +1077,7 @@ void Grid::printCols(int it){
           Cdump[j][i].S.cons[SS1],
           Cdump[j][i].S.cons[SS2],
           Cdump[j][i].S.cons[TAU],
-          Cdump[j][i].S.cons[NUM_C]);
+          Cdump[j][i].S.prim[TR1]);
       }
     }
     fclose(fout);

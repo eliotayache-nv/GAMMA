@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-14 13:42:05
+* @Last Modified time: 2020-09-23 17:52:26
 */
 
 #include "../environment.h"
@@ -28,6 +28,8 @@ static double rhoNorm = rho0;
 static double lNorm = c_;
 static double vNorm = c_;
 static double pNorm = rhoNorm*vNorm*vNorm;
+
+static double ejecta_regrid_ratio = 100;
 
 void loadParams(s_par *par){
 
@@ -108,14 +110,14 @@ int Grid::initialValues(){
         c->S.prim[VV1] = vr1_norm;
         c->S.prim[VV2] = 0.;
         c->S.prim[PPP] = p1_norm;
-        c->S.cons[NUM_C] = 1.;
+        c->S.prim[TR1] = 1.;
       }
       else{
         c->S.prim[RHO] = rho0_norm;
         c->S.prim[VV1] = 0.0;
         c->S.prim[VV2] = 0.0;
         c->S.prim[PPP] = p0_norm;
-        c->S.cons[NUM_C] = 2.;            
+        c->S.prim[TR1] = 2.;            
       }
     }
   }
@@ -186,13 +188,19 @@ int Grid::checkCellForRegrid(int j, int i){
   // We allow dx in [0.1, 10] around target uniform resolution
 
   Cell c = Ctot[j][i];
-  double split_ratio = 50;    // relative to target resolution
+
+  double trac = c.S.prim[TR1];
+  double split_ratio = 50;     // relative to target resolution
   double merge_ratio = 0.05;   // relative to target resolution
-  // double r  = c.G.x[MV];
   double dl = c.G.dl[MV];
   double rmin = Ctot[j][iLbnd[j]+1].G.x[r_];
   double rmax = Ctot[j][iRbnd[j]-1].G.x[r_];
   double target_res = (rmax - rmin) / ncell[r_];
+
+  if (fabs(trac-1) < 0.5){
+    split_ratio /= ejecta_regrid_ratio;   // smaller cells in ejecta
+    merge_ratio /= ejecta_regrid_ratio;
+  }
 
   if (dl > split_ratio * target_res) {
     return(split_);
@@ -201,6 +209,19 @@ int Grid::checkCellForRegrid(int j, int i){
     return(merge_);
   }
   return(skip_);
+
+}
+
+
+void Cell::user_regridVal(double *res){
+  // user function to find regrid victims
+  // adapts the search to special target resolution requirements
+  // depending on the tracer value
+
+  double trac = S.prim[TR1];
+  if (fabs(trac-1 < 0.5)){
+    *res *= ejecta_regrid_ratio;
+  }
 
 }
 

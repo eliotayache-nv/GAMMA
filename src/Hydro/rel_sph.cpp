@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-14 00:22:28
+* @Last Modified time: 2020-09-15 10:48:52
 */
 
 #include "../fluid.h"
@@ -58,6 +58,8 @@ void FluidState::prim2cons(double r){
   for (int i = 0; i < NUM_D; ++i) cons[SS1+i] = ss[i];
   cons[SS1+t_] *= r;
 
+  for (int t = 0; t < NUM_T; ++t) cons[TR1+t] = prim[TR1+t]*D; 
+
 }
 
 
@@ -86,7 +88,7 @@ void FluidState::state2flux(double r){
     }
     flux[n][SS1+t_] *= r; // spherical coords
     flux[n][TAU] = ss[n] - D*uu[n]/lfac;
-    for (int t = 0; t < NUM_T; ++t) flux[n][NUM_C+t] = cons[NUM_C+t]*uu[n]/lfac;
+    for (int t = 0; t < NUM_T; ++t) flux[n][TR1+t] = cons[TR1+t]*uu[n]/lfac;
   }
 
 }
@@ -284,6 +286,9 @@ void FluidState::cons2prim(double r, double pin){
   for (int d = 0; d < NUM_D; ++d){ 
     prim[UU1+d] = uu[d];
   }
+  for (int t = 0; t < NUM_T; ++t){
+    prim[TR1+t] = cons[TR1+t] / D;
+  }
 
   prim2cons(r); // for consistency
   
@@ -397,21 +402,22 @@ FluidState Interface::starState(FluidState Sin, double lbda){
   double p = Sin.prim[PPP];
   double D = Sin.cons[DEN];
   double E = Sin.cons[TAU]+Sin.cons[DEN];
+  double tr[NUM_T];
+  for (int t = 0; t < NUM_T; ++t) tr[t] = Sin.cons[TR1+t];
 
-  // Setting up temporary variables:
   double A = lbda * E - m;
   double B = m * (lbda-v) - p;
-    // Mignone (2006) eq. 17
   FluidState Sout;
   double pS = (A*lS - B) / (1. - lbda*lS);
-    // Mignone (2006) eq. 17
   double k = (lbda-v) / (lbda - lS);
   Sout.cons[DEN] = D * k;
   Sout.cons[s]   = (m * (lbda-v) + pS - p) / (lbda-lS); 
   for (int n = 0; n < NUM_D-1; ++n){ Sout.cons[ss[n]] = mm[ss[n]-SS1] * k; }
   Sout.cons[SS1+t_] *= r;
   Sout.cons[TAU] = (E * (lbda-v) + pS * lS - p * v) / (lbda - lS) - D*k;
-      // Mignone (2006) eq. 16 (-D)
+  for (int t = 0; t < NUM_T; ++t) Sout.cons[TR1+t] = tr[t] * k;
+    // Mignone (2006) eq. 16 (-D)
+    // Mignone (2006) eq. 17
 
   return Sout;
   // no need to compute the flux, will be done in the solver function
