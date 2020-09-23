@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-23 17:52:26
+* @Last Modified time: 2020-09-23 19:05:39
 */
 
 #include "../environment.h"
@@ -29,7 +29,8 @@ static double lNorm = c_;
 static double vNorm = c_;
 static double pNorm = rhoNorm*vNorm*vNorm;
 
-static double ejecta_regrid_ratio = 100;
+static double ejecta_regrid_ratio = 0.01;
+static double csm_regrid_ratio    = 10;
 
 void loadParams(s_par *par){
 
@@ -193,13 +194,19 @@ int Grid::checkCellForRegrid(int j, int i){
   double split_ratio = 50;     // relative to target resolution
   double merge_ratio = 0.05;   // relative to target resolution
   double dl = c.G.dl[MV];
+  double r = c.G.x[r_];
   double rmin = Ctot[j][iLbnd[j]+1].G.x[r_];
   double rmax = Ctot[j][iRbnd[j]-1].G.x[r_];
   double target_res = (rmax - rmin) / ncell[r_];
 
-  if (fabs(trac-1) < 0.5){
-    split_ratio /= ejecta_regrid_ratio;   // smaller cells in ejecta
-    merge_ratio /= ejecta_regrid_ratio;
+  if (fabs(trac-1) < 0.2){
+    split_ratio *= ejecta_regrid_ratio;   // smaller cells in ejecta
+    merge_ratio *= ejecta_regrid_ratio;
+  }
+
+  if (fabs(trac-2) < 0.5){
+    split_ratio *= csm_regrid_ratio;   // smaller cells in ejecta
+    merge_ratio *= csm_regrid_ratio;
   }
 
   if (dl > split_ratio * target_res) {
@@ -219,8 +226,11 @@ void Cell::user_regridVal(double *res){
   // depending on the tracer value
 
   double trac = S.prim[TR1];
-  if (fabs(trac-1 < 0.5)){
-    *res *= ejecta_regrid_ratio;
+  if (fabs(trac-1 < 0.2)){
+    *res /= ejecta_regrid_ratio;
+  }
+  if (fabs(trac-2 < 0.5)){
+    *res /= csm_regrid_ratio;
   }
 
 }
