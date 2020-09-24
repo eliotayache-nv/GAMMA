@@ -43,6 +43,7 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 #define OMP_ ENABLED_
 
 #define SPATIAL_RECONSTRUCTION_ PIECEWISE_LINEAR_
+#define CIRC_REGRID_ DISABLED_
 
 // ---------------------------------------------------------------------------------------
 // GLOBAL VARIABLES

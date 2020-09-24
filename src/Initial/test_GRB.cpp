@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-23 19:34:33
+* @Last Modified time: 2020-09-24 18:34:26
 */
 
 #include "../environment.h"
@@ -29,23 +29,21 @@ static double lNorm = c_;
 static double vNorm = c_;
 static double pNorm = rhoNorm*vNorm*vNorm;
 
-static double ejecta_regrid_ratio = 0.05;
-static double csm_regrid_ratio    = 10;
+static double ejecta_regrid_ratio = 0.01;
+static double csm_regrid_ratio    = 1;
 
 void loadParams(s_par *par){
 
   par->tini      = 0.;
   par->ncell[x_] = 300;
   par->ncell[y_] = 150;
-  par->nmax      = 320;    // max number of cells in MV direction
+  par->nmax      = 1000;    // max number of cells in MV direction
   par->ngst      = 2;
 
 }
 
 // ---------------------------------------------------------------------------------------
 // GRB-specific functions
-
-
 
 
 
@@ -131,14 +129,14 @@ int Grid::initialValues(){
 void Grid::userKinematics(){
 
   // setting lower and higher i boundary interface velocities to zero
-  int check_dist = 90;
+  // int check_dist = 90;
   double vIn     = 0.8;     // can't be lower than 1 for algo to work
   double vOut    = 1.2;     
   // double rhoInlim = 1.e3;     // threshold to detect back of the ejecta
   // double vOutlim = 0.1;
 
-  int moveInner = 1.;
-  int moveOuter = 1.;
+  // int moveInner = 1.;
+  // int moveOuter = 1.;
   // for (int j = 0; j < nde_nax[F1]; ++j){
 
   //   Cell      Cin  = Ctot[j][iLbnd[j]+check_dist];
@@ -150,10 +148,12 @@ void Grid::userKinematics(){
   // }
 
   // communicating to all nodes
-  double allmoveInner;
-  double allmoveOuter;
-  MPI_Allreduce(&moveInner, &allmoveInner, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-  MPI_Allreduce(&moveOuter, &allmoveOuter, 2, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  double allmoveInner = 1;
+  double allmoveOuter = 1;
+  // double allmoveInner;
+  // double allmoveOuter;
+  // MPI_Allreduce(&moveInner, &allmoveInner, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+  // MPI_Allreduce(&moveOuter, &allmoveOuter, 2, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int n = 0; n <= ngst; ++n){
@@ -191,13 +191,13 @@ int Grid::checkCellForRegrid(int j, int i){
   Cell c = Ctot[j][i];
 
   double trac = c.S.prim[TR1];
-  double split_ratio = 50;     // relative to target resolution
-  double merge_ratio = 0.05;   // relative to target resolution
-  double dl = c.G.dl[MV];
-  double r = c.G.x[r_];
-  double rmin = Ctot[j][iLbnd[j]+1].G.x[r_];
-  double rmax = Ctot[j][iRbnd[j]-1].G.x[r_];
-  double target_res = (rmax - rmin) / ncell[r_];
+  double split_ratio = 5;     // relative to target aspect ratio
+  double merge_ratio = 0.1;    // relative to target aspect ratio
+  double target_ar = 1;
+  double dr  = c.G.dx[r_];
+  double dth = c.G.dx[t_];
+  double r   = c.G.x[r_];
+  double ar  = dr / (r*dth);  // aspect ratio
 
   if (fabs(trac-1) < 0.2){
     split_ratio *= ejecta_regrid_ratio;   // smaller cells in ejecta
@@ -205,14 +205,15 @@ int Grid::checkCellForRegrid(int j, int i){
   }
 
   if (fabs(trac-2) < 0.5){
-    split_ratio *= csm_regrid_ratio;   // smaller cells in ejecta
+    split_ratio *= csm_regrid_ratio;   // bigger cells in csm
     merge_ratio *= csm_regrid_ratio;
   }
 
-  if (dl > split_ratio * target_res) {
+  if (ar > split_ratio * target_ar) {
+    // printf("%d %d\n", j, i);
     return(split_);
   }
-  if (dl < merge_ratio * target_res) {
+  if (ar < merge_ratio * target_ar) {
     return(merge_);
   }
   return(skip_);
