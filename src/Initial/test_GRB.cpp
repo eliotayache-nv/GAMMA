@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-24 18:34:26
+* @Last Modified time: 2020-09-26 15:15:50
 */
 
 #include "../environment.h"
@@ -29,7 +29,7 @@ static double lNorm = c_;
 static double vNorm = c_;
 static double pNorm = rhoNorm*vNorm*vNorm;
 
-static double ejecta_regrid_ratio = 0.01;
+static double ejecta_regrid_ratio = 0.1;
 static double csm_regrid_ratio    = 1;
 
 void loadParams(s_par *par){
@@ -37,7 +37,7 @@ void loadParams(s_par *par){
   par->tini      = 0.;
   par->ncell[x_] = 300;
   par->ncell[y_] = 150;
-  par->nmax      = 1000;    // max number of cells in MV direction
+  par->nmax      = 5000;    // max number of cells in MV direction
   par->ngst      = 2;
 
 }

@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-24 19:52:41
+* @Last Modified time: 2020-09-27 22:51:50
 */
 
 #include "../environment.h"
@@ -600,12 +600,12 @@ void Grid::applyRegrid(int j, int i, int action){
 
   // circular regrid: we grab the extra cell somewhere on the track (res stays the same)
   // And we avoid load-balancing issues
-  if (action == split_ and ntrack[j]){
+  if (action == split_ and ntrack[j] < nde_nax[MV]-1){
     // merge smallest cell in track 
     int isplit = i;
 
     #if CIRC_REGRID_ == DISABLED_
-      if (ntrack[j] >= nde_nax[F1]) return; // no space in memory to split cell
+      if (ntrack[j] >= nde_nax[MV]) return; // no space in memory to split cell
     #elif CIRC_REGRID_ == ENABLED_
       int is = ismall[j];
       if (i==is) exit(10);    // cell to split can't be the smallest cell in the fluid
@@ -873,6 +873,7 @@ void Grid::update(double dt){
     for (int i = 0; i < ntrack[j]-1; ++i){
       // printf("%d from %d of %d on node %d of %d\n", j,proc, nthrd, worldrank, worldsize);
       Itot[j][i].move(dt);
+      // if (i==ntrack[j]-2) printf("%le\n", Itot[j][i].x[MV]);
     }
   }
   // exit(10);
@@ -1074,7 +1075,19 @@ void Grid::printCols(int it){
     sizes[0] = nde_nax[F1] * nde_nax[MV];
     jsize[0] = nde_nax[F1];
     std::copy_n(&Ctot[0][0], sizes[0], &Cdump[0][0]);
-    std::copy_n(&ntrack[0], nde_nax[F1], &ntrackd[0]);
+    std::copy_n(&ntrack[0], nde_nax[F1], &ntrackd[0]);  
+
+    // for (int j = 0; j < nde_nax[F1]; ++j)
+    // {
+    //   printf("ntrack %d %d %d %le %le %le %le\n", 
+    //     j, 
+    //     ntrack[j], 
+    //     ntrackd[j], 
+    //     Ctot[j][300].G.x[MV], 
+    //     Cdump[j][300].G.x[MV], 
+    //     Ctot[j][ntrack[j]-3].G.x[MV],
+    //     Cdump[j][ntrack[j]-3].G.x[MV]);
+    // }
 
     for (int j = 1; j < worldsize; ++j){
       int o[NUM_D]; // origin
@@ -1084,7 +1097,7 @@ void Grid::printCols(int it){
       int i2 = o[MV];
       MPI_Recv(&SCdump[i1][i2], sizes[j], cell_mpi, j, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Recv(      &jsize[j],        1,  MPI_INT, j, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Recv(   &ntrackd[i1], jsize[j],  MPI_INT, j, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(   &ntrackd[i1+ngst], jsize[j],  MPI_INT, j, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     std::stringstream ss;
@@ -1095,7 +1108,7 @@ void Grid::printCols(int it){
 
     fprintf(fout, "j i x y dx dy dlx dly rho vx vy p D sx sy tau trac\n");
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
-      for (int i = ngst; i < ntrackd[j]+ngst; ++i) {
+      for (int i = ngst; i < ntrackd[j]-ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
         double lfac = Cdump[j][i].S.lfac();
         fprintf(fout, "%d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
@@ -1125,6 +1138,7 @@ void Grid::printCols(int it){
 
   }else{
     int size  = nde_nax[F1] * nde_nax[MV];  // size includes MV ghost cells
+    int jsize = nde_nax[F1]-2*ngst;
     MPI_Send( &size,     1,  MPI_INT, 0, 0, MPI_COMM_WORLD);
     MPI_Send(origin, NUM_D,  MPI_INT, 0, 1, MPI_COMM_WORLD);
     s_cell **SC = array_2d<s_cell>(nde_nax[F1],nde_nax[MV]);
@@ -1134,8 +1148,8 @@ void Grid::printCols(int it){
       }
     }
     MPI_Send(&SC[0][0],     size, cell_mpi, 0, 2, MPI_COMM_WORLD);
-    MPI_Send(&nde_nax[F1],     1,  MPI_INT, 0, 3, MPI_COMM_WORLD);
-    MPI_Send(&ntrack[0], nde_nax[F1], MPI_INT, 0, 4, MPI_COMM_WORLD);
+    MPI_Send(&jsize,     1,  MPI_INT, 0, 3, MPI_COMM_WORLD);
+    MPI_Send(&ntrack[ngst], jsize, MPI_INT, 0, 4, MPI_COMM_WORLD);
     delete_array_2d<s_cell>(SC);
   }
 
