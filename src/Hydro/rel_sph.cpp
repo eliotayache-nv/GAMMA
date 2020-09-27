@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-15 10:48:52
+* @Last Modified time: 2020-09-28 00:07:13
 */
 
 #include "../fluid.h"
@@ -358,7 +358,7 @@ void Interface::computeLambda(){
   double Fhllm = (lL * BR - lR * BL) / (lR - lL);
   double mhll  = (BR - BL) / (lR - lL);
 
-  if (FhllE < 1.e-13){
+  if (FhllE < 1.e-15){
     lS = mhll / (Ehll + Fhllm);
     return;
   }

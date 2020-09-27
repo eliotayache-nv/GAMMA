@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 00:07:21
+* @Last Modified time: 2020-09-06 15:23:32
 */
 
 #include "../fluid.h"
@@ -34,9 +34,7 @@ FluidState::FluidState(){
 FluidState::~FluidState(){}
 
 
-void FluidState::prim2cons(double r){
-
-  UNUSED(r);
+void FluidState::prim2cons(){
 
   double rho = prim[RHO];
   double p   = prim[PPP];
@@ -58,8 +56,6 @@ void FluidState::prim2cons(double r){
   cons[DEN] = D;
   cons[TAU] = tau;
   for (int i = 0; i < NUM_D; ++i) cons[SS1+i] = ss[i];
-
-  for (int t = 0; t < NUM_T; ++t) cons[TR1+t] = prim[TR1+t]*D; 
 
 }
 
@@ -122,11 +118,13 @@ static double f(double p, void *params){
 
 }
 
-void FluidState::cons2prim(double r, double pin){
+void FluidState::cons2prim(double pin){
 
+  double  lfac,E,S,D;  // (computed from conserved variables)
   int     status;
-  int     iter = 0, max_iter = 100;
-  double  res;
+  int     iter = 0, max_iter = 1000000;
+  double  r;
+  double  p_lo, p_hi,p;
   struct  f_params                params;
   const   gsl_root_fsolver_type   *T;
   gsl_root_fsolver                *s;
@@ -136,102 +134,90 @@ void FluidState::cons2prim(double r, double pin){
   F.params = &params;
 
   // setting initial parameters
-  double D = cons[DEN];
-  double tau = cons[TAU];
-  double E = D+tau;
-  double ss[NUM_D];
-  double S2 = 0.;
-
-  for (int d = 0; d < NUM_D; ++d) ss[d] = cons[SS1+d];
-  for (int d = 0; d < NUM_D; ++d) S2 += ss[d]*ss[d];
-
-  double S = sqrt(S2);
+  D = cons[DEN];
+  S = 0.;
+  for (int i = 0; i < NUM_D; ++i) S += cons[SS1+i]*cons[SS1+i];
+  S = sqrt(S);
+  E = cons[TAU]+cons[DEN];
 
   params.D = D;
   params.S = S;
   params.E = E;
   params.gamma = GAMMA_;
 
-  double pCand;
-  if (pin != 0) pCand = pin;
-  else pCand = prim[PPP];
+  if (pin != 0) p = pin;
+  else p = prim[PPP];
 
   // Looking for pressure only if current one doesn't work;
-  double f_init = f(pCand, &params);
-  if (fabs(f_init) > 1.e-13) {
+  double f_init = f(p, &params);
 
-    double p_lo, p_hi;
+  if (fabs(f_init) > 1.e-14) {
+
     T = gsl_root_fsolver_brent;
     s = gsl_root_fsolver_alloc (T);
 
     // setting boundaries
     // f(p_lo) has to be positive. No solution otherwise
     // hence, f(p_hi) has to be negative
-    p_lo = fmax(0., (1. + 1e-13) * S - E);
-      // the endpoints not straddling can come from here (when p_lo is set to zero)
-    bool find_p = true;
-    if (f(p_lo, &params)<0) { find_p = false; } // no solution
+
+    p_lo = fmax(0., (1. + 1e-13) * fabs(S) - E);
 
     if (f_init < 0){
-      p_hi = 1.*pCand;
+      p_hi = 1.*p;
     }
     else {
-      p_hi = pCand;
-      while (f(p_hi, &params) > 0) {p_hi *= 10; }
+      int i = 0;
+      p_hi = p;
+      while (f(p_hi, &params) > 0) {
+        i++;
+        p_hi *= 10;
+      }
     }
+    gsl_root_fsolver_set (s, &F, p_lo, p_hi);
 
-    if (p_hi<p_lo) {find_p = false; } // no solution
+    // Iterating for root finding:            
+    do {
+      iter++;
+      status = gsl_root_fsolver_iterate (s);
+      r = gsl_root_fsolver_root (s);
+      p_lo = gsl_root_fsolver_x_lower (s);
+      p_hi = gsl_root_fsolver_x_upper (s);
+      status = gsl_root_test_interval (p_lo, p_hi,
+                       0, 1.e-13);
+    }                
+    while (status == GSL_CONTINUE && iter < max_iter);
 
-    if (find_p){
-      gsl_root_fsolver_set (s, &F, p_lo, p_hi);
-      do {
-        iter++;
-        status = gsl_root_fsolver_iterate (s);
-        res = gsl_root_fsolver_root (s);
-        p_lo = gsl_root_fsolver_x_lower (s);
-        p_hi = gsl_root_fsolver_x_upper (s);
-        status = gsl_root_test_interval (p_lo, p_hi, 1.e-13, 1.e-13);
-      } while (status == GSL_CONTINUE && iter < max_iter);
-      gsl_root_fsolver_free (s);
-      pCand = res;
-    }
+    gsl_root_fsolver_free (s);
+    p = r;
   }
 
-  double p = pCand;
-  double Ep2 = (E+p)*(E+p);
-  double v2 = S2/Ep2;
-  double lfac = 1./sqrt(fabs(1.-v2)); // fabs in case of non-physical state
-  double rho = D/lfac;
-
-  double uu[NUM_D];
-  if (S < 1.e-14) {
-    for (int d = 0; d < NUM_D; ++d) uu[d] = 0;
-  }
-  else {
-    double v = sqrt(1.- 1./(lfac*lfac));
-    for (int d = 0; d < NUM_D; ++d) uu[d] = lfac*v*(ss[d]/S);
-      // Mignone (2006) eq. 3
-  }
-
-  cons2prim_user(&rho, &p, uu);
+  lfac = 1./sqrt(1.-(S*S)/((E+p)*(E+p)));
 
   prim[PPP] = p;
-  prim[RHO] = rho;
-  for (int d = 0; d < NUM_D; ++d){ 
-    prim[UU1+d] = uu[d];
-  }
-  for (int t = 0; t < NUM_T; ++t){
-    prim[TR1+t] = cons[TR1+t] / D;
+  prim[RHO] = D/lfac;
+
+  // printf("%le\n", (S*S)/((E+p)*(E+p)));
+
+  if (S == 0.)    
+    for (int i = 0; i < NUM_D; ++i) prim[UU1+i] = 0;
+  else
+  {
+    double v = sqrt(1.- 1./(lfac*lfac));
+    for (int i = 0; i < NUM_D; ++i) prim[UU1+i] = lfac*v*(cons[SS1+i]/S);
+    // Mignone (2006) eq. 3
   }
 
-  prim2cons(r); // for consistency
+  prim2cons(); // for consistency
   
 }
-
 
 void Interface::wavespeedEstimates(){
 
   int u = UU1+dim;
+  // if      (dim == x_) { u = UU1; }
+  // else if (dim == y_) { u = UU2; }
+  // else                { u = UU3; }
+
   double lfacL = SL.lfac();
   double lfacR = SR.lfac();
   double vL = SL.prim[u]/lfacL;
@@ -263,7 +249,9 @@ void Interface::computeLambda(){
 
   int u = UU1+dim;
   int s = SS1+dim;
-  double d;
+  // if      (dim == x_) { u = UU1; s = SS1; }
+  // else if (dim == y_) { u = UU2; s = SS2; }
+  // else                { u = UU3; s = SS3; }
 
   wavespeedEstimates();
   
@@ -291,7 +279,7 @@ void Interface::computeLambda(){
   double Fhllm = (lL * BR - lR * BL) / (lR - lL);
   double mhll  = (BR - BL) / (lR - lL);
 
-  if (FhllE < 1.e-15){
+  if (FhllE == 0){
     lS = mhll / (Ehll + Fhllm);
     return;
   }
@@ -324,30 +312,26 @@ FluidState Interface::starState(FluidState Sin, double lbda){
     ss[0] = SS1 + x_; ss[1] = SS1 + y_;
   }
 
-  double mm[NUM_D];
-  for (int d = 0; d < NUM_D; ++d) mm[d] = Sin.cons[SS1+d];
-
   double lfac = Sin.lfac();
   double v = Sin.prim[u]/lfac;
-  double m = mm[dim];
+  double m = Sin.cons[s];
   double p = Sin.prim[PPP];
   double D = Sin.cons[DEN];
   double E = Sin.cons[TAU]+Sin.cons[DEN];
-  double tr[NUM_T];
-  for (int t = 0; t < NUM_T; ++t) tr[t] = Sin.cons[TR1+t];
 
+  // Setting up temporary variables:
   double A = lbda * E - m;
   double B = m * (lbda-v) - p;
+    // Mignone (2006) eq. 17
   FluidState Sout;
   double pS = (A*lS - B) / (1. - lbda*lS);
+    // Mignone (2006) eq. 17
   double k = (lbda-v) / (lbda - lS);
   Sout.cons[DEN] = D * k;
   Sout.cons[s]   = (m * (lbda-v) + pS - p) / (lbda-lS); 
-  for (int n = 0; n < NUM_D-1; ++n){ Sout.cons[ss[n]] = mm[ss[n]-SS1] * k; }
+  for (int n = 0; n < NUM_D-1; ++n){ Sout.cons[ss[n]] = Sin.cons[ss[n]] * k; }
   Sout.cons[TAU] = (E * (lbda-v) + pS * lS - p * v) / (lbda - lS) - D*k;
-  for (int t = 0; t < NUM_T; ++t) Sout.cons[TR1+t] = tr[t] * k;
-    // Mignone (2006) eq. 16 (-D)
-    // Mignone (2006) eq. 17
+      // Mignone (2006) eq. 16 (-D)
 
   return Sout;
   // no need to compute the flux, will be done in the solver function
