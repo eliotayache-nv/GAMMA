@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 18:59:27
+* @Last Modified time: 2020-09-28 19:42:59
 */
 
 #include "main.h"
@@ -20,11 +20,10 @@ int main(int argc, char *argv[]){
   int status;
   Simu simu;
   Flags flags;
-
+  
+  chbindir(argv[0]);
   flags.load(argc, argv);
   flags.checkApplicable();
-
-  chbindir(argv[0]);
   mpi_init(&argc, &argv);
   checkEnvironment();
 
@@ -62,6 +61,7 @@ void Flags::checkApplicable(){
   if (!overwrite){
     DIR* dir = opendir("../results/Last");
     if (dir) throw OverwriteOutputException();
+    closedir(dir);
   }
 
   if (overwrite and resume){

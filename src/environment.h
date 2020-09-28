@@ -20,7 +20,6 @@
 #include <sstream>
 #include <iomanip>
 
-
 #include "err.h"
 
 #define UNUSED(x) (void)(x)
