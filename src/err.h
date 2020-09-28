@@ -63,4 +63,20 @@ struct StartupFileManagementException : public exception
   }
 };
 
+struct OverwriteOutputException : public exception
+{
+  const char * what () const throw ()
+  {
+    return "You are about to overwrite ouput files. Use '-w' flag if it's intentional.";
+  }
+};
+
+struct WrongCombinatinoOfFlagsException : public exception
+{
+  const char * what () const throw ()
+  {
+    return "Wrong combination of flags! Check that they can be used together.";
+  }
+};
+
 #endif
