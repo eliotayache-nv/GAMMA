@@ -2,17 +2,8 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 16:56:10
+* @Last Modified time: 2020-09-28 18:59:27
 */
-
-#include <iostream>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <libgen.h>
-#include <unistd.h>
-#include <cstring>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "main.h"
 #include "environment.h"
@@ -37,8 +28,10 @@ int main(int argc, char *argv[]){
   mpi_init(&argc, &argv);
   checkEnvironment();
 
-  if (flags.resume)
-    simu.reinitialise();
+  if (flags.resume){
+    DIR* dir = opendir("../results/Last");
+    simu.reinitialise(dir);    
+  }
   else
     simu.initialise();
 

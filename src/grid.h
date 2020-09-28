@@ -57,7 +57,7 @@ class Grid{
   int  initialValues();
   void destruct();            // free memory
   void print(int var);
-  void printCols(int it);
+  void printCols(int it, double t);
   void interfaceGeomFromCellPos();
   void interfaceGeomFromCellPos(int j); // only one track
 

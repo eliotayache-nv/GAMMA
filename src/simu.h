@@ -21,7 +21,7 @@ public:
     FILE*     fout;
 
     void initialise();   // load configurations
-    void reinitialise(); // load configuration from snapshot
+    void reinitialise(DIR *dir); // load configuration from snapshot
     void run();          // Runs the hydro evolution of the grid 
 
 };

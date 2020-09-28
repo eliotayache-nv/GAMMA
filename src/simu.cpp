@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 16:58:33
+* @Last Modified time: 2020-09-28 18:18:58
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -40,7 +40,7 @@ void Simu::run(){
     dt = grid.prepForUpdate(it, t);
 
     // printing grid (everything is ready right after grid prepare)
-    if (it%10 == 0){ grid.printCols(it); }
+    if (it%10 == 0){ grid.printCols(it, t); }
 
     grid.update(dt);
 
