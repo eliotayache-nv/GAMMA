@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-09-27 22:50:03
+# @Last Modified time: 2020-09-28 11:05:46
 
 
 import numpy as np
@@ -62,6 +62,10 @@ def readData(key, it=None, sequence=False):
     filename = '../../results/%s%d.out'  %(key,it)
   data = pd.read_csv(filename, sep=" ")
   return(data)
+
+
+def getArray(data, key):
+  return(data.pivot(index='j', columns='i', values=key).to_numpy())
 
 
 def quadMesh(data, key, 

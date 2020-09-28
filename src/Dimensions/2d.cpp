@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 10:38:44
+* @Last Modified time: 2020-09-28 11:16:53
 */
 
 #include "../environment.h"
@@ -604,9 +604,7 @@ void Grid::applyRegrid(int j, int i, int action){
     // merge smallest cell in track 
     int isplit = i;
 
-    #if CIRC_REGRID_ == DISABLED_
-      if (ntrack[j] >= nde_nax[MV]) return; // no space in memory to split cell
-    #elif CIRC_REGRID_ == ENABLED_
+    #if CIRC_REGRID_ == ENABLED_
       int is = ismall[j];
       if (i==is) exit(10);    // cell to split can't be the smallest cell in the fluid
       merge(j,is); // merging with smallest neighbour
@@ -616,13 +614,11 @@ void Grid::applyRegrid(int j, int i, int action){
     split(j,isplit);
   }
 
-  if (action == merge_){
+  if (action == merge_ and ntrack[j] > 2*ngst+2){
     // we can just invert the idexes (i, is) -> (ib, i)
     merge(j,i); // merging with smallest neighbour
 
-    #if CIRC_REGRID_ == DISABLED_
-      if (ntrack[j] <= 1+2*ngst) return; // we're gonna loose all evolution
-    #elif CIRC_REGRID_ == ENABLED_
+    #if CIRC_REGRID_ == ENABLED_
       int ib = ibig[j];
       if (i==ib) exit(10);    // cell to split can't be the smallest cell in the fluid
       if (ib > i) ib--;
