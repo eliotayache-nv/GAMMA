@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-09-13 11:49:44
+# @Last Modified time: 2020-09-27 22:50:03
 
 
 import numpy as np
@@ -84,12 +84,19 @@ def quadMesh(data, key,
   dx = data.pivot(index='j', columns='i', values='dx').to_numpy()
   y  = data.pivot(index='j', columns='i', values='y').to_numpy()
   dy = data.pivot(index='j', columns='i', values='dy').to_numpy()
+  z = np.ma.masked_array(z, np.isnan(z))
+  x = np.ma.masked_array(x, np.isnan(x))
+  y = np.ma.masked_array(y, np.isnan(y))
+  dx = np.ma.masked_array(dx, np.isnan(dx))
+  dy = np.ma.masked_array(dy, np.isnan(dy))
 
   if key2:
     z2 = data.pivot(index='j', columns='i', values=key2).to_numpy()
+    z2 = np.ma.masked_array(z2, np.isnan(z2))
 
   if (quiver):
     vx = data.pivot(index='j', columns='i', values='vx').to_numpy()
+    vx = np.ma.masked_array(vx, np.isnan(vx))
 
   if r2:
     z*=x**2
@@ -118,8 +125,9 @@ def quadMesh(data, key,
   for j in range(z.shape[0]-1):
     xj = x - dx/2.
     yj = y - dy/2.
-    xj[j+1,:] = xj[j,:]
-    
+    xj[j+1,:] = xj[j,:]   #these xj[] might not exist
+    yj[j+1,:] = yj[j,:]+dy[j,:]   #these xj[] might not exist
+
     if (geometry=='polar'):
       xx = xj * np.cos(yj)
       yy = xj * np.sin(yj)
@@ -128,6 +136,7 @@ def quadMesh(data, key,
 
     mask = np.zeros(z.shape)+1
     mask[j,:] = 0
+    mask[np.isnan(z)]=1
     zj = np.ma.masked_array(z, mask>0)
     if key2:
       zj2 = np.ma.masked_array(z2, mask>0)
