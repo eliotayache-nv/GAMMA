@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 10:01:27
+* @Last Modified time: 2020-09-28 16:58:33
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -17,25 +17,24 @@ Simu::Simu(){
 
 }
 
+
 Simu::~Simu(){}
 
-int Simu::initialise(){
 
-  int status = 0;
+void Simu::initialise(){
 
   loadParams(&par);
   t = par.tini;
   grid.initialise(par);
-  status = grid.initialGeometry();
-  status = grid.initialValues();
+  grid.initialGeometry();
+  grid.initialValues();
   mpi_distribute(&grid);
   grid.prepForRun();
 
-  return status;
-
 }
 
-int Simu::run(){
+
+void Simu::run(){
 
   while (!stop){
     dt = grid.prepForUpdate(it, t);
@@ -52,7 +51,5 @@ int Simu::run(){
     if (it == 500){ stop = true; }
     if (t > 1.e10){ stop = true; }
   }
-
-  return 0;
 
 }

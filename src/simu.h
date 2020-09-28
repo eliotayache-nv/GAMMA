@@ -20,8 +20,9 @@ public:
 
     FILE*     fout;
 
-    int initialise();   // load configurations
-    int run();          // Runs the hydro evolution of the grid 
+    void initialise();   // load configurations
+    void reinitialise(); // load configuration from snapshot
+    void run();          // Runs the hydro evolution of the grid 
 
 };
 

@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 16:38:56
+* @Last Modified time: 2020-09-28 16:56:10
 */
 
 #include <iostream>
@@ -37,8 +37,12 @@ int main(int argc, char *argv[]){
   mpi_init(&argc, &argv);
   checkEnvironment();
 
-  status = simu.initialise();
-  status = simu.run();
+  if (flags.resume)
+    simu.reinitialise();
+  else
+    simu.initialise();
+
+  simu.run();
 
   mpi_finalise();
   return 0;
