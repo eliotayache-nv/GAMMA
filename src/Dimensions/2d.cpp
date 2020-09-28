@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-27 22:51:50
+* @Last Modified time: 2020-09-28 10:38:44
 */
 
 #include "../environment.h"
@@ -510,7 +510,7 @@ void Grid::computeNeighbors(bool print){
             }
             while (xm < xjR){
               c->neigh[d][0].push_back(Ctot[j-1][im+1].nde_id);
-              if (im > ntrack[j]-1) break;
+              if (im > ntrack[j-1]-1) break;
               im++; xm = Itot[j-1][im].x[MV];
             }            
           }
@@ -523,7 +523,7 @@ void Grid::computeNeighbors(bool print){
             while (xp < xjR){
               c->neigh[d][1].push_back(Ctot[j+1][ip+1].nde_id);
               ip++; 
-              if (ip > ntrack[j]-1) break;
+              if (ip > ntrack[j+1]-1) break;
               xp = Itot[j+1][ip].x[MV];
             }
           }

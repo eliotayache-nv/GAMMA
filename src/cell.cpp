@@ -10,6 +10,8 @@ Cell::Cell(){
     }
   }
 
+  for (int d = 0; d < NUM_D; ++d){ S.prim[VV1+d] = 0.; }
+
 }
 
 Cell::~Cell(){}

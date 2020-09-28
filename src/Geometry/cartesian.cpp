@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 15:17:31
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-05 14:30:55
+* @Last Modified time: 2020-09-28 09:02:30
 */
 
 
@@ -41,5 +41,14 @@ void Cell::move(double xL, double xR){
 void Interface::computedA(){
 
     dA = dx[0];
+
+}
+
+
+double Cell::regridVal(){
+
+  double res = G.dx[MV];
+  user_regridVal(&res);
+  return(res);
 
 }
