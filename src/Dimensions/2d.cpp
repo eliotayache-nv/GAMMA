@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 18:20:18
+* @Last Modified time: 2020-09-29 22:29:14
 */
 
 #include "../environment.h"
@@ -87,7 +87,7 @@ void Grid::initialise(s_par par){
   ibig   = new int[nde_nax[F1]];
   ismall = new int[nde_nax[F1]];
   
-  Cinit = array_2d<Cell>(ncell[F1],nax[MV]-ngst); // Cinit need to have the empty cells...
+  Cinit = array_2d<Cell>(ncell[F1],nax[MV]-2*ngst); // Cinit need to have the empty cells...
   Ctot  = array_2d<Cell>(nde_nax[F1],nde_nax[MV]);                       // ...for restart
   Itot  = array_2d<Interface>(nde_nax[F1],nde_nax[MV]-1);
   I     = array_2d_nogst<Interface>(Itot, nde_nax[F1], ngst); // removes ghost to ghost

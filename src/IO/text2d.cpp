@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 18:31:36
+* @Last Modified time: 2020-09-29 19:13:56
 */
 
 #include "../simu.h"
@@ -18,7 +18,6 @@ public:
 
   Data(char *line): line(line){
 
-    double t;
     sscanf(line, 
       "%le %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n",
       &t, &j, &i, 
@@ -31,7 +30,7 @@ public:
   
   char *line;
   int j, i;
-  double x, y, dx, dy, dlx, dly, rho, vx, vy, p, D, sx, sy, tau, trac;
+  double t, x, y, dx, dy, dlx, dly, rho, vx, vy, p, D, sx, sy, tau, trac;
 
   void toCell(Grid *g){
 
@@ -77,17 +76,19 @@ static void openLastSnapshot(DIR* dir, vector<Data> *data, long int *it, double 
 
   FILE *snap = fopen(addr, "r");
   char line[256];
+  fgets(line, sizeof(line), snap);
   while (fgets(line, sizeof(line), snap)) {
     Data datapoint(line);
     data->push_back(datapoint);
   }
+  *t = data->at(0).t;
   printf("tstart = %le\n", *t);
   fclose(snap);
 
 }
 
-static void reloadFromData(Grid* g, vector<Data> data);
 
+static void reloadFromData(Grid* g, vector<Data> data);
 void Simu::reinitialise(DIR* dir){
 
   vector<Data> data;
@@ -103,12 +104,26 @@ void Simu::reinitialise(DIR* dir){
 
 void reloadFromData(Grid* g, vector<Data> data){
 
-  int i = 0;
-  int j = 0;
+  int ngst = g->ngst;
+  int i_old = 0;
+  int j_old = 0;
   for (std::vector<Data>::size_type c = 0; c < data.size(); ++c){
-    i = data[c].i;
-    j = data[c].j;
     data[c].toCell(g);
+    int i = data[c].i;
+    int j = data[c].j;
+    int jtrgt = j-1+ngst;
+    if (j>j_old){
+      g->nact[jtrgt]   = i_old + 1;
+      g->ntrack[jtrgt] = i_old + 1 + 2*ngst;
+      g->iRbnd[jtrgt]  = i_old + 1 + ngst; 
+    }
+    j_old = j;
+    i_old = i;
+    if (c == data.size()-1){
+      g->nact[j+ngst]   = i_old + 1;
+      g->ntrack[j+ngst] = i_old + 1 + 2*ngst;
+      g->iRbnd[j+ngst]  = i_old + 1 + ngst; 
+    }
   }
 
 }
