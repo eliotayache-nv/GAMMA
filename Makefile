@@ -1,9 +1,10 @@
-INITIAL    = test_GRB
+INITIAL    = test_RT
 TIMESTEP   = rk3
-GEOMETRY   = spherical
-HYDRO      = rel_sph
+GEOMETRY   = cartesian
+HYDRO      = rel_cart
 SOLVER     = hllc
 DIMENSIONS = 2d
+IO         = text2d
 
 OS_NAME := $(shell uname -s | tr A-Z a-z)
 HOST_NAME := $(shell hostname | cut -c-6)s
@@ -43,9 +44,10 @@ GEOMETRYY  =$(SOURCE)/Geometry/$(GEOMETRY)
 HYDROO     =$(SOURCE)/Hydro/$(HYDRO)
 SOLVERR    =$(SOURCE)/Solver/$(SOLVER)
 DIMENSIONSS=$(SOURCE)/Dimensions/$(DIMENSIONS)
+IOO        =$(SOURCE)/IO/$(IO)
 
 SOURCES = $(wildcard $(SOURCE)/*.cpp) 
-OBJECTS = $(SOURCES:.cpp=.o) $(INITIALL).o $(GEOMETRYY).o $(HYDROO).o $(SOLVERR).o $(DIMENSIONSS).o
+OBJECTS = $(SOURCES:.cpp=.o) $(INITIALL).o $(GEOMETRYY).o $(HYDROO).o $(SOLVERR).o $(DIMENSIONSS).o $(IOO).o
 
 
 all : $(BIN)/GAMMA
@@ -92,6 +94,9 @@ $(SOLVERR).o: $(SOLVERR).cpp
 	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $< -o $@
 
 $(DIMENSIONSS).o: $(DIMENSIONSS).cpp
+	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $< -o $@
+
+$(IOO).o: $(IOO).cpp
 	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $< -o $@
 
 
