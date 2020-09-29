@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 18:21:57
+* @Last Modified time: 2020-09-29 09:35:01
 */
 
 #include "../environment.h"
@@ -94,6 +94,14 @@ void Grid::initialise(s_par par){
   C     = array_2d_nogst<Cell>(Ctot, nde_nax[F1], ngst);     
 
 }
+
+
+// Grid::reloadGeometry(){
+
+
+
+// }
+
 
 
 void Grid::assignId(int ind[NUM_D]){

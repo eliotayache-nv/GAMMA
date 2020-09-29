@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 19:14:05
+* @Last Modified time: 2020-09-29 09:44:03
 */
 
 #include "../simu.h"
@@ -12,13 +12,12 @@
 #include "../array_tools.h"
 
 
-static void openLastSnapshot(DIR* dir, FILE *snap, long int *it){
+static void openLastSnapshot(DIR* dir, char *addr, long int *it, double *t){
 
   struct dirent  *dirp;       
   vector<string>  files;     
   char strfile[100];
   char strFilePath[100] = "../results/Last/";
-  char *addr;
 
   while ((dirp = readdir(dir)) != NULL) {
     std::string fname = dirp->d_name;
@@ -28,19 +27,31 @@ static void openLastSnapshot(DIR* dir, FILE *snap, long int *it){
   std::sort(files.begin(), files.end());
   strcpy(strfile,files[files.size()-1].c_str());
   sscanf(strfile, "phys%ld.h5", it);
-  printf("%ld\n", *it);
+
   addr = strcat(strFilePath, strfile);
   printf("resuming setup from file: ");
-  printf("%s\n", strcat(strFilePath, strfile));
-  snap = fopen(addr, "r");
+  printf("%s\n", addr);
+
+  FILE *snap = fopen(addr, "r");
+  char line[256];
+  int j, i;
+  double x, y, dx, dy, dlx, dly, rho, vx, vy, p, D, sx, sy, tau, trac;
+  while (fgets(line, sizeof(line), snap)) {
+    sscanf(line, 
+      "%le %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n",
+      t, &j, &i, &x, &y, &dx, &dy, &dlx, &dly, &rho, &vx, &vy, &p, &D, &sx, &sy, &tau, &trac
+      ); 
+  }
+
+  fclose(snap);
 
 }
 
 
 void Simu::reinitialise(DIR* dir){
 
-  FILE *snap;
-  openLastSnapshot(dir, snap, &it);
+  char addr[256];
+  openLastSnapshot(dir, addr, &it, &t);
   loadParams(&par);
   grid.initialise(par);   // this is unchanged from IC startup
   grid.initialGeometry();  

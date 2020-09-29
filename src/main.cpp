@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 19:42:59
+* @Last Modified time: 2020-09-29 09:43:28
 */
 
 #include "main.h"
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
   int status;
   Simu simu;
   Flags flags;
-  
+
   chbindir(argv[0]);
   flags.load(argc, argv);
   flags.checkApplicable();
@@ -58,7 +58,7 @@ void Flags::load(int argc, char *argv[]){
 // Check that the combination of flags is allowed
 void Flags::checkApplicable(){
 
-  if (!overwrite){
+  if (!overwrite and !resume){
     DIR* dir = opendir("../results/Last");
     if (dir) throw OverwriteOutputException();
     closedir(dir);
