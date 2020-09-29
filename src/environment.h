@@ -23,6 +23,8 @@
 #include "err.h"
 
 #define UNUSED(x) (void)(x)
+#define ENABLED_  0
+#define DISABLED_ 1
 
 enum{RHO,PPP,UU1,UU2,UU3};  // 3rd dimension optional so must be last
 enum{TP1,TP2,VV1,VV2,VV3};
@@ -33,7 +35,6 @@ enum{X_,Y_,Z_};      // in case of typo
 enum{R_,T_,P_};      // in case of typo
 enum{left_,right_};    
 enum{skip_,merge_,split_};
-enum{ENABLED_,DISABLED_};
 
 enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 
@@ -57,7 +58,7 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 #define OMP_ ENABLED_
 
 #define SPATIAL_RECONSTRUCTION_ PIECEWISE_LINEAR_
-#define CIRC_REGRID_ ENABLED_
+#define CIRC_REGRID_ DISABLED_
 
 // ---------------------------------------------------------------------------------------
 // GLOBAL VARIABLES
