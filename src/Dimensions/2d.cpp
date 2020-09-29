@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 11:25:31
+* @Last Modified time: 2020-09-29 18:20:18
 */
 
 #include "../environment.h"
@@ -87,8 +87,8 @@ void Grid::initialise(s_par par){
   ibig   = new int[nde_nax[F1]];
   ismall = new int[nde_nax[F1]];
   
-  Cinit = array_2d<Cell>(ncell[F1],ncell[MV]);
-  Ctot  = array_2d<Cell>(nde_nax[F1],nde_nax[MV]);
+  Cinit = array_2d<Cell>(ncell[F1],nax[MV]-ngst); // Cinit need to have the empty cells...
+  Ctot  = array_2d<Cell>(nde_nax[F1],nde_nax[MV]);                       // ...for restart
   Itot  = array_2d<Interface>(nde_nax[F1],nde_nax[MV]-1);
   I     = array_2d_nogst<Interface>(Itot, nde_nax[F1], ngst); // removes ghost to ghost
   C     = array_2d_nogst<Cell>(Ctot, nde_nax[F1], ngst);     
@@ -996,7 +996,7 @@ void Grid::state2flux(){
 
 void mpi_distribute(Grid *grid){
 
-  int size  = grid->nde_ncell[MV];
+  int size  = grid->nde_nax[MV] - grid->ngst;
   for (int j = 0; j < grid->nde_ncell[F1]; ++j){  // have to  copy track by track
     int index = grid->origin[F1]+j;
     std::copy_n(&(grid->Cinit[index][0]), size, &(grid->C[j][0]));
@@ -1009,10 +1009,6 @@ void mpi_distribute(Grid *grid){
       grid->Ctot[j][i].nde_id = grid->nde_nax[MV]*j + i;
       grid->Ctot[j][i].nde_ind[0] = j;
       grid->Ctot[j][i].nde_ind[1] = i;
-      // if(j==101) printf("%d %d %d\n",
-      //   grid->Ctot[j][i].nde_id,
-      //   grid->Ctot[j][i].nde_ind[0] = j,
-      //   grid->Ctot[j][i].nde_ind[1] = i);
     }
   }
 

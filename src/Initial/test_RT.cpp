@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 10:01:12
+* @Last Modified time: 2020-09-29 17:17:39
 */
 
 #include "../environment.h"
@@ -97,7 +97,7 @@ int Grid::checkCellForRegrid(int j, int i){
   Cell c = Ctot[j][i];
 
   double split_dl = 0.05;
-  double merge_dl = 0.0005;
+  double merge_dl = 0.0001;
     // careful, dx != dl
 
   if (c.G.dx[MV] > split_dl) {
@@ -115,7 +115,7 @@ void Cell::user_regridVal(double *res){
   // user function to find regrid victims
   // adapts the search to special target resolution requirements
   // depending on the tracer value
-
+  
   UNUSED(*res);
 
 }

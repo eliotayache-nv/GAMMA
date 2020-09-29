@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 09:44:03
+* @Last Modified time: 2020-09-29 18:31:36
 */
 
 #include "../simu.h"
@@ -12,12 +12,55 @@
 #include "../array_tools.h"
 
 
-static void openLastSnapshot(DIR* dir, char *addr, long int *it, double *t){
+class Data
+{
+public:
+
+  Data(char *line): line(line){
+
+    double t;
+    sscanf(line, 
+      "%le %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n",
+      &t, &j, &i, 
+      &x, &y, &dx, &dy, &dlx, &dly, &rho, &vx, &vy, &p, &D, &sx, &sy, &tau, &trac
+      );
+
+  }
+
+  ~Data(){}
+  
+  char *line;
+  int j, i;
+  double x, y, dx, dy, dlx, dly, rho, vx, vy, p, D, sx, sy, tau, trac;
+
+  void toCell(Grid *g){
+
+    Cell *c = &g->Cinit[j][i];
+
+    c->G.x[x_] = x;
+    c->G.x[y_] = y;
+    c->G.dx[x_] = dx;
+    c->G.dx[y_] = dy;
+    c->computeAllGeom();
+
+    c->S.prim[RHO] = rho;
+    c->S.prim[VV1] = vx;
+    c->S.prim[VV2] = vy;
+    c->S.prim[PPP] = p;
+    c->S.prim[TR1] = trac;
+
+  }
+
+}; 
+
+
+static void openLastSnapshot(DIR* dir, vector<Data> *data, long int *it, double *t){
 
   struct dirent  *dirp;       
   vector<string>  files;     
   char strfile[100];
   char strFilePath[100] = "../results/Last/";
+  char *addr;
 
   while ((dirp = readdir(dir)) != NULL) {
     std::string fname = dirp->d_name;
@@ -30,34 +73,43 @@ static void openLastSnapshot(DIR* dir, char *addr, long int *it, double *t){
 
   addr = strcat(strFilePath, strfile);
   printf("resuming setup from file: ");
-  printf("%s\n", addr);
+  printf("%s | ", addr);
 
   FILE *snap = fopen(addr, "r");
   char line[256];
-  int j, i;
-  double x, y, dx, dy, dlx, dly, rho, vx, vy, p, D, sx, sy, tau, trac;
   while (fgets(line, sizeof(line), snap)) {
-    sscanf(line, 
-      "%le %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n",
-      t, &j, &i, &x, &y, &dx, &dy, &dlx, &dly, &rho, &vx, &vy, &p, &D, &sx, &sy, &tau, &trac
-      ); 
+    Data datapoint(line);
+    data->push_back(datapoint);
   }
-
+  printf("tstart = %le\n", *t);
   fclose(snap);
 
 }
 
+static void reloadFromData(Grid* g, vector<Data> data);
 
 void Simu::reinitialise(DIR* dir){
 
-  char addr[256];
-  openLastSnapshot(dir, addr, &it, &t);
+  vector<Data> data;
+  openLastSnapshot(dir, &data, &it, &t);
   loadParams(&par);
   grid.initialise(par);   // this is unchanged from IC startup
-  grid.initialGeometry();  
-  grid.initialValues();
+  reloadFromData(&grid, data);
   mpi_distribute(&grid);
   grid.prepForRun();
+
+}
+
+
+void reloadFromData(Grid* g, vector<Data> data){
+
+  int i = 0;
+  int j = 0;
+  for (std::vector<Data>::size_type c = 0; c < data.size(); ++c){
+    i = data[c].i;
+    j = data[c].j;
+    data[c].toCell(g);
+  }
 
 }
 
@@ -110,8 +162,8 @@ void Grid::printCols(int it, double t){
         double lfac = Cdump[j][i].S.lfac();
         fprintf(fout, "%le %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
           t,
-          j,
-          i,
+          j-ngst,
+          i-ngst,
           Cdump[j][i].G.x[x_],
           Cdump[j][i].G.x[y_],
           Cdump[j][i].G.dx[x_],
