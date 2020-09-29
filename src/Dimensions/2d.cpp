@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 09:35:01
+* @Last Modified time: 2020-09-29 11:25:31
 */
 
 #include "../environment.h"
@@ -94,14 +94,6 @@ void Grid::initialise(s_par par){
   C     = array_2d_nogst<Cell>(Ctot, nde_nax[F1], ngst);     
 
 }
-
-
-// Grid::reloadGeometry(){
-
-
-
-// }
-
 
 
 void Grid::assignId(int ind[NUM_D]){
@@ -903,7 +895,7 @@ void Grid::interfaceGeomFromCellPos(){
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
     double xj = Ctot[j][iLbnd[j]+1].G.x[F1];
     for (int i = 0; i < ntrack[j]-1; ++i){
-      Itot[j][i].x[MV] = (Ctot[j][i].G.x[MV] + Ctot[j][i+1].G.x[MV])/2.;
+      Itot[j][i].x[MV] = Ctot[j][i+1].G.x[MV] - Ctot[j][i+1].G.dx[MV]/2.;
       Itot[j][i].x[F1] = xj;
       Itot[j][i].dx[0] = Ctot[j][i].G.dx[F1];
       Itot[j][i].computedA();
