@@ -1,7 +1,7 @@
-INITIAL    = test_RT
+INITIAL    = test_GRB
 TIMESTEP   = rk3
-GEOMETRY   = cartesian
-HYDRO      = rel_cart
+GEOMETRY   = spherical
+HYDRO      = rel_sph
 SOLVER     = hllc
 DIMENSIONS = 2d
 IO         = text2d
