@@ -32,5 +32,5 @@ module load openmpi/gcc/2.0.0   # for compatible versions
 make
 
 # run the application
-mpirun -np $SLURM_NTASKS ./bin/GAMMA -w
+mpirun -np $SLURM_NTASKS ./bin/GAMMA -r
 # mpirun -np $SLURM_NTASKS valgrind --tool=memcheck --leak-check=full --track-origins=yes --show-reachable=yes ./bin/GAMMA
