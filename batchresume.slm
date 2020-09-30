@@ -11,11 +11,11 @@
 # set the number of nodes and partition
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
-#SBATCH --partition=batch-devel
-#SBATCH --qos=devel
+#SBATCH --partition=batch
+#SBATCH --qos=free
 #SBATCH --cpus-per-task=16
 # set max wallclock time
-#SBATCH --time=00:10:00
+#SBATCH --time=06:00:00
  
 # send mail to this address
 #SBATCH --mail-user=ehra20@bath.ac.uk
@@ -32,5 +32,5 @@ module load openmpi/gcc/2.0.0   # for compatible versions
 make
 
 # run the application
-mpirun -np $SLURM_NTASKS ./bin/GAMMA -w
+mpirun -np $SLURM_NTASKS ./bin/GAMMA -r
 # mpirun -np $SLURM_NTASKS valgrind --tool=memcheck --leak-check=full --track-origins=yes --show-reachable=yes ./bin/GAMMA
