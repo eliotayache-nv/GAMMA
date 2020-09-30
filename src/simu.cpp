@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 18:24:31
+* @Last Modified time: 2020-09-30 10:07:58
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -40,7 +40,7 @@ void Simu::run(){
     dt = grid.prepForUpdate(it, t);
 
     // printing grid (everything is ready right after grid prepare)
-    if (it%10 == 0){ grid.printCols(it, t); }
+    if (it%50 == 0){ grid.printCols(it, t); }
 
     grid.update(dt);
 
@@ -48,7 +48,7 @@ void Simu::run(){
     it++;
 
     if ((worldrank == 0) and (it%1000 == 0)){ printf("it: %ld time: %le\n", it, t);}
-    if (it == 500){ stop = true; }
+    // if (it == 500){ stop = true; }
     if (t > 1.e10){ stop = true; }
   }
 

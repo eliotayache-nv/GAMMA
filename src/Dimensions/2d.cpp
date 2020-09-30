@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 22:29:14
+* @Last Modified time: 2020-09-30 15:45:19
 */
 
 #include "../environment.h"
@@ -88,6 +88,8 @@ void Grid::initialise(s_par par){
   ismall = new int[nde_nax[F1]];
   
   Cinit = array_2d<Cell>(ncell[F1],nax[MV]-2*ngst); // Cinit need to have the empty cells...
+  Cinit[0][0].G.dV = 12;
+  printf("%le\n", Cinit[0][0].G.dV);
   Ctot  = array_2d<Cell>(nde_nax[F1],nde_nax[MV]);                       // ...for restart
   Itot  = array_2d<Interface>(nde_nax[F1],nde_nax[MV]-1);
   I     = array_2d_nogst<Interface>(Itot, nde_nax[F1], ngst); // removes ghost to ghost
@@ -996,9 +998,13 @@ void Grid::state2flux(){
 
 void mpi_distribute(Grid *grid){
 
-  int size  = grid->nde_nax[MV] - grid->ngst;
+  // printf("blah %d\n", worldrank);
+  int size  = grid->nde_nax[MV] - 2*grid->ngst;
+  int o = grid->origin[F1];
   for (int j = 0; j < grid->nde_ncell[F1]; ++j){  // have to  copy track by track
-    int index = grid->origin[F1]+j;
+    int index = o+j;
+    // printf("%d\n", index);
+    // printf("%le\n", grid->Cinit[index][0].G.x[x_]);
     std::copy_n(&(grid->Cinit[index][0]), size, &(grid->C[j][0]));
   }
   delete_array_2d(grid->Cinit);

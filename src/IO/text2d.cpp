@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-30 09:35:45
+* @Last Modified time: 2020-09-30 16:43:10
 */
 
 #include "../simu.h"
@@ -34,7 +34,7 @@ public:
 
   void toCell(Grid *g){
 
-    Cell *c = &g->Cinit[j][i];
+    Cell *c = &(g->Cinit[j][i]);
 
     c->G.x[x_] = x;
     c->G.x[y_] = y;
@@ -48,6 +48,7 @@ public:
     c->S.prim[PPP] = p;
     c->S.prim[TR1] = trac;
 
+    if (j==0 and i==0) printf("yo %le\n", g->Cinit[0][0].G.dV);
   }
 
 }; 
@@ -87,31 +88,48 @@ static void openLastSnapshot(DIR* dir, vector<Data> *data, long int *it, double 
 }
 
 
-static void reloadFromData(Grid* g, vector<Data> data);
+static void reloadFromData(Grid* g, vector<Data> *data);
 void Simu::reinitialise(DIR* dir){
 
-  vector<Data> data;
+  // Read in file done sequentially
+  int rR = worldrank+1;
+  int rL = worldrank-1;
+  int msg = 1;
+  int tagrecv = worldrank-1;
+  int tagsend = worldrank;
+
+  if (worldrank != 0) // checking if previous process has finished
+    MPI_Recv(&msg , 1, MPI_INT, rL, tagrecv, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+  std::vector<Data> data;
   openLastSnapshot(dir, &data, &it, &t);
   loadParams(&par);
   grid.initialise(par);   // this is unchanged from IC startup
-  reloadFromData(&grid, data);
+  reloadFromData(&grid, &data);
+
+  printf("%d %d %d\n", worldrank, grid.ncell[F1], grid.nax[MV]);
+  printf("%d %le\n", worldrank, grid.Cinit[0][0].G.dV);
   mpi_distribute(&grid);
   grid.prepForRun();
 
-  vector<Data>().swap(data); // freeing memory
+  data.clear();
+  std::vector<Data>().swap(data); // freeing memory
+
+  if (worldrank != worldsize-1) // telling next process we're finished
+    MPI_Send(&msg , 1, MPI_INT, rR, tagsend, MPI_COMM_WORLD);
 
 }
 
 
-void reloadFromData(Grid* g, vector<Data> data){
+void reloadFromData(Grid *g, vector<Data> *data){
 
   int ngst = g->ngst;
   int i_old = 0;
   int j_old = 0;
-  for (std::vector<Data>::size_type c = 0; c < data.size(); ++c){
-    data[c].toCell(g);
-    int i = data[c].i;
-    int j = data[c].j;
+  for (int c = 0; c < (int) data->size(); ++c){
+    (*data)[c].toCell(g);
+    int j = (*data)[c].j;
+    int i = (*data)[c].i;
     int jtrgt = j-1+ngst;
     if (j>j_old){
       g->nact[jtrgt]   = i_old + 1;
@@ -120,11 +138,13 @@ void reloadFromData(Grid* g, vector<Data> data){
     }
     j_old = j;
     i_old = i;
-    if (c == data.size()-1){
+    if (c == (int) data->size()-1){
       g->nact[j+ngst]   = i_old + 1;
       g->ntrack[j+ngst] = i_old + 1 + 2*ngst;
       g->iRbnd[j+ngst]  = i_old + 1 + ngst; 
     }
+    // printf("blah %d %d %le\n", j, i, g->Cinit[j][i].G.dV);
+    printf("%d %d %d %le\n", worldrank, j, i, g->Cinit[0][0].G.dV); fflush(stdout);
   }
 
 }
