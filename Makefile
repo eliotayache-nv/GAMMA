@@ -1,7 +1,7 @@
-INITIAL    = test_RT
+INITIAL    = test_cyl
 TIMESTEP   = rk3
-GEOMETRY   = cartesian
-HYDRO      = rel_cart
+GEOMETRY   = cylindrical
+HYDRO      = rel_cyl
 SOLVER     = hllc
 DIMENSIONS = 2d
 IO         = text2d
