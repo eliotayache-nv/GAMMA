@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 19:13:56
+* @Last Modified time: 2020-09-30 09:31:46
 */
 
 #include "../simu.h"
@@ -98,6 +98,8 @@ void Simu::reinitialise(DIR* dir){
   reloadFromData(&grid, data);
   mpi_distribute(&grid);
   grid.prepForRun();
+
+  vector<Data>().swap(data); // freeing memory
 
 }
 
