@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-30 09:31:46
+* @Last Modified time: 2020-09-30 09:35:45
 */
 
 #include "../simu.h"
@@ -71,8 +71,7 @@ static void openLastSnapshot(DIR* dir, vector<Data> *data, long int *it, double 
   sscanf(strfile, "phys%ld.h5", it);
 
   addr = strcat(strFilePath, strfile);
-  printf("resuming setup from file: ");
-  printf("%s | ", addr);
+  if (worldrank == 0) printf("resuming setup from file: %s | ", addr);
 
   FILE *snap = fopen(addr, "r");
   char line[256];
@@ -82,7 +81,7 @@ static void openLastSnapshot(DIR* dir, vector<Data> *data, long int *it, double 
     data->push_back(datapoint);
   }
   *t = data->at(0).t;
-  printf("tstart = %le\n", *t);
+  if (worldrank == 0) printf("tstart = %le\n", *t);
   fclose(snap);
 
 }
