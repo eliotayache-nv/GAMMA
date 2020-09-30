@@ -14,6 +14,12 @@ ifeq ($(HOME), /home/t/ehra20)
 	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 -fopenmp 		#run this line on distant
 	LFLAGS = -fopenmp -lgsl -lgslcblas -lm	#run this line on distant
 else
+ifeq ($(HOME), /home/rwe-ubuntu)
+	CXX     = mpicxx
+	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 -fopenmp 		#run this line on distant
+	LFLAGS = -L/usr/local/lib -fopenmp -lgsl -lgslcblas -lm	#run this line on distant
+	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/lib/openmpi/include
+else
 ifeq ($(OS_NAME), linux)
 	CXX     = /usr/bin/g++
 	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 		#run this line on distant
@@ -27,6 +33,7 @@ ifeq ($(OS_NAME), darwin)
 # 	LFLAGS = -L/usr/local/lib -fopenmp -lhdf5 -lgsl -lm 		#run this line on local
 	LFLAGS = -L/usr/local/lib -fopenmp -lgsl -lm	#run this line on local
 	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
+endif
 endif
 endif
 endif
