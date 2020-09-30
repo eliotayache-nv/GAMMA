@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 18:24:31
+* @Last Modified time: 2020-09-30 15:05:11
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -35,6 +35,8 @@ void Simu::initialise(){
 
 
 void Simu::run(){
+
+  printf("Hello! welcome to GAMMA2D!\n");
 
   while (!stop){
     dt = grid.prepForUpdate(it, t);
