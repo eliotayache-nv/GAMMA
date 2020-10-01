@@ -11,7 +11,7 @@ HOST_NAME := $(shell hostname | cut -c-6)s
 
 ifeq ($(HOME), /home/t/ehra20)
 	CXX     = mpicxx
-	CXXFLAGS = -Wall -Wextra -std=c++0x -03 -fopenmp 		#run this line on distant
+	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 -fopenmp 		#run this line on distant
 # 	CXXFLAGS = -Wall -Wextra -std=c++0x -g -fopenmp 		#run this line on distant
 	LFLAGS = -fopenmp -lgsl -lgslcblas -lm	#run this line on distant
 else
