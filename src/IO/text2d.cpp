@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-30 16:43:10
+* @Last Modified time: 2020-10-01 17:49:21
 */
 
 #include "../simu.h"
@@ -19,8 +19,8 @@ public:
   Data(char *line): line(line){
 
     sscanf(line, 
-      "%le %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n",
-      &t, &j, &i, 
+      "%le %d %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n",
+      &t, &nact, &j, &i, 
       &x, &y, &dx, &dy, &dlx, &dly, &rho, &vx, &vy, &p, &D, &sx, &sy, &tau, &trac
       );
 
@@ -29,7 +29,7 @@ public:
   ~Data(){}
   
   char *line;
-  int j, i;
+  int j, i, nact;
   double t, x, y, dx, dy, dlx, dly, rho, vx, vy, p, D, sx, sy, tau, trac;
 
   void toCell(Grid *g){
@@ -48,7 +48,6 @@ public:
     c->S.prim[PPP] = p;
     c->S.prim[TR1] = trac;
 
-    if (j==0 and i==0) printf("yo %le\n", g->Cinit[0][0].G.dV);
   }
 
 }; 
@@ -58,8 +57,8 @@ static void openLastSnapshot(DIR* dir, vector<Data> *data, long int *it, double 
 
   struct dirent  *dirp;       
   vector<string>  files;     
-  char strfile[100];
-  char strFilePath[100] = "../results/Last/";
+  char strfile[512];
+  char strFilePath[512] = "../results/Last/";
   char *addr;
 
   while ((dirp = readdir(dir)) != NULL) {
@@ -75,7 +74,7 @@ static void openLastSnapshot(DIR* dir, vector<Data> *data, long int *it, double 
   if (worldrank == 0) printf("resuming setup from file: %s | ", addr);
 
   FILE *snap = fopen(addr, "r");
-  char line[256];
+  char line[512];
   fgets(line, sizeof(line), snap);
   while (fgets(line, sizeof(line), snap)) {
     Data datapoint(line);
@@ -84,6 +83,7 @@ static void openLastSnapshot(DIR* dir, vector<Data> *data, long int *it, double 
   *t = data->at(0).t;
   if (worldrank == 0) printf("tstart = %le\n", *t);
   fclose(snap);
+  closedir(dir);
 
 }
 
@@ -91,32 +91,16 @@ static void openLastSnapshot(DIR* dir, vector<Data> *data, long int *it, double 
 static void reloadFromData(Grid* g, vector<Data> *data);
 void Simu::reinitialise(DIR* dir){
 
-  // Read in file done sequentially
-  int rR = worldrank+1;
-  int rL = worldrank-1;
-  int msg = 1;
-  int tagrecv = worldrank-1;
-  int tagsend = worldrank;
-
-  if (worldrank != 0) // checking if previous process has finished
-    MPI_Recv(&msg , 1, MPI_INT, rL, tagrecv, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
   std::vector<Data> data;
   openLastSnapshot(dir, &data, &it, &t);
   loadParams(&par);
   grid.initialise(par);   // this is unchanged from IC startup
   reloadFromData(&grid, &data);
-
-  printf("%d %d %d\n", worldrank, grid.ncell[F1], grid.nax[MV]);
-  printf("%d %le\n", worldrank, grid.Cinit[0][0].G.dV);
   mpi_distribute(&grid);
   grid.prepForRun();
 
   data.clear();
-  std::vector<Data>().swap(data); // freeing memory
-
-  if (worldrank != worldsize-1) // telling next process we're finished
-    MPI_Send(&msg , 1, MPI_INT, rR, tagsend, MPI_COMM_WORLD);
+  std::vector<Data>().swap(data); // freeing memory  
 
 }
 
@@ -124,27 +108,20 @@ void Simu::reinitialise(DIR* dir){
 void reloadFromData(Grid *g, vector<Data> *data){
 
   int ngst = g->ngst;
-  int i_old = 0;
-  int j_old = 0;
+  int o = g->origin[F1];
+  int e = o + g->nde_ncell[F1]-1;
   for (int c = 0; c < (int) data->size(); ++c){
-    (*data)[c].toCell(g);
     int j = (*data)[c].j;
-    int i = (*data)[c].i;
-    int jtrgt = j-1+ngst;
-    if (j>j_old){
-      g->nact[jtrgt]   = i_old + 1;
-      g->ntrack[jtrgt] = i_old + 1 + 2*ngst;
-      g->iRbnd[jtrgt]  = i_old + 1 + ngst; 
+
+    (*data)[c].toCell(g);
+
+    int nact = (*data)[c].nact;
+    int jtrgt = j-o+ngst;
+    if (j>=o and j<=e){
+      g->nact[jtrgt]   = nact;
+      g->ntrack[jtrgt] = nact + 2*ngst;
+      g->iRbnd[jtrgt]  = nact + 1 + ngst;
     }
-    j_old = j;
-    i_old = i;
-    if (c == (int) data->size()-1){
-      g->nact[j+ngst]   = i_old + 1;
-      g->ntrack[j+ngst] = i_old + 1 + 2*ngst;
-      g->iRbnd[j+ngst]  = i_old + 1 + ngst; 
-    }
-    // printf("blah %d %d %le\n", j, i, g->Cinit[j][i].G.dV);
-    printf("%d %d %d %le\n", worldrank, j, i, g->Cinit[0][0].G.dV); fflush(stdout);
   }
 
 }
@@ -191,13 +168,15 @@ void Grid::printCols(int it, double t){
     const char* strfout = s.c_str();
     FILE* fout = fopen(strfout, "w");
 
-    fprintf(fout, "t j i x y dx dy dlx dly rho vx vy p D sx sy tau trac\n");
+    fprintf(fout, "t nact j i x y dx dy dlx dly rho vx vy p D sx sy tau trac\n");
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
       for (int i = ngst; i < ntrackd[j]-ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
         double lfac = Cdump[j][i].S.lfac();
-        fprintf(fout, "%le %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
+        int nactd = ntrackd[j]-2*ngst;
+        fprintf(fout, "%le %d %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
           t,
+          nactd,
           j-ngst,
           i-ngst,
           Cdump[j][i].G.x[x_],

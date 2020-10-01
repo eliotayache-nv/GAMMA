@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-30 16:46:58
+* @Last Modified time: 2020-10-01 16:47:04
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -50,7 +50,7 @@ void Simu::run(){
     it++;
 
     if ((worldrank == 0) and (it%1000 == 0)){ printf("it: %ld time: %le\n", it, t);}
-    // if (it == 500){ stop = true; }
+    if (it == 1000){ stop = true; }
     if (t > 1.e10){ stop = true; }
   }
 

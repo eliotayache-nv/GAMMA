@@ -1,7 +1,7 @@
-INITIAL    = test_GRB
+INITIAL    = test_RT
 TIMESTEP   = rk3
-GEOMETRY   = spherical
-HYDRO      = rel_sph
+GEOMETRY   = cartesian
+HYDRO      = rel_cart
 SOLVER     = hllc
 DIMENSIONS = 2d
 IO         = text2d
@@ -11,7 +11,7 @@ HOST_NAME := $(shell hostname | cut -c-6)s
 
 ifeq ($(HOME), /home/t/ehra20)
 	CXX     = mpicxx
-	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 -fopenmp 		#run this line on distant
+	CXXFLAGS = -Wall -Wextra -std=c++0x -g -fopenmp 		#run this line on distant
 	LFLAGS = -fopenmp -lgsl -lgslcblas -lm	#run this line on distant
 else
 ifeq ($(HOME), /home/rwe-ubuntu)
