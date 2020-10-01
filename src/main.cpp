@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 19:02:16
+* @Last Modified time: 2020-10-01 18:26:25
 */
 
 #include "main.h"
@@ -16,6 +16,8 @@ static void chbindir(const char binPath[]);
 
 
 int main(int argc, char *argv[]){
+
+  printf("Hello! Welcome to GAMMA2D!\n");
 
   int status;
   Simu simu;
