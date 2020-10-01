@@ -1,7 +1,7 @@
-INITIAL    = test_RT
+INITIAL    = test_GRB
 TIMESTEP   = rk3
-GEOMETRY   = cartesian
-HYDRO      = rel_cart
+GEOMETRY   = spherical
+HYDRO      = rel_sph
 SOLVER     = hllc
 DIMENSIONS = 2d
 IO         = text2d
@@ -11,12 +11,14 @@ HOST_NAME := $(shell hostname | cut -c-6)s
 
 ifeq ($(HOME), /home/t/ehra20)
 	CXX     = mpicxx
-	CXXFLAGS = -Wall -Wextra -std=c++0x -g -fopenmp 		#run this line on distant
+	CXXFLAGS = -Wall -Wextra -std=c++0x -03 -fopenmp 		#run this line on distant
+# 	CXXFLAGS = -Wall -Wextra -std=c++0x -g -fopenmp 		#run this line on distant
 	LFLAGS = -fopenmp -lgsl -lgslcblas -lm	#run this line on distant
 else
 ifeq ($(HOME), /home/rwe-ubuntu)
 	CXX     = mpicxx
 	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 -fopenmp 		#run this line on distant
+# 	CXXFLAGS = -Wall -Wextra -std=c++0x -g -fopenmp 		#run this line on distant
 	LFLAGS = -L/usr/local/lib -fopenmp -lgsl -lgslcblas -lm	#run this line on distant
 	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/lib/openmpi/include
 else
