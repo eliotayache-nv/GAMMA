@@ -9,7 +9,7 @@
 #SBATCH --error=hydro.e
  
 # set the number of nodes and partition
-#SBATCH --nodes=1
+#SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --partition=batch-devel
 #SBATCH --qos=devel
@@ -32,5 +32,5 @@ module load openmpi/gcc/2.0.0   # for compatible versions
 make
 
 # run the application
-mpirun -np $SLURM_NTASKS ./bin/GAMMA -r
-# mpirun -np $SLURM_NTASKS valgrind --leak-check=full --track-origins=yes --show-reachable=yes --error-limit=no --suppressions=openmpi.supp --log-file=valgrind.log ./bin/GAMMA -r
+# mpirun -np $SLURM_NTASKS ./bin/GAMMA -r
+mpirun -np $SLURM_NTASKS valgrind --leak-check=full --track-origins=yes --show-reachable=yes --error-limit=no --suppressions=openmpi.supp --log-file=valgrind.log ./bin/GAMMA -r
