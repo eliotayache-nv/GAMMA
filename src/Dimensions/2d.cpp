@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-01 18:00:16
+* @Last Modified time: 2020-10-01 18:25:51
 */
 
 #include "../environment.h"
@@ -868,7 +868,6 @@ void Grid::update(double dt){
     // int nthrd = omp_get_num_threads();
     for (int i = 0; i < ntrack[j]-1; ++i){
       // printf("%d from %d of %d on node %d of %d\n", j,proc, nthrd, worldrank, worldsize);
-      printf("%d %d\n", j, i);
       Itot[j][i].move(dt);
       // if (i==ntrack[j]-2) printf("%le\n", Itot[j][i].x[MV]);
     }

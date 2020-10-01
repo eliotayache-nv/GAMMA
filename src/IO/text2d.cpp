@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-01 17:49:21
+* @Last Modified time: 2020-10-01 18:24:55
 */
 
 #include "../simu.h"
@@ -120,7 +120,7 @@ void reloadFromData(Grid *g, vector<Data> *data){
     if (j>=o and j<=e){
       g->nact[jtrgt]   = nact;
       g->ntrack[jtrgt] = nact + 2*ngst;
-      g->iRbnd[jtrgt]  = nact + 1 + ngst;
+      g->iRbnd[jtrgt]  = nact + ngst;
     }
   }
 
