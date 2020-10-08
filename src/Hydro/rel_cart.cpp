@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-07 16:55:53
+* @Last Modified time: 2020-10-08 15:01:57
 */
 
 #include "../fluid.h"
@@ -125,7 +125,7 @@ static double f(double p, void *params){
 void FluidState::cons2prim(double r, double pin){
 
   int     status;
-  int     iter = 0, max_iter = 1000;
+  int     iter = 0, max_iter = 100;
   double  res;
   struct  f_params                params;
   const   gsl_root_fsolver_type   *T;
@@ -204,7 +204,7 @@ void FluidState::cons2prim(double r, double pin){
   double rho = D/lfac;
 
   double uu[NUM_D];
-  if (S < 1.e-14) {
+  if (fabs(S) < 1.e-14) {
     for (int d = 0; d < NUM_D; ++d) uu[d] = 0;
   }
   else {
@@ -291,12 +291,12 @@ void Interface::computeLambda(){
   double Fhllm = (lL * BR - lR * BL) / (lR - lL);
   double mhll  = (BR - BL) / (lR - lL);
 
-  if (FhllE < 1.e-15){
+  if (fabs(FhllE) < 1.e-15){
     lS = mhll / (Ehll + Fhllm);
     return;
   }
 
-  double delta = pow(Ehll + Fhllm,2.) - 4. * FhllE * mhll;
+  double delta = pow(Ehll + Fhllm, 2.) - 4. * FhllE * mhll;
   lS = ((Ehll + Fhllm) - sqrt(delta)) / (2. * FhllE);
 
 }

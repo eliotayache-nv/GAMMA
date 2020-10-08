@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-08 10:34:07
+* @Last Modified time: 2020-10-08 14:51:33
 */
 
 #include "../environment.h"
@@ -285,7 +285,7 @@ void Grid::updateGhosts(int it, double t){
       assignId(ind);
 
       Itot[j][i] = Itot[j][iLbnd[j]+1];
-      Itot[j][i].x[MV]   -= (iLbnd[j]-i+1) * Ctot[j][iLbnd[j]+1].G.dx[MV];
+      Itot[j][i].x[MV] -= (iLbnd[j]-i+1) * Ctot[j][iLbnd[j]+1].G.dx[MV];
     }
     for (int i = iRbnd[j]; i < nde_nax[MV]; ++i){
       Ctot[j][i] = Ctot[j][iRbnd[j]-1];

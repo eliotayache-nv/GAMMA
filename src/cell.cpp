@@ -53,6 +53,7 @@ void Cell::update_dt(int dim, Interface IL, Interface IR){
     else { dt_candR = 1.e15; }
 
     dt_cand = fmin(dt_candL, dt_candR);
+
   } 
 
   else {
@@ -94,6 +95,9 @@ void Cell::update(double dt, double xL, double xR){
     S.cons[q] /= G.dV;
   }
   S.cons2prim(G.x[r_]);
+
+  // printf("%le\n", S.prim[PPP]);
+  // if (isnan(S.prim[PPP])){ exit(11); }
 
 }
 

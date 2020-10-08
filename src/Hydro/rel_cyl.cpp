@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 00:07:13
+* @Last Modified time: 2020-10-08 14:44:02
 */
 
 #include "../fluid.h"
@@ -270,7 +270,7 @@ void FluidState::cons2prim(double r, double pin){
   double rho = D/lfac;
 
   double uu[NUM_D];
-  if (S < 1.e-14) {
+  if (fabs(S) < 1.e-14) {
     for (int d = 0; d < NUM_D; ++d) uu[d] = 0;
   }
   else {
@@ -358,7 +358,7 @@ void Interface::computeLambda(){
   double Fhllm = (lL * BR - lR * BL) / (lR - lL);
   double mhll  = (BR - BL) / (lR - lL);
 
-  if (FhllE < 1.e-15){
+  if (fabs(FhllE) < 1.e-15){
     lS = mhll / (Ehll + Fhllm);
     return;
   }

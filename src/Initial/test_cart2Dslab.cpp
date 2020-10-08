@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-08 10:53:21
+* @Last Modified time: 2020-10-08 15:01:28
 */
 
 // rupert simulation 1: 
@@ -14,7 +14,7 @@ void loadParams(s_par *par){
 
   par->tini      = 0.;      // initial time(?)
   par->ncell[x_] = 200;     // number of cells in x direction
-  par->ncell[y_] = 24;     // number of cells in y direction
+  par->ncell[y_] = 10;     // number of cells in y direction
   par->nmax      = 1000;    // max number of cells in MV direction
   par->ngst      = 2;       // number of ghost cells (?); probably don't change
 
@@ -130,8 +130,8 @@ int Grid::checkCellForRegrid(int j, int i){
 
   Cell c = Ctot[j][i];
 
-  double split_dl = 0.1;
-  double merge_dl = 0.00001;
+  double split_dl = 0.05;
+  double merge_dl = 0.0001;
     // careful, dx != dl
 
   if (c.G.dx[MV] > split_dl) {
