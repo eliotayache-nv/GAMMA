@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-08 15:01:28
+* @Last Modified time: 2020-10-08 16:00:45
 */
 
 // rupert simulation 1: 
@@ -56,11 +56,11 @@ int Grid::initialValues(){
   double p_slab = 1.;
 
   // set velocities in the lab frame
-  double v_slab_lab = 0.9;        // set slab velocity (along x) in lab frame
+  double v_slab_lab = -0.9;        // set slab velocity (along x) in lab frame
   double v_env_lab = 0;           // set environment velocity (along x) in lab frame
   
   // set velocity of the reference frame
-  double v_ref = 0.9;             // set velocity of reference frame
+  double v_ref = -0.9;             // set velocity of reference frame
   
   // lorentz transformations
   double v_slab_ref, v_env_ref, lorentz_gamma, slab_xcentre_ref, slab_xwidth_ref;

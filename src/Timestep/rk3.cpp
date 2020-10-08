@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:57:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-08 10:31:10
+* @Last Modified time: 2020-10-08 15:58:02
 */
 
 #include "../environment.h"
@@ -40,8 +40,10 @@ void Grid::evolve(int it, double t, double dt){
       double x  = I->x[MV];
       double x0 = I->x0[MV];
       I->x[MV] = 3./4. * x0 + 1./4. * x;
+      // if (i==iLbnd[j]+1 and it == 1) printf("%le %le\n", x0, x);
     }
   }
+
 
   CellGeomFromInterfacePos();
 
@@ -53,10 +55,13 @@ void Grid::evolve(int it, double t, double dt){
         c->S.cons[q] /= c->G.dV;
       }
       c->S.cons2prim(c->G.x[r_]);
+      // if (i==iLbnd[j]+1 and it == 1) printf("%le %d\n",c->G.dx[x_], iLbnd[j]);
     }
   }
   
-  updateGhosts(it, t);
+  // if (it==1) exit(11);
+
+  // updateGhosts(it, t);
   prepForUpdate(it, t);
 
   // second half-step
@@ -83,6 +88,7 @@ void Grid::evolve(int it, double t, double dt){
       double x  = I->x[MV];
       double x0 = I->x0[MV];
       I->x[MV] = 1./3. * x0 + 2./3. * x;
+      // if (i==iLbnd[j] and it == 0) printf("%le %le\n", x0, x);
     }
   }
 
