@@ -30,8 +30,8 @@ public:
   int    nde_id;          // id on node of cell (access with Ctot[0][id])
   int    nde_ind[NUM_D];  // location on grid (node-specific)
   double dt_loc = 1.e15;  // local max dt
-  FluidState      S;
-  s_cell_geometry G;
+  FluidState      S, S0;  // 0 for higher time-stepping
+  s_cell_geometry G, G0;  // 0 for higher time-stepping
   double flux[2][NUM_D][NUM_Q];   // L and R fluxes in all dimensions and directions
   vector<int> neigh[NUM_D][2];    // neighboring cells in each direction (id)
   double grad_mv[NUM_Q];          // gradient in moving direction

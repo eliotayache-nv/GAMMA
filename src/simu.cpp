@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-01 18:26:14
+* @Last Modified time: 2020-10-07 18:33:17
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -37,18 +37,24 @@ void Simu::initialise(){
 void Simu::run(){
   
   while (!stop){
-    dt = grid.prepForUpdate(it, t);
 
-    // printing grid (everything is ready right after grid prepare)
-    if (it%50 == 0){ grid.printCols(it, t); }
+    grid.regrid();
 
-    grid.update(dt);
+    grid.updateGhosts(it, t);
+    grid.prepForUpdate(it, t);
+
+    dt = CFL_ * grid.collect_dt();
+
+    grid.evolve(it, t, dt);
 
     t += dt;
     it++;
 
-    if ((worldrank == 0) and (it%1000 == 0)){ printf("it: %ld time: %le\n", it, t);}
-    if (it == 1000){ stop = true; }
+    // printing grid (everything is ready right after grid prepare)
+    if (it%1 == 0){ grid.printCols(it, t); }
+
+    if ((worldrank == 0) and (it%10 == 0)){ printf("it: %ld time: %le\n", it, t);}
+    if (it == 2000){ stop = true; }
     if (t > 1.e10){ stop = true; }
   }
 

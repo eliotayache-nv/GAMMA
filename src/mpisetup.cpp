@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 15:59:03
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-10 10:48:05
+* @Last Modified time: 2020-10-07 17:34:14
 */
 #include "mpi.h"
 #include "err.h"
@@ -17,7 +17,6 @@
 
 void mpi_init(int *argc, char **argv[]){
 
-  int provided;
   MPI_Init(argc, argv);
   MPI_Comm_size(MPI_COMM_WORLD, &worldsize);
   MPI_Comm_rank(MPI_COMM_WORLD, &worldrank);

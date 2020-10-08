@@ -18,8 +18,8 @@ public:
   int  memNumber;
   int  dim;               // orientation (orthogonal vector direction)
 
-  double x[NUM_D];        // position (in a single direction)
-  double v;               // velocity (only in MV dimension) (lab frame)
+  double x[NUM_D], x0[NUM_D];        // position (in a single direction)
+  double v, v0;           // velocity (only in MV dimension) (lab frame)
   double lfac;            // Lorentz factor (only in MV dimension) (lab frame)
   double dx[NUM_D-1];     // spatial extent
                           // for 3D order is either (y,z) - (x,z) - (x,y)

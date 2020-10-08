@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-01 18:25:51
+* @Last Modified time: 2020-10-08 10:34:07
 */
 
 #include "../environment.h"
@@ -564,7 +564,7 @@ void Grid::regrid(){
   #pragma omp parallel for default(shared)
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
     targetRegridVictims(j); // updating ismall and ibig
-    for (int i = iLbnd[j]+2; i <= iRbnd[j]-2; ++i){  // only active cells
+    for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){  // only active cells
       int action = checkCellForRegrid(j, i);
       if (action != skip_){ 
         applyRegrid(j, i, action); 
@@ -864,25 +864,57 @@ void Grid::update(double dt){
 
   #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]; ++j){
-    // int proc = omp_get_thread_num();
-    // int nthrd = omp_get_num_threads();
     for (int i = 0; i < ntrack[j]-1; ++i){
-      // printf("%d from %d of %d on node %d of %d\n", j,proc, nthrd, worldrank, worldsize);
       Itot[j][i].move(dt);
-      // if (i==ntrack[j]-2) printf("%le\n", Itot[j][i].x[MV]);
     }
   }
-  // exit(10);
   // do not update border cells because can lead to non-physical states
   #pragma omp parallel for default(shared)
   for (int j = 1; j < nde_nax[F1]-1; ++j){
-    // int proc = omp_get_thread_num();
-    // int nthread = omp_get_num_threads();
-    // printf("%d hello from %d of %d on node %d from %d\n",j, proc, nthread, worldrank, worldsize );
     for (int i = 1; i < ntrack[j]-1; ++i){
       double xL = Itot[j][i-1].x[MV];
       double xR = Itot[j][i].x[MV];
       Ctot[j][i].update(dt,xL,xR);
+    }
+  }
+
+}
+
+
+void Grid::copyState0(){
+  // Copies the current state of the grid into S0 for higher order time-stepping
+
+  #pragma omp parallel for default(shared)
+  for (int j = 0; j < nde_nax[F1]; ++j){
+    for (int i = 0; i < ntrack[j]; ++i){
+      Cell *c = &Ctot[j][i];
+      c->S0 = c->S;
+      c->G0 = c->G;
+    }
+  }  
+
+  #pragma omp parallel for default(shared)
+  for (int j = 0; j < nde_nax[F1]; ++j){
+    for (int i = 0; i < ntrack[j]-1; ++i){
+      Interface *I = &Itot[j][i];
+      for (int d = 0; d < NUM_D; ++d) I->x0[d] = I->x[d];
+      I->v0 = I->v;
+    }
+  }  
+
+}
+
+
+void Grid::CellGeomFromInterfacePos(){
+  // pos in F1 needs to already be updated
+
+  #pragma omp parallel for default(shared)
+  for (int j = jLbnd+1; j <= jRbnd-1; ++j){
+    for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
+      Cell *c = &Ctot[j][i];
+      double xL = Itot[j][i-1].x[MV];
+      double xR = Itot[j][i].x[MV];
+      c->move(xL, xR);
     }
   }
 

@@ -61,6 +61,7 @@ class Grid{
   void printCols(int it, double t);
   void interfaceGeomFromCellPos();
   void interfaceGeomFromCellPos(int j); // only one track
+  void CellGeomFromInterfacePos();
 
   // update
   void prepForRun();
@@ -70,7 +71,7 @@ class Grid{
   void updateKinematics();
   void userKinematics();
   void gradients(Cell *c);
-  double prepForUpdate(int it, double t);
+  void prepForUpdate(int it, double t);
   void computeFluxes();
   double collect_dt();
   void updateGhosts(int it, double t);
@@ -78,6 +79,8 @@ class Grid{
   void reconstructStates( int j, int i, int dim, 
                           int idn=-1,
                           Interface *Int = NULL );
+  void copyState0();
+  void evolve(int it, double t, double dt);
   void update(double dt);
 
   // AMR

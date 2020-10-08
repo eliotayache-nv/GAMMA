@@ -1,7 +1,7 @@
-INITIAL    = test_GRB
+INITIAL    = test_cart2Dslab
 TIMESTEP   = rk3
-GEOMETRY   = spherical
-HYDRO      = rel_sph
+GEOMETRY   = cartesian
+HYDRO      = rel_cart
 SOLVER     = hllc
 DIMENSIONS = 2d
 IO         = text2d
@@ -56,7 +56,7 @@ DIMENSIONSS=$(SOURCE)/Dimensions/$(DIMENSIONS)
 IOO        =$(SOURCE)/IO/$(IO)
 
 SOURCES = $(wildcard $(SOURCE)/*.cpp) 
-OBJECTS = $(SOURCES:.cpp=.o) $(INITIALL).o $(GEOMETRYY).o $(HYDROO).o $(SOLVERR).o $(DIMENSIONSS).o $(IOO).o
+OBJECTS = $(SOURCES:.cpp=.o) $(INITIALL).o $(TIMESTEPP).o $(GEOMETRYY).o $(HYDROO).o $(SOLVERR).o $(DIMENSIONSS).o $(IOO).o
 
 
 all : $(BIN)/GAMMA
