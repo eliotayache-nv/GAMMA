@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-08 14:46:34
+* @Last Modified time: 2020-10-09 12:57:58
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -56,7 +56,7 @@ void Simu::run(){
     if (it%1 == 0){ grid.printCols(it, t); }
 
     if ((worldrank == 0) and (it%10 == 0)){ printf("it: %ld time: %le\n", it, t);}
-    if (it == 1000){ stop = true; }
+    if (it > 1000){ stop = true; }
     if (t > 1.e10){ stop = true; }
   }
 
