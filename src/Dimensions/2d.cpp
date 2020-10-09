@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-08 15:48:15
+* @Last Modified time: 2020-10-09 18:16:36
 */
 
 #include "../environment.h"
@@ -909,8 +909,8 @@ void Grid::CellGeomFromInterfacePos(){
   // pos in F1 needs to already be updated
 
   #pragma omp parallel for default(shared)
-  for (int j = 0; j <= nde_nax[F1]; ++j){
-    for (int i = 1; i <= ntrack[j]-1; ++i){
+  for (int j = 0; j < nde_nax[F1]; ++j){
+    for (int i = 1; i < ntrack[j]-1; ++i){
       Cell *c = &Ctot[j][i];
       double xL = Itot[j][i-1].x[MV];
       double xR = Itot[j][i].x[MV];
