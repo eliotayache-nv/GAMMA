@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-09-28 11:05:46
+# @Last Modified time: 2020-10-11 22:56:42
 
 
 import numpy as np
@@ -69,6 +69,7 @@ def getArray(data, key):
 
 
 def quadMesh(data, key, 
+  mov="x",
   log=False, 
   key2=None,
   log2=False,
@@ -129,14 +130,23 @@ def quadMesh(data, key,
   for j in range(z.shape[0]-1):
     xj = x - dx/2.
     yj = y - dy/2.
+    dyj = dy
+
+    if mov == 'y':
+      tmp = np.copy(xj)
+      xj = yj
+      yj = np.copy(tmp)
+      dyj = dx
+
     xj[j+1,:] = xj[j,:]   #these xj[] might not exist
-    yj[j+1,:] = yj[j,:]+dy[j,:]   #these xj[] might not exist
+    yj[j+1,:] = yj[j,:]+dyj[j,:]   #these xj[] might not exist
 
     if (geometry=='polar'):
       xx = xj * np.cos(yj)
       yy = xj * np.sin(yj)
       xj = xx
       yj = yy
+
 
     mask = np.zeros(z.shape)+1
     mask[j,:] = 0
