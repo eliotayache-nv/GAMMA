@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 15:17:31
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-23 17:29:21
+* @Last Modified time: 2020-10-11 18:13:05
 */
 
 
@@ -44,8 +44,8 @@ void Cell::computeCentroid(){
   double r = G.x[r_];
   double dr = G.dx[r_];
 
+  for (int d = 0; d < NUM_D; ++d){ G.cen[d] = G.x[d]; }
   G.cen[r_] = r + (2.* r * pow(dr, 2)) / (12. * pow(r, 2) + pow(dr, 2)); 
-  // for (int d = 0; d < NUM_D; ++d){ G.cen[d] = G.x[d]; }
 
 }
 

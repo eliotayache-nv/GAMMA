@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-08 14:43:50
+* @Last Modified time: 2020-10-11 17:37:29
 */
 
 #include "../fluid.h"
@@ -440,9 +440,6 @@ void Cell::sourceTerms(double dt){
   double r2  = r+dr/2.;
   double th1 = th-dth/2.;
   double th2 = th+dth/2.;
-
-  // printf("%le %le\n", S.cons[SS1], (rho*h*ut*ut + 2*p) / r * dV * dt);
-  // printf("%le %le\n", S.cons[SS2], p*cos(th)/fabs(sin(th)) * dV * dt);
 
   S.cons[SS1] += (rho*h*ut*ut + 2*p) / r * dV * dt;
   // S.cons[SS2] += p*cos(th)/fabs(sin(th)) * dV * dt;

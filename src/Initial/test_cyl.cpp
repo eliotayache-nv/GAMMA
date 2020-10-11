@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 17:17:39
+* @Last Modified time: 2020-10-11 23:00:15
 */
 
 #include "../environment.h"
@@ -19,14 +19,16 @@ void loadParams(s_par *par){
 }
 
 int Grid::initialGeometry(){
+  // Careful! the moving dimension must evolve with j
+  // The fixed dimension must evolve with i
 
-  for (int j = 0; j < ncell[y_]; ++j){
-    for (int i = 0; i < ncell[x_]; ++i){
+  for (int j = 0; j < ncell[r_]; ++j){
+    for (int i = 0; i < ncell[zcyl_]; ++i){
       Cell *c = &Cinit[j][i];
-      c->G.x[x_]  = (double) 2.*(i+0.5)/ncell[x_] - 1.;
-      c->G.dx[x_] =          2./ncell[x_];
-      c->G.x[y_]  = (double) 2.*(j+0.5)/ncell[y_] - 1.;
-      c->G.dx[y_] =          2./ncell[y_];
+      c->G.x[r_]     = (double) 2.*(j+0.5)/ncell[r_];
+      c->G.dx[r_]    =          2./ncell[r_];
+      c->G.x[zcyl_]  = (double) 2.*(i+0.5)/ncell[zcyl_] - 1.;
+      c->G.dx[zcyl_] =          2./ncell[zcyl_];
 
       c->computeAllGeom();
     }
@@ -41,8 +43,8 @@ int Grid::initialValues(){
     for (int i = 0; i < ncell[MV]; ++i){
       Cell *c = &Cinit[j][i];
 
-      double x = c->G.x[x_];
-      double y = c->G.x[y_];
+      double r = c->G.x[r_];
+      double z = c->G.x[zcyl_];
 
       c->S.prim[RHO] = 1.;
       c->S.prim[VV1] = 0.;
@@ -50,10 +52,10 @@ int Grid::initialValues(){
       c->S.prim[PPP] = 1.;
       c->S.prim[TR1] = 2.;
 
-      if (x < -0.5 and fabs(y)< 0.2){
+      if (z < -0.5 and fabs(r)< 0.2){
         c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = 0.7;
-        c->S.prim[VV2] = 0.;
+        c->S.prim[VV1] = 0.;
+        c->S.prim[VV2] = 0.7;
         c->S.prim[PPP] = 1.;
         c->S.prim[TR1] = 1.;
 
@@ -94,18 +96,18 @@ void Grid::userBoundaries(int it, double t){
 
 int Grid::checkCellForRegrid(int j, int i){
 
-  Cell c = Ctot[j][i];
+  // Cell c = Ctot[j][i];
 
-  double split_dl = 0.05;
-  double merge_dl = 0.0001;
+  // double split_dl = 0.05;
+  // double merge_dl = 0.0001;
     // careful, dx != dl
 
-  if (c.G.dx[MV] > split_dl) {
-    return(split_);
-  }
-  if (c.G.dx[MV] < merge_dl) {
-    return(merge_);
-  }
+  // if (c.G.dx[MV] > split_dl) {
+  //   return(split_);
+  // }
+  // if (c.G.dx[MV] < merge_dl) {
+  //   return(merge_);
+  // }
   return(skip_);
 
 }

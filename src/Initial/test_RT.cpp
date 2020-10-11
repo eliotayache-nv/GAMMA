@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-29 17:17:39
+* @Last Modified time: 2020-10-11 22:36:24
 */
 
 #include "../environment.h"
@@ -19,13 +19,15 @@ void loadParams(s_par *par){
 }
 
 int Grid::initialGeometry(){
+  // Careful! When switching moving coordinate, you need to set MV as a function of i
+  // and F1 as a functino of j
 
-  for (int j = 0; j < ncell[y_]; ++j){
-    for (int i = 0; i < ncell[x_]; ++i){
+  for (int j = 0; j < ncell[x_]; ++j){
+    for (int i = 0; i < ncell[y_]; ++i){
       Cell *c = &Cinit[j][i];
-      c->G.x[x_]  = (double) 2.*(i+0.5)/ncell[x_] - 1.;
+      c->G.x[x_]  = (double) 2.*(j+0.5)/ncell[x_] - 1.;
       c->G.dx[x_] =          2./ncell[x_];
-      c->G.x[y_]  = (double) 2.*(j+0.5)/ncell[y_] - 1.;
+      c->G.x[y_]  = (double) 2.*(i+0.5)/ncell[y_] - 1.;
       c->G.dx[y_] =          2./ncell[y_];
 
       c->computeAllGeom();
@@ -37,8 +39,8 @@ int Grid::initialGeometry(){
 
 int Grid::initialValues(){
 
-  for (int j = 0; j < ncell[F1]; ++j){
-    for (int i = 0; i < ncell[MV]; ++i){
+  for (int j = 0; j < ncell[x_]; ++j){
+    for (int i = 0; i < ncell[y_]; ++i){
       Cell *c = &Cinit[j][i];
 
       double x = c->G.x[x_];

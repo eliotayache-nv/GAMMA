@@ -31,8 +31,10 @@ enum{TP1,TP2,VV1,VV2,VV3};
 enum{DEN,TAU,SS1,SS2,SS3};
 enum{x_,y_,z_};      // cartesian
 enum{r_,t_,p_};      // spherical
+enum{rcyl_,zcyl_};      // cylindrical 2D
 enum{X_,Y_,Z_};      // in case of typo
 enum{R_,T_,P_};      // in case of typo
+enum{RCYL_,ZCYL_};      // in case of typo
 enum{left_,right_};    
 enum{skip_,merge_,split_};
 
@@ -45,8 +47,8 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 #define NUM_Q (NUM_C+NUM_T)   // advected variables (tracers are placed at end of list)
 #define TR1   NUM_C         // index of first tracer 
 #define NUM_D 2             // number of dimensions
-#define MV    x_            // moving dimension
-#define F1    y_            // fixed dimension 1
+#define MV    zcyl_            // moving dimension
+#define F1    r_            // fixed dimension 1
 #define F2    z_            // fixed dimension 2
 #define VI      1.            // interface velocity (units of CD velocity)
 #define GAMMA_  (5./3.)

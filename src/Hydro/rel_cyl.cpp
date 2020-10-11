@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-08 14:44:02
+* @Last Modified time: 2020-10-11 17:41:44
 */
 
 #include "../fluid.h"
@@ -36,6 +36,8 @@ FluidState::~FluidState(){}
 
 void FluidState::prim2cons(double r){
 
+  UNUSED(r);
+
   double rho = prim[RHO];
   double p   = prim[PPP];
   double u   = 0;
@@ -56,7 +58,6 @@ void FluidState::prim2cons(double r){
   cons[DEN] = D;
   cons[TAU] = tau;
   for (int i = 0; i < NUM_D; ++i) cons[SS1+i] = ss[i];
-  cons[SS1+t_] *= r;
 
   for (int t = 0; t < NUM_T; ++t) cons[TR1+t] = prim[TR1+t]*D; 
 
@@ -64,6 +65,8 @@ void FluidState::prim2cons(double r){
 
 
 void FluidState::state2flux(double r){
+
+  UNUSED(r);
 
   double p = prim[PPP];
   double u = 0;
@@ -75,10 +78,9 @@ void FluidState::state2flux(double r){
   }
   u = sqrt(u);
   double lfac = sqrt(1+u*u);
-  double D = cons[DEN];
+  double D   = cons[DEN];
   double ss[NUM_D];
   for (int i = 0; i < NUM_D; ++i) ss[i] = cons[SS1+i];
-  ss[t_] /= r;
 
   for (int n = 0; n < NUM_D; ++n){
     flux[n][DEN] = D*uu[n]/lfac;
@@ -86,9 +88,8 @@ void FluidState::state2flux(double r){
       if (i==n) flux[n][SS1+i] = ss[i]*uu[n]/lfac + p;
       else flux[n][SS1+i] = ss[i]*uu[n]/lfac;
     }
-    flux[n][SS1+t_] *= r; // spherical coords
     flux[n][TAU] = ss[n] - D*uu[n]/lfac;
-    for (int t = 0; t < NUM_T; ++t) flux[n][TR1+t] = cons[TR1+t]*uu[n]/lfac;
+    for (int t = 0; t < NUM_T; ++t) flux[n][NUM_C+t] = cons[NUM_C+t]*uu[n]/lfac;
   }
 
 }
@@ -98,71 +99,6 @@ void FluidState::state2flux(double r){
  * PRIMITIVE VARIABLES RECONSTRUCTION:
  *
  */
-
-// // This is the function we need to set to zero:
-// static double f_eval(double p, double *f, double *dfdp, double D, double S2, double E){
-
-//   double g = GAMMA_;
-//   double Ep2 = (E+p)*(E+p);
-//   double v2 = S2/Ep2;
-//   double rhoe = E*(1.-v2) - D*sqrt(fabs(1.-v2)) - p*v2;
-//   double pNew = (g-1.)*rhoe;
-
-//   double oe = 1./(sqrt(fabs(1.-v2))*E/D - 1. - p/D*v2/sqrt(fabs(1.-v2)) );
-//   double c2 = (g-1.)/(1.+oe/g);
-
-//   *f = pNew - p;
-//   *dfdp = v2*c2 - 1.;
-
-// }
-
-// void FluidState::cons2prim(double r, double pin){
-
-//   UNUSED(pin);
-
-//   double D = cons[DEN];
-//   double tau = cons[TAU];
-//   double E = D+tau;
-//   double ss[NUM_D];
-//   double S2 = 0.;
-
-//   for (int d = 0; d < NUM_D; ++d) ss[d] = cons[SS1+d];
-//   ss[t_] /= r;
-//   for (int d = 0; d < NUM_D; ++d) S2 += ss[d]*ss[d];
-
-//   double p = prim[PPP];
-//   double f, dfdp;
-//   f_eval(p, &f, &dfdp, D, S2, E);
-//   int iter = 0;
-//   while (fabs(f/p) > 1.e-13 and iter < 100){
-//     p -= f/dfdp;
-//     f_eval(p, &f, &dfdp, D, S2, E);
-//     iter++;
-//   }
-
-//   double Ep2 = (E+p)*(E+p);
-//   double v2 = S2/Ep2;
-//   double lfac = 1./sqrt(fabs(1.-v2));
-//   double rho = D/lfac;
-
-//   double uu[NUM_D];
-//   for (int d = 0; d < NUM_D; ++d){ 
-//     double v = (ss[d]/(E+p));
-//     uu[d] = lfac*v;
-//   }
-
-//   cons2prim_user(&rho, &p, uu);
-
-//   prim[RHO] = rho;
-//   prim[PPP] = p;
-//   for (int d = 0; d < NUM_D; ++d){ 
-//     prim[UU1+d] = uu[d];
-//   }
-
-//   prim2cons(r); 
-//   state2flux(r);
-
-// }
 
 struct f_params{
   double D,S,E,gamma;
@@ -179,13 +115,12 @@ static double f(double p, void *params){
   double  E = par->E;
   double  gamma = par->gamma;
 
-  lfac = 1. / sqrt(fabs(1. - (S*S) / ((E+p) * (E+p))));
+  lfac = 1. / sqrt(1. - (S * S) / ((E + p) * (E + p)));
 
-  return( (E + p - D * lfac - (gamma * p * lfac * lfac) / (gamma - 1.)) );
+  return (E + p - D * lfac - (gamma * p * lfac * lfac) / (gamma - 1.));
     // Mignone (2006) eq. 5
 
 }
-
 
 void FluidState::cons2prim(double r, double pin){
 
@@ -208,7 +143,6 @@ void FluidState::cons2prim(double r, double pin){
   double S2 = 0.;
 
   for (int d = 0; d < NUM_D; ++d) ss[d] = cons[SS1+d];
-  ss[t_] /= r;
   for (int d = 0; d < NUM_D; ++d) S2 += ss[d]*ss[d];
 
   double S = sqrt(S2);
@@ -294,9 +228,10 @@ void FluidState::cons2prim(double r, double pin){
   
 }
 
+
 void Interface::wavespeedEstimates(){
 
-  int    u = UU1+dim;
+  int u = UU1+dim;
   double lfacL = SL.lfac();
   double lfacR = SR.lfac();
   double vL = SL.prim[u]/lfacL;
@@ -326,11 +261,9 @@ void Interface::wavespeedEstimates(){
 
 void Interface::computeLambda(){
 
-  int    u = UU1+dim;
-  int    s = SS1+dim;
+  int u = UU1+dim;
+  int s = SS1+dim;
   double d;
-  if (dim == t_) d = x[r_];
-  else           d = 1.;
 
   wavespeedEstimates();
   
@@ -338,8 +271,8 @@ void Interface::computeLambda(){
   double lfacR = SR.lfac();
   double vL = SL.prim[u]/lfacL;
   double vR = SR.prim[u]/lfacR;
-  double mL = SL.cons[s]/d;
-  double mR = SR.cons[s]/d;
+  double mL = SL.cons[s];
+  double mR = SR.cons[s];
   double pL = SL.prim[PPP];
   double pR = SR.prim[PPP];
   double EL = SL.cons[TAU]+SL.cons[DEN];
@@ -363,7 +296,7 @@ void Interface::computeLambda(){
     return;
   }
 
-  double delta = pow(Ehll + Fhllm,2.) - 4. * FhllE * mhll;
+  double delta = pow(Ehll + Fhllm, 2.) - 4. * FhllE * mhll;
   lS = ((Ehll + Fhllm) - sqrt(delta)) / (2. * FhllE);
 
 }
@@ -391,10 +324,8 @@ FluidState Interface::starState(FluidState Sin, double lbda){
     ss[0] = SS1 + x_; ss[1] = SS1 + y_;
   }
 
-  double r = x[r_];
   double mm[NUM_D];
   for (int d = 0; d < NUM_D; ++d) mm[d] = Sin.cons[SS1+d];
-  mm[t_] /= r;
 
   double lfac = Sin.lfac();
   double v = Sin.prim[u]/lfac;
@@ -413,7 +344,6 @@ FluidState Interface::starState(FluidState Sin, double lbda){
   Sout.cons[DEN] = D * k;
   Sout.cons[s]   = (m * (lbda-v) + pS - p) / (lbda-lS); 
   for (int n = 0; n < NUM_D-1; ++n){ Sout.cons[ss[n]] = mm[ss[n]-SS1] * k; }
-  Sout.cons[SS1+t_] *= r;
   Sout.cons[TAU] = (E * (lbda-v) + pS * lS - p * v) / (lbda - lS) - D*k;
   for (int t = 0; t < NUM_T; ++t) Sout.cons[TR1+t] = tr[t] * k;
     // Mignone (2006) eq. 16 (-D)
@@ -427,32 +357,15 @@ FluidState Interface::starState(FluidState Sin, double lbda){
 
 void Cell::sourceTerms(double dt){
 
-  double rho = S.prim[RHO];
-  double ut  = S.prim[UU1+t_];
   double p   = S.prim[PPP];
-  double h   = 1.+p*GAMMA_/(GAMMA_-1.)/rho; // look at this expression
   double r   = G.x[r_];
-  double dr  = G.dx[r_];
-  double th  = G.x[t_];
-  double dth = G.dx[t_];
   double dV  = G.dV;
-  double r1  = r-dr/2.;
-  double r2  = r+dr/2.;
-  double th1 = th-dth/2.;
-  double th2 = th+dth/2.;
 
-  // printf("%le %le\n", S.cons[SS1], (rho*h*ut*ut + 2*p) / r * dV * dt);
-  // printf("%le %le\n", S.cons[SS2], p*cos(th)/fabs(sin(th)) * dV * dt);
+  S.cons[SS1] += p / r * dV * dt;
 
-  S.cons[SS1] += (rho*h*ut*ut + 2*p) / r * dV * dt;
-  // S.cons[SS2] += p*cos(th)/fabs(sin(th)) * dV * dt;
-    // fabs to cope with negative thetas (ghost cells)
-  S.cons[SS2] += 2./3.* PI * p * (r2*r2*r2 - r1*r1*r1) * (sin(th2) - sin(th1)) * dt;
+  return;
 
 }
-
-
-
 
 
 

@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-09 18:16:36
+* @Last Modified time: 2020-10-11 22:35:08
 */
 
 #include "../environment.h"
@@ -533,27 +533,27 @@ void Grid::computeNeighbors(bool print){
   }
 
   if (print){
+    printf("%d %d\n", MV, F1);
     for (int j = 1; j < nde_nax[F1]-1; ++j){
       for (int i = 1; i < ntrack[j]-1; ++i){
         for (int d = 0; d < NUM_D; ++d){
           for (int s = 0; s < 2; ++s)
           {
-            printf("%d %d, %d %d: ", j, i, d, s);
-            Cell c  = Ctot[j][i];
-
-            for (std::vector<int>::size_type n = 0; n < c.neigh[d][s].size(); ++n){
-
-              int id  = c.neigh[d][s][n];
-              Cell cn = Ctot[0][id];
-              int jn  = cn.nde_ind[0];
-              int in  = cn.nde_ind[1];
-              printf(" %d %d", jn, in);
+            Cell *c  = &Ctot[j][i];
+            printf("%d %d, %d %d, %le: ", j, i, d, s, c->G.x[MV]);
+            for (std::vector<int>::size_type n = 0; n < c->neigh[d][s].size(); ++n){
+              int id  = c->neigh[d][s][n];
+              Cell *cn = &Ctot[0][id];
+              int jn  = cn->nde_ind[0];
+              int in  = cn->nde_ind[1];
+              printf(" %d %d %le", jn, in, cn->G.x[MV]);
             }
             printf("\n");  
           }
         }
       }
     } 
+    exit(9);
   }
 
 }
@@ -580,9 +580,9 @@ void Grid::targetRegridVictims(int j){
   double minVal = 1.e20;
   double maxVal = 0.;
   for (int i = iLbnd[j]+2; i <= iRbnd[j]-2; ++i){   // not allowing edges to be victims
-    Cell c = Ctot[j][i];
+    Cell *c = &Ctot[j][i];
 
-    double val = c.regridVal();
+    double val = c->regridVal();
     if (val < minVal){
       minVal = val;
       ismall[j] = i;
@@ -792,7 +792,6 @@ void Grid::computeFluxes(){
   #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]-1; ++j){
     double jpos = ( Ctot[j][1].G.x[F1] + Ctot[j+1][1].G.x[F1] )/2.;
-
 
     // resetting fluxes
     for (int i = 0; i < ntrack[j]; ++i){
