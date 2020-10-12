@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-11 23:00:15
+* @Last Modified time: 2020-10-12 10:57:58
 */
 
 #include "../environment.h"
@@ -96,18 +96,18 @@ void Grid::userBoundaries(int it, double t){
 
 int Grid::checkCellForRegrid(int j, int i){
 
-  // Cell c = Ctot[j][i];
+  Cell c = Ctot[j][i];
 
-  // double split_dl = 0.05;
-  // double merge_dl = 0.0001;
-    // careful, dx != dl
+  double split_dl = 0.05;
+  double merge_dl = 0.0001;
+    careful, dx != dl
 
-  // if (c.G.dx[MV] > split_dl) {
-  //   return(split_);
-  // }
-  // if (c.G.dx[MV] < merge_dl) {
-  //   return(merge_);
-  // }
+  if (c.G.dx[MV] > split_dl) {
+    return(split_);
+  }
+  if (c.G.dx[MV] < merge_dl) {
+    return(merge_);
+  }
   return(skip_);
 
 }
