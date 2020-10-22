@@ -88,16 +88,13 @@ void Cell::update(double dt, double xL, double xR){
       S.cons[q] += (flux[0][d][q] - flux[1][d][q]) * dt;
     }
   }
-  sourceTerms(dt);
+  sourceTerms(dt); userSourceTerms(dt);
   move(xL, xR);
 
   for (int q = 0; q < NUM_Q; ++q){
     S.cons[q] /= G.dV;
   }
   S.cons2prim(G.x[r_]);
-
-  // printf("%le\n", S.prim[PPP]);
-  // if (isnan(S.prim[PPP])){ exit(11); }
 
 }
 

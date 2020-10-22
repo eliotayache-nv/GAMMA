@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-08 15:01:57
+* @Last Modified time: 2020-10-22 11:34:34
 */
 
 #include "../fluid.h"
@@ -357,7 +357,7 @@ FluidState Interface::starState(FluidState Sin, double lbda){
 
 void Cell::sourceTerms(double dt){
 
-  return;
+  UNUSED(dt);
 
 }
 

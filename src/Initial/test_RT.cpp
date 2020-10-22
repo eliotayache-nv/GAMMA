@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-11 22:36:24
+* @Last Modified time: 2020-10-22 12:04:26
 */
 
 #include "../environment.h"
@@ -11,9 +11,9 @@
 void loadParams(s_par *par){
 
   par->tini      = 0.;
-  par->ncell[x_] = 100;
-  par->ncell[y_] = 100;
-  par->nmax      = 1000;    // max number of cells in MV direction
+  par->ncell[x_] = 50;
+  par->ncell[y_] = 50;
+  par->nmax      = 200;    // max number of cells in MV direction
   par->ngst      = 2;
 
 }
@@ -25,9 +25,9 @@ int Grid::initialGeometry(){
   for (int j = 0; j < ncell[x_]; ++j){
     for (int i = 0; i < ncell[y_]; ++i){
       Cell *c = &Cinit[j][i];
-      c->G.x[x_]  = (double) 2.*(j+0.5)/ncell[x_] - 1.;
+      c->G.x[x_]  = (double) 2.*(i+0.5)/ncell[x_] - 1.;
       c->G.dx[x_] =          2./ncell[x_];
-      c->G.x[y_]  = (double) 2.*(i+0.5)/ncell[y_] - 1.;
+      c->G.x[y_]  = (double) 2.*(j+0.5)/ncell[y_] - 1.;
       c->G.dx[y_] =          2./ncell[y_];
 
       c->computeAllGeom();
@@ -86,6 +86,19 @@ void Grid::userKinematics(){
 }
 
 
+void Cell::userSourceTerms(double dt){
+
+  // sources have to be expressed in terms of conserved variables
+  double y  = G.x[y_]; 
+  double dV = G.dV;
+
+  if (fabs(y) <= 0.11){
+    S.cons[DEN] += 0.1*dV*dt;
+  }
+
+}
+
+
 void Grid::userBoundaries(int it, double t){
 
   UNUSED(it);
@@ -99,7 +112,7 @@ int Grid::checkCellForRegrid(int j, int i){
   Cell c = Ctot[j][i];
 
   double split_dl = 0.05;
-  double merge_dl = 0.0001;
+  double merge_dl = 0.0005;
     // careful, dx != dl
 
   if (c.G.dx[MV] > split_dl) {

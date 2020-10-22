@@ -39,6 +39,7 @@ public:
   void update(double dt, double xL, double xR);
   void move(double xL, double xR);
   void sourceTerms(double dt);
+  void userSourceTerms(double dt);
   void computedV();
   void computedl();
   void computeCentroid();

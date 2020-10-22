@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-11 17:41:44
+* @Last Modified time: 2020-10-22 11:34:23
 */
 
 #include "../fluid.h"
@@ -362,8 +362,6 @@ void Cell::sourceTerms(double dt){
   double dV  = G.dV;
 
   S.cons[SS1] += p / r * dV * dt;
-
-  return;
 
 }
 
