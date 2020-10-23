@@ -2,18 +2,25 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-22 12:04:26
+* @Last Modified time: 2020-10-23 12:04:44
 */
 
 #include "../environment.h"
 #include "../grid.h"
+#include <gsl/gsl_roots.h>   // root finding algorithms
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_rng.h>
+
+
+double g = 9.81;   // (cm.s-2)
 
 void loadParams(s_par *par){
 
   par->tini      = 0.;
-  par->ncell[x_] = 50;
-  par->ncell[y_] = 50;
-  par->nmax      = 200;    // max number of cells in MV direction
+  par->ncell[x_] = 100;
+  par->ncell[y_] = 100;
+  par->nmax      = 1000;    // max number of cells in MV direction
   par->ngst      = 2;
 
 }
@@ -22,8 +29,8 @@ int Grid::initialGeometry(){
   // Careful! When switching moving coordinate, you need to set MV as a function of i
   // and F1 as a functino of j
 
-  for (int j = 0; j < ncell[x_]; ++j){
-    for (int i = 0; i < ncell[y_]; ++i){
+  for (int j = 0; j < ncell[y_]; ++j){
+    for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
       c->G.x[x_]  = (double) 2.*(i+0.5)/ncell[x_] - 1.;
       c->G.dx[x_] =          2./ncell[x_];
@@ -39,6 +46,13 @@ int Grid::initialGeometry(){
 
 int Grid::initialValues(){
 
+  const gsl_rng_type * T;
+  gsl_rng * r;
+
+  gsl_rng_env_setup();
+  T = gsl_rng_default;
+  r = gsl_rng_alloc (T);
+
   for (int j = 0; j < ncell[x_]; ++j){
     for (int i = 0; i < ncell[y_]; ++i){
       Cell *c = &Cinit[j][i];
@@ -46,24 +60,31 @@ int Grid::initialValues(){
       double x = c->G.x[x_];
       double y = c->G.x[y_];
 
-      c->S.prim[RHO] = 1.;
+      double rho1 = 1.;
+      double rho2 = 0.1;
+      double p0 = 1;
+
+      c->S.prim[RHO] = rho1;
       c->S.prim[VV1] = 0.;
       c->S.prim[VV2] = 0.;
-      c->S.prim[PPP] = 1.;
+      c->S.prim[PPP] = p0;
       c->S.prim[TR1] = 2.;
 
-      if (x < -0.5 and fabs(y)< 0.2){
-        c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = 0.7;
+      if (x*x + y*y < 0.2*0.2){
+        c->S.prim[RHO] = rho1;
+        c->S.prim[VV1] = 0.0;
         c->S.prim[VV2] = 0.;
-        c->S.prim[PPP] = 1.;
+        c->S.prim[PPP] = 1000*p0;
         c->S.prim[TR1] = 1.;
 
       }
-    }
 
+      // c->S.prim[VV1] = 0.02 * (double) gsl_rng_get (r) / (double) gsl_rng_max(r) - 0.01;
+
+    }
   }
 
+  gsl_rng_free (r);
   return 0;
 
 }
@@ -88,13 +109,13 @@ void Grid::userKinematics(){
 
 void Cell::userSourceTerms(double dt){
 
-  // sources have to be expressed in terms of conserved variables
-  double y  = G.x[y_]; 
-  double dV = G.dV;
+  // // sources have to be expressed in terms of conserved variables
+  // double y   = G.x[y_]; 
+  // double dV  = G.dV;
+  // double rho = S.prim[RHO];
+  // double fg = -rho*g*dV*dt;
 
-  if (fabs(y) <= 0.11){
-    S.cons[DEN] += 0.1*dV*dt;
-  }
+  // S.cons[SS1] += fg;
 
 }
 

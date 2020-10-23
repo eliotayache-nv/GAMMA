@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-11 22:35:08
+* @Last Modified time: 2020-10-23 11:35:42
 */
 
 #include "../environment.h"
@@ -649,10 +649,21 @@ void Grid::split(int j, int i){
   Cell *c  = &Ctot[j][i];
   Cell *cR = &Ctot[j][i+1];  // this should be an empty cell as we just freed it  
 
-  // Simple copy so far
-  for (int q = 0; q < NUM_Q; ++q){
-    cR->S.prim[q] = c->S.prim[q];
-  }
+  // computing gradients
+  // done before geometry update
+  #if SPATIAL_RECONSTRUCTION_ == PIECEWISE_LINEAR_
+
+    Cell *cL      = &Ctot[j][i-1]; 
+    Cell *cR_old  = &Ctot[j][i+2];  // +2 because we freed up space on the right already
+
+    double gradL[NUM_Q], gradR[NUM_Q], gradC[NUM_Q];
+    grad(*cL, *c, MV, gradL);
+    grad(*c,  *cR_old, MV, gradR);
+    for (int q = 0; q < NUM_Q; ++q){ 
+      gradC[q] = minmod(gradL[q], gradR[q]);
+    }
+
+  #endif
 
   // updating geometry
   double x_old = c->G.x[MV];
@@ -668,6 +679,28 @@ void Grid::split(int j, int i){
 
   c->computeAllGeom();
   cR->computeAllGeom();
+
+  #if SPATIAL_RECONSTRUCTION_ == PIECEWISE_CONSTANT_
+
+    for (int q = 0; q < NUM_Q; ++q){
+      cR->S.prim[q] = c->S.prim[q];
+    }
+
+  #endif
+  #if SPATIAL_RECONSTRUCTION_ == PIECEWISE_LINEAR_
+
+    double xL = c->G.cen[MV];
+    double xR = cR->G.cen[MV];
+    double xI = c->G.x[MV] + c->G.dx[MV];
+
+    for (int q = 0; q < NUM_Q; ++q){
+      double Sc = c->S.prim[q];
+      double g = gradC[q];
+      c->S.prim[q] = Sc + g * (xL - xI);
+      cR->S.prim[q] = Sc + g * (xR - xI);
+    }
+
+  #endif
 
   cR->S.prim2cons(cR->G.x[r_]);
   cR->S.state2flux(cR->G.x[r_]);
