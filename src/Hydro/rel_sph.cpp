@@ -1,8 +1,8 @@
 /*
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
-* @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-22 11:34:13
+* @Last Modified by:   eliotayache
+* @Last Modified time: 2020-11-11 14:08:10
 */
 
 #include "../fluid.h"
@@ -190,7 +190,7 @@ static double f(double p, void *params){
 void FluidState::cons2prim(double r, double pin){
 
   int     status;
-  int     iter = 0, max_iter = 100;
+  int     iter = 0, max_iter = 1000;
   double  res;
   struct  f_params                params;
   const   gsl_root_fsolver_type   *T;
@@ -224,7 +224,7 @@ void FluidState::cons2prim(double r, double pin){
 
   // Looking for pressure only if current one doesn't work;
   double f_init = f(pCand, &params);
-  if (fabs(f_init) > 1.e-13) {
+  if (fabs(f_init) > 0.) {
 
     double p_lo, p_hi;
     T = gsl_root_fsolver_brent;
@@ -256,7 +256,7 @@ void FluidState::cons2prim(double r, double pin){
         res = gsl_root_fsolver_root (s);
         p_lo = gsl_root_fsolver_x_lower (s);
         p_hi = gsl_root_fsolver_x_upper (s);
-        status = gsl_root_test_interval (p_lo, p_hi, 1.e-13, 1.e-13);
+        status = gsl_root_test_interval (p_lo, p_hi, 0., 1.e-13);
       } while (status == GSL_CONTINUE && iter < max_iter);
       gsl_root_fsolver_free (s);
       pCand = res;
@@ -270,7 +270,7 @@ void FluidState::cons2prim(double r, double pin){
   double rho = D/lfac;
 
   double uu[NUM_D];
-  if (fabs(S) < 1.e-14) {
+  if (fabs(S) == 0) {
     for (int d = 0; d < NUM_D; ++d) uu[d] = 0;
   }
   else {
@@ -338,18 +338,18 @@ void Interface::computeLambda(){
   double lfacR = SR.lfac();
   double vL = SL.prim[u]/lfacL;
   double vR = SR.prim[u]/lfacR;
-  double mL = SL.cons[s]/d;
-  double mR = SR.cons[s]/d;
+  double mmL = SL.cons[s]/d;
+  double mmR = SR.cons[s]/d;
   double pL = SL.prim[PPP];
   double pR = SR.prim[PPP];
   double EL = SL.cons[TAU]+SL.cons[DEN];
   double ER = SR.cons[TAU]+SR.cons[DEN];
 
   // Setting up temporary variables:
-  double AL = lL * EL - mL;
-  double AR = lR * ER - mR;
-  double BL = mL * (lL - vL) - pL;
-  double BR = mR * (lR - vR) - pR;
+  double AL = lL * EL - mmL;
+  double AR = lR * ER - mmR;
+  double BL = mmL * (lL - vL) - pL;
+  double BR = mmR * (lR - vR) - pR;
     // Mignone (2006) eq. 17
 
   // Coefficients for lambdaStar equation:
@@ -358,7 +358,7 @@ void Interface::computeLambda(){
   double Fhllm = (lL * BR - lR * BL) / (lR - lL);
   double mhll  = (BR - BL) / (lR - lL);
 
-  if (fabs(FhllE) < 1.e-15){
+  if (fabs(FhllE) == 0){
     lS = mhll / (Ehll + Fhllm);
     return;
   }
@@ -440,11 +440,14 @@ void Cell::sourceTerms(double dt){
   double r2  = r+dr/2.;
   double th1 = th-dth/2.;
   double th2 = th+dth/2.;
+  double rsq = (r2*r2+r1*r1+r2*r1)/3.;
 
-  S.cons[SS1] += (rho*h*ut*ut + 2*p) / r * dV * dt;
-  // S.cons[SS2] += p*cos(th)/fabs(sin(th)) * dV * dt;
+  S.cons[SS1] += (rho*h*ut*ut + 2.*p) *(r/rsq) * dV * dt;
+  // S.cons[SS1] += (rho*h*ut*ut + 2.*p) / r * dV * dt;
+  // S.cons[SS1] += (rho*ut*ut + 2.*p) / r * dV * dt;
+  S.cons[SS2] += p*cos(th)/fabs(sin(th)) * dV * dt;
     // fabs to cope with negative thetas (ghost cells)
-  S.cons[SS2] += 2./3.* PI * p * (r2*r2*r2 - r1*r1*r1) * (sin(th2) - sin(th1)) * dt;
+  // S.cons[SS2] += 2./3.* PI * p * (r2*r2*r2 - r1*r1*r1) * (sin(th2) - sin(th1)) * dt;
 
 }
 

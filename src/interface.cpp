@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-12 11:54:57
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-05 14:38:28
+* @Last Modified time: 2020-11-09 15:45:54
 */
 
 #include "interface.h"
@@ -23,6 +23,7 @@ Interface::~Interface()
 
 void Interface::move(double dt){
 
+  // printf("%le %le\n", v, dt);
   x[MV] += dt * v;
   computedA();
 

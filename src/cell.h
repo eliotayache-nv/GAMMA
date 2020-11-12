@@ -36,6 +36,10 @@ public:
   vector<int> neigh[NUM_D][2];    // neighboring cells in each direction (id)
   double grad_mv[NUM_Q];          // gradient in moving direction
 
+  #if SHOCK_DETECTION_ == ENABLED_
+    bool isShocked;
+  #endif
+
   void update(double dt, double xL, double xR);
   void move(double xL, double xR);
   void sourceTerms(double dt);

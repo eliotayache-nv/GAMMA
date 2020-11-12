@@ -1,8 +1,8 @@
 // /*
 // * @Author: eliotayache
 // * @Date:   2020-06-10 11:07:58
-// * @Last Modified by:   Eliot Ayache
-// * @Last Modified time: 2020-09-03 14:57:43
+// * @Last Modified by:   eliotayache
+// * @Last Modified time: 2020-11-11 09:51:07
 // */
 
 #include "../environment.h"
@@ -34,5 +34,6 @@ void Interface::computeFlux(){
   }
 
   for (int q = 0; q < NUM_Q; ++q){ flux[q] *= dA; }
+
 
 }
