@@ -1,8 +1,8 @@
 /*
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
-* @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-23 11:35:42
+* @Last Modified by:   eliotayache
+* @Last Modified time: 2020-11-11 10:28:55
 */
 
 #include "../environment.h"
@@ -239,6 +239,7 @@ void Grid::updateGhosts(int it, double t){
       ntrack[j] = ntrack[jLbnd+1];
       nact[j] = nact[jLbnd+1];
       iRbnd[j] = iRbnd[jLbnd+1];
+      iLbnd[j] = iLbnd[jLbnd+1];
       std::copy_n(&Ctot[jLbnd+1][0], ntrack[jLbnd+1],   &Ctot[j][0]);
       std::copy_n(&Itot[jLbnd+1][0], ntrack[jLbnd+1]-1, &Itot[j][0]);
 
@@ -250,6 +251,7 @@ void Grid::updateGhosts(int it, double t){
         Ctot[j][i].computeAllGeom();
         if (i != ntrack[j]-1){ 
           Itot[j][i].x[F1] -= (jLbnd-j+1)*C[0][0].G.dx[F1]; 
+          Itot[j][i].computedA();
         }
       }
     }
@@ -259,6 +261,7 @@ void Grid::updateGhosts(int it, double t){
       ntrack[j] = ntrack[jRbnd-1];
       nact[j] = nact[jRbnd-1];
       iRbnd[j] = iRbnd[jRbnd-1];
+      iLbnd[j] = iLbnd[jRbnd-1];
       std::copy_n(&Ctot[jRbnd-1][0], ntrack[jRbnd-1]  , &Ctot[j][0]);
       std::copy_n(&Itot[jRbnd-1][0], ntrack[jRbnd-1]-1, &Itot[j][0]);
 
@@ -270,6 +273,7 @@ void Grid::updateGhosts(int it, double t){
         Ctot[j][i].computeAllGeom();
         if (i != ntrack[j]-1){ 
           Itot[j][i].x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dx[F1];
+          Itot[j][i].computedA();
         }
       }
     }
@@ -286,6 +290,7 @@ void Grid::updateGhosts(int it, double t){
 
       Itot[j][i] = Itot[j][iLbnd[j]+1];
       Itot[j][i].x[MV] -= (iLbnd[j]-i+1) * Ctot[j][iLbnd[j]+1].G.dx[MV];
+      Itot[j][i].computedA();
     }
     for (int i = iRbnd[j]; i < nde_nax[MV]; ++i){
       Ctot[j][i] = Ctot[j][iRbnd[j]-1];
@@ -296,6 +301,7 @@ void Grid::updateGhosts(int it, double t){
 
       Itot[j][i-1] = Itot[j][iRbnd[j]-2];
       Itot[j][i-1].x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dx[MV];
+      Itot[j][i].computedA();
     }
   }
   userBoundaries(it, t); // overiding with user-specific boundary conditions
@@ -564,7 +570,7 @@ void Grid::regrid(){
   #pragma omp parallel for default(shared)
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
     targetRegridVictims(j); // updating ismall and ibig
-    for (int i = iLbnd[j]+2; i <= iRbnd[j]-2; ++i){  // only active cells
+    for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){  // only active cells
       int action = checkCellForRegrid(j, i);
       if (action != skip_){ 
         applyRegrid(j, i, action); 
@@ -597,6 +603,8 @@ void Grid::targetRegridVictims(int j){
 
 
 void Grid::applyRegrid(int j, int i, int action){
+
+  // printf("%d\n", action);
 
   // circular regrid: we grab the extra cell somewhere on the track (res stays the same)
   // And we avoid load-balancing issues
@@ -722,7 +730,7 @@ void Grid::merge(int j, int i){
 
   // identify neigbour victim
   int side;
-  if (cL->G.dx[MV] < cR->G.dx[MV]){
+  if ((cL->G.dx[MV] < cR->G.dx[MV] and i != ngst) or i == nact[j]+ngst-1){
     side = left_;
     cVic = cL;
   } else {
@@ -858,6 +866,7 @@ void Grid::computeFluxes(){
         reconstructStates(j,i,F1,idn,&Int);
         Int.computeLambda();
         Int.computeFlux();
+        // printf("flux %d %d %le %le\n", j, i, Int.flux[TAU]/Int.dA, Int.dx[0]);
 
         c0->update_dt(F1, Int.lL);
         cn->update_dt(F1, Int.lR);
@@ -868,7 +877,6 @@ void Grid::computeFluxes(){
       }
     }  
   }
-
 }
   
 
@@ -895,8 +903,9 @@ double Grid::collect_dt(){
 void Grid::update(double dt){
 
   #pragma omp parallel for default(shared)
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int i = 0; i < ntrack[j]-1; ++i){
+  for (int j = 1; j < nde_nax[F1]-1; ++j){
+    for (int i = 0; i < ntrack[j]-1; ++i){ // F1 -1 because there's one less interface
+      // printf("%d %d\n", j, i);
       Itot[j][i].move(dt);
     }
   }
@@ -906,6 +915,10 @@ void Grid::update(double dt){
     for (int i = 1; i < ntrack[j]-1; ++i){
       double xL = Itot[j][i-1].x[MV];
       double xR = Itot[j][i].x[MV];
+      double vL = Itot[j][i-1].v;
+      double vR = Itot[j][i].v;
+      if (xR < xL) printf("vel %d %d %le %le %le %le\n", j, i, vL, vR, xL, xR);
+      // printf("%d %d\n", j, i);
       Ctot[j][i].update(dt,xL,xR);
     }
   }

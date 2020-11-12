@@ -54,6 +54,10 @@ void Cell::update_dt(int dim, Interface IL, Interface IR){
 
     dt_cand = fmin(dt_candL, dt_candR);
 
+    if (dt_cand < 0){
+      printf("MV %le %le %le %le\n", dt_cand, a, l, v);
+      exit(30);
+    }
   } 
 
   else {
@@ -70,7 +74,12 @@ void Cell::update_dt(int dim, Interface IL, Interface IR){
       l = -IL.lL;
       if (l > 0) { dt_cand = a/l;  } else { dt_cand = 1.e15; }      
     }
+    if (dt_cand < 0){
+      printf("F1 %le %le %le\n", dt_cand, a, l);
+      exit(31);
+    }
   }
+
 
   dt_loc = fmin(dt_loc, dt_cand);
 
@@ -84,6 +93,7 @@ void Cell::update(double dt, double xL, double xR){
   }
 
   for (int d = 0; d < NUM_D; ++d){
+  // for (int d = 0; d < 1; ++d){  
     for (int q = 0; q < NUM_Q; ++q){
       S.cons[q] += (flux[0][d][q] - flux[1][d][q]) * dt;
     }
