@@ -1,7 +1,7 @@
-INITIAL    = test_cart2Dslab
+INITIAL    = RT_jet_v1
 TIMESTEP   = rk3
-GEOMETRY   = cartesian
-HYDRO      = rel_cart
+GEOMETRY   = spherical
+HYDRO      = rel_sph
 SOLVER     = hllc
 DIMENSIONS = 2d
 IO         = text2d
@@ -16,6 +16,13 @@ ifeq ($(HOME), /home/t/ehra20)
 	LFLAGS = -fopenmp -lgsl -lgslcblas -lm	#run this line on distant
 else
 ifeq ($(HOME), /home/rwe-ubuntu)
+	CXX     = mpicxx
+	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 -fopenmp 		#run this line on distant
+# 	CXXFLAGS = -Wall -Wextra -std=c++0x -g -fopenmp 		#run this line on distant
+	LFLAGS = -L/usr/local/lib -fopenmp -lgsl -lgslcblas -lm	#run this line on distant
+	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/lib/openmpi/include
+else
+ifeq ($(HOME), /u/g/rwe22)
 	CXX     = mpicxx
 	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 -fopenmp 		#run this line on distant
 # 	CXXFLAGS = -Wall -Wextra -std=c++0x -g -fopenmp 		#run this line on distant
@@ -39,6 +46,7 @@ endif
 endif
 endif
 endif
+endif
 
 IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
 
@@ -57,7 +65,6 @@ IOO        =$(SOURCE)/IO/$(IO)
 
 SOURCES = $(wildcard $(SOURCE)/*.cpp) 
 OBJECTS = $(SOURCES:.cpp=.o) $(INITIALL).o $(TIMESTEPP).o $(GEOMETRYY).o $(HYDROO).o $(SOLVERR).o $(DIMENSIONSS).o $(IOO).o
-
 
 all : $(BIN)/GAMMA
 
