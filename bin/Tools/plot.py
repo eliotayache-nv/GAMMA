@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-10-11 22:56:42
+# @Last Modified time: 2020-10-28 18:19:00
 
 
 import numpy as np
@@ -66,6 +66,36 @@ def readData(key, it=None, sequence=False):
 
 def getArray(data, key):
   return(data.pivot(index='j', columns='i', values=key).to_numpy())
+
+
+def plot1D(data, key, 
+  mov="x",
+  log=False, 
+  v1min=None,
+  color=None, 
+  r2=False):
+  z = data[key].to_numpy()
+  x  = data["x"].to_numpy()
+
+  if r2:
+    z*=x**2
+
+  xmin = np.min(x)
+  xmax = np.max(x)
+
+  vmin = np.min(z)
+  vmax = np.max(z)
+
+  if v1min:
+    vmin = v1min
+
+  f = plt.figure()
+
+  if log==True:
+    plt.yscale('log')
+
+  plt.plot(x,z,'go--')
+
 
 
 def quadMesh(data, key, 
