@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-11-16 15:33:13
+* @Last Modified time: 2020-11-16 16:19:29
 */
 
 #include "../environment.h"
@@ -78,7 +78,7 @@ int Grid::initialValues(){
       }
       c->S.prim[RHO] = rho;
       c->S.prim[TR1] = trac;
-      c->S.prim[VV1] = 0.01 * (cos(4.*PI*y) * (1. + cos(3*PI*x))) / 4.;
+      c->S.prim[UU1] = 0.01 * (1. + cos(4.*PI*y) * (1. + cos(3.*PI*x))) / 4.;
       c->S.prim[VV2] = 0.;
       c->S.prim[PPP] = p0 - g*rho*x;
 
