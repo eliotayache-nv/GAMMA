@@ -1,7 +1,7 @@
-INITIAL    = RT_jet_v1
+INITIAL    = test_RT_gravity
 TIMESTEP   = rk3
-GEOMETRY   = spherical
-HYDRO      = rel_sph
+GEOMETRY   = cartesian
+HYDRO      = rel_cart
 SOLVER     = hllc
 DIMENSIONS = 2d
 IO         = text2d
