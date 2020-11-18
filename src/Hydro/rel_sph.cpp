@@ -1,8 +1,8 @@
 /*
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
-* @Last Modified by:   eliotayache
-* @Last Modified time: 2020-11-11 14:08:10
+* @Last Modified by:   Eliot Ayache
+* @Last Modified time: 2020-11-18 12:02:18
 */
 
 #include "../fluid.h"
@@ -443,6 +443,7 @@ void Cell::sourceTerms(double dt){
   double rsq = (r2*r2+r1*r1+r2*r1)/3.;
 
   S.cons[SS1] += (rho*h*ut*ut + 2.*p) *(r/rsq) * dV * dt;
+  // S.cons[SS1] += (rho*ut*ut + 2.*p) * (r/rsq)* dV * dt;
   // S.cons[SS1] += (rho*h*ut*ut + 2.*p) / r * dV * dt;
   // S.cons[SS1] += (rho*ut*ut + 2.*p) / r * dV * dt;
   S.cons[SS2] += p*cos(th)/fabs(sin(th)) * dV * dt;

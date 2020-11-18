@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-11-17 17:45:07
+* @Last Modified time: 2020-11-16 17:48:14
 */
 
 #include "../environment.h"
@@ -14,7 +14,7 @@
 #include <gsl/gsl_rng.h>
 
 
-double g = - 0.1;
+double g = 0.1; 
 double p0 = 2.5;
 
 void loadParams(s_par *par){
@@ -22,7 +22,7 @@ void loadParams(s_par *par){
   par->tini      = 0.;
   par->ncell[x_] = 100;
   par->ncell[y_] = 25;
-  par->nmax      = 104;    // max number of cells in MV direction
+  par->nmax      = 110;    // max number of cells in MV direction
   par->ngst      = 2;
 
 }
@@ -39,12 +39,10 @@ int Grid::initialGeometry(){
   for (int j = 0; j < ncell[y_]; ++j){
     for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
-      double dx = (xmax-xmin)/ncell[x_];
-      double dy = (ymax-ymin)/ncell[y_];
-      c->G.x[x_]  = xmin + (i+0.5)*dx;
-      c->G.x[y_]  = ymin + (j+0.5)*dy;
-      c->G.dx[x_] = dx;
-      c->G.dx[y_] = dy;
+      c->G.x[x_]  = (double) (xmax-xmin)*(i+0.5)/ncell[x_] + xmin;
+      c->G.dx[x_] =          (xmax-xmin)/ncell[x_];
+      c->G.x[y_]  = (double) (ymax-ymin)*(j+0.5)/ncell[y_] + ymin;
+      c->G.dx[y_] =          (ymax-ymin)/ncell[y_];
 
       c->computeAllGeom();
     }
@@ -80,14 +78,14 @@ int Grid::initialValues(){
       }
       c->S.prim[RHO] = rho;
       c->S.prim[TR1] = trac;
-      c->S.prim[VV1] = 0.01 * (1. + cos(4.*PI*y)) * (1. + cos(3.*PI*x)) / 4.;
+      c->S.prim[UU1] = 0.01 * ((1. + cos(4.*PI*y)) * (1. + cos(3.*PI*x))) / 4.;
       c->S.prim[VV2] = 0.;
-      c->S.prim[PPP] = p0 + g*rho*x;
+      c->S.prim[PPP] = p0 - g*rho*x;
 
     }
   }
 
-  // gsl_rng_free (r);
+  gsl_rng_free (r);
   return 0;
 
 }
@@ -116,8 +114,8 @@ void Cell::userSourceTerms(double dt){
   double dV  = G.dV;
   double rho = S.prim[RHO];
   double lfac = S.lfac();
-  double vx  = S.prim[UU1]/lfac;
-  double fg = lfac*rho*g*dV*dt;
+  double vx  = S.prim[VV1]/lfac;
+  double fg = -lfac*rho*g*dV*dt;
   double Wg = fg*vx;
 
   S.cons[SS1] += fg;
@@ -199,22 +197,18 @@ void Grid::userBoundaries(int it, double t){
 
 int Grid::checkCellForRegrid(int j, int i){
 
-  Cell c = Ctot[j][i];
+  // Cell c = Ctot[j][i];
 
-  // double target_ar = 1.;
-  double split_ar = 2.;
-  double merge_ar = 0.5;
+  // double split_dl = 0.05;
+  // double merge_dl = 0.0005;
+  //   // careful, dx != dl
 
-  double dx = Ctot[j][i].G.dx[x_];
-  double dy = Ctot[j][i].G.dx[y_];
-  double ar = dx/dy;
-
-  if (ar > split_ar) {
-    return(split_);
-  }
-  if (ar < merge_ar) {
-    return(merge_);
-  }
+  // if (c.G.dx[MV] > split_dl) {
+  //   return(split_);
+  // }
+  // if (c.G.dx[MV] < merge_dl) {
+  //   return(merge_);
+  // }
   return(skip_);
 
 }

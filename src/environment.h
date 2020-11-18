@@ -48,8 +48,8 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 #define MV    x_            // moving dimension
 #define F1    y_            // fixed dimension 1
 #define F2    z_            // fixed dimension 2
-#define VI      0.            // interface velocity (units of CD velocity)
-#define GAMMA_  1.4 //(5./3.)
+#define VI      1.            // interface velocity (units of CD velocity)
+#define GAMMA_  (4./3.)
 #define CFL_    0.2
 
 #define DUMPSTEP_ 100
@@ -57,7 +57,7 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 #define MPI_ ENABLED_
 #define OMP_ ENABLED_
 
-#define SPATIAL_RECONSTRUCTION_ PIECEWISE_LINEAR_
+#define SPATIAL_RECONSTRUCTION_ PIECEWISE_CONSTANT_
 #define CIRC_REGRID_ DISABLED_
 
 // ---------------------------------------------------------------------------------------

@@ -1,8 +1,8 @@
 /*
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
-* @Last Modified by:   eliotayache
-* @Last Modified time: 2020-11-11 09:51:28
+* @Last Modified by:   Eliot Ayache
+* @Last Modified time: 2020-11-18 11:57:25
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -40,6 +40,7 @@ void Simu::run(){
 
   while (!stop){
 
+
     grid.regrid();
 
     grid.updateGhosts(it, t);
@@ -56,16 +57,16 @@ void Simu::run(){
     //if (it%20000 == 0){ grid.printCols(it, t); }
     //if (it%10000 == 0){ grid.printCols(it, t); }
     // if (it%2000 == 0){ grid.printCols(it, t); }
-    if (it%1000 == 0){ grid.printCols(it, t); }
+    if (it%10 == 0){ grid.printCols(it, t); }
 
     //if ((worldrank == 0) and (it%1000 == 0)){ printf("it: %ld time: %le\n", it, t);}
-    if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
+    if ((worldrank == 0) and (it%10 == 0)){ printf("it: %ld time: %le\n", it, t);}
 
     //if (it > 8870000){ stop = true; }
     //if (it > 50000){ stop = true; }
     //if (t > 2.5e6){ stop = true; }
-    // if (it > 1000){ stop = true; }
-    if (t > 1.e7){ stop = true; }
+    if (it > 10000){ stop = true; }
+    // if (t > 1.e7){ stop = true; }
   }
 
 }

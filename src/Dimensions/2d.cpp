@@ -1,8 +1,8 @@
 /*
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
-* @Last Modified by:   eliotayache
-* @Last Modified time: 2020-11-11 10:28:55
+* @Last Modified by:   Eliot Ayache
+* @Last Modified time: 2020-11-18 11:53:24
 */
 
 #include "../environment.h"
@@ -292,7 +292,7 @@ void Grid::updateGhosts(int it, double t){
       Itot[j][i].x[MV] -= (iLbnd[j]-i+1) * Ctot[j][iLbnd[j]+1].G.dx[MV];
       Itot[j][i].computedA();
     }
-    for (int i = iRbnd[j]; i < nde_nax[MV]; ++i){
+    for (int i = iRbnd[j]; i < ntrack[j]; ++i){
       Ctot[j][i] = Ctot[j][iRbnd[j]-1];
       Ctot[j][i].G.x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dx[MV];
       Ctot[j][i].computeAllGeom();
@@ -301,7 +301,7 @@ void Grid::updateGhosts(int it, double t){
 
       Itot[j][i-1] = Itot[j][iRbnd[j]-2];
       Itot[j][i-1].x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dx[MV];
-      Itot[j][i].computedA();
+      Itot[j][i-1].computedA();
     }
   }
   userBoundaries(it, t); // overiding with user-specific boundary conditions
