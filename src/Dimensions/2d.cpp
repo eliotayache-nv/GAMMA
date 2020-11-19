@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-11-18 11:53:24
+* @Last Modified time: 2020-11-19 10:12:06
 */
 
 #include "../environment.h"
@@ -589,6 +589,9 @@ void Grid::targetRegridVictims(int j){
     Cell *c = &Ctot[j][i];
 
     double val = c->regridVal();
+
+    if (val < 0) continue; 
+
     if (val < minVal){
       minVal = val;
       ismall[j] = i;
