@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-08 16:00:45
+* @Last Modified time: 2020-11-20 16:54:47
 */
 
 // rupert simulation 1: 
@@ -152,7 +152,7 @@ void Grid::userBoundaries(int it, double t){
   if (worldrank==worldsize-1){
     for (int j = nde_nax[F1]-ngst; j < nde_nax[F1]; ++j){
 
-      int target_j = nde_nax[F1] - ngst -j;
+      int target_j = nde_nax[F1] - ngst -1 - (j - jRbnd);
       ntrack[j] = ntrack[target_j];
       nact[j] = nact[target_j];
       iRbnd[j] = iRbnd[target_j];
