@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:57:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-11-22 19:47:32
+* @Last Modified time: 2020-11-22 19:58:58
 */
 
 #include "../environment.h"
@@ -22,7 +22,7 @@ void Grid::evolve(int it, double t, double dt){
   update(dt);
   // do not evolve border cells because they are going to be copied anyways
   // and it can lead to non-physical states
-  // #pragma omp parallel for default(shared)
+  #pragma omp parallel for default(shared)
   for (int j = 1; j < nde_nax[F1]-1; ++j){
     for (int i = 1; i < ntrack[j]-1; ++i){
       Cell *c = &Ctot[j][i];
@@ -31,7 +31,6 @@ void Grid::evolve(int it, double t, double dt){
       for (int q = 0; q < NUM_Q; ++q){
         double Q   = c->S.cons[q];
         double Q0  = c->S0.cons[q];
-        // if (q == DEN) printf("%d %le %le %le %le\n", q, Q, Q0, dV, dV0);
         c->S.cons[q] = 3./4. * Q0 * dV0 + 1./4. * Q * dV;
       }
     }
