@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:57:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-08 15:58:02
+* @Last Modified time: 2020-11-22 19:47:32
 */
 
 #include "../environment.h"
@@ -14,12 +14,15 @@ void Grid::evolve(int it, double t, double dt){
 
   copyState0();
 
-  // first half-step
+  // first intermediate step
   update(dt);
 
+  // second intermediate step
+  prepForUpdate(it, t);
+  update(dt);
   // do not evolve border cells because they are going to be copied anyways
   // and it can lead to non-physical states
-  #pragma omp parallel for default(shared)
+  // #pragma omp parallel for default(shared)
   for (int j = 1; j < nde_nax[F1]-1; ++j){
     for (int i = 1; i < ntrack[j]-1; ++i){
       Cell *c = &Ctot[j][i];
@@ -28,6 +31,7 @@ void Grid::evolve(int it, double t, double dt){
       for (int q = 0; q < NUM_Q; ++q){
         double Q   = c->S.cons[q];
         double Q0  = c->S0.cons[q];
+        // if (q == DEN) printf("%d %le %le %le %le\n", q, Q, Q0, dV, dV0);
         c->S.cons[q] = 3./4. * Q0 * dV0 + 1./4. * Q * dV;
       }
     }
@@ -40,10 +44,9 @@ void Grid::evolve(int it, double t, double dt){
       double x  = I->x[MV];
       double x0 = I->x0[MV];
       I->x[MV] = 3./4. * x0 + 1./4. * x;
-      // if (i==iLbnd[j]+1 and it == 1) printf("%le %le\n", x0, x);
+      I->computedA();
     }
   }
-
 
   CellGeomFromInterfacePos();
 
@@ -55,16 +58,12 @@ void Grid::evolve(int it, double t, double dt){
         c->S.cons[q] /= c->G.dV;
       }
       c->S.cons2prim(c->G.x[r_]);
-      // if (i==iLbnd[j]+1 and it == 1) printf("%le %d\n",c->G.dx[x_], iLbnd[j]);
     }
   }
   
-  // if (it==1) exit(11);
-
+  // third intermediate step
   // updateGhosts(it, t);
   prepForUpdate(it, t);
-
-  // second half-step
   update(dt);
 
   #pragma omp parallel for default(shared)
@@ -88,7 +87,7 @@ void Grid::evolve(int it, double t, double dt){
       double x  = I->x[MV];
       double x0 = I->x0[MV];
       I->x[MV] = 1./3. * x0 + 2./3. * x;
-      // if (i==iLbnd[j] and it == 0) printf("%le %le\n", x0, x);
+      I->computedA();
     }
   }
 
