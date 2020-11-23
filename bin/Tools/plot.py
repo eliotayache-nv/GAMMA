@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-11-23 21:31:03
+# @Last Modified time: 2020-11-23 21:47:08
 
 
 import numpy as np
@@ -73,7 +73,8 @@ def plot1D(data, key,
   log=False, 
   v1min=None,
   color=None, 
-  r2=False):
+  r2=False, 
+  trac=None):
 
   if key=="lfac":
     var = "vx"
@@ -82,6 +83,7 @@ def plot1D(data, key,
 
   z = data[var].to_numpy()
   x  = data["x"].to_numpy()
+  tracvals = data["trac"].to_numpy()
 
   if key=="lfac":
     z = 1./np.sqrt(1 - z**2)
@@ -103,7 +105,8 @@ def plot1D(data, key,
   if log==True:
     plt.yscale('log')
 
-    plt.plot(x,z,'ko-', mfc='r', mec='r', ms=3)
+    plt.plot(x,z,'k',zorder=1)
+    plt.scatter(x,z, c=tracvals, edgecolors='k', lw=1, zorder=2)
 
 
 
