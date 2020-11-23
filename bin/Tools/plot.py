@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-10-28 18:19:00
+# @Last Modified time: 2020-11-23 20:00:05
 
 
 import numpy as np
@@ -236,14 +236,19 @@ def quadMesh(data, key,
     f.tight_layout()
 
 
-def loopFigs(dir, key, **kwargs):
+def loopFigs(dir, key, oneDimensional = False, **kwargs):
   if not os.path.exists("../../results/%s/figs" %dir):
     os.mkdir("../../results/%s/figs" %dir)
   for filename in glob.glob("../../results/%s/*.out" %dir):
     print(filename.split("results/")[1])
     data = readData(filename.split("results/")[1])
-    quadMesh(data, key, **kwargs)
+    if oneDimensional:
+      plot1D(data, key, **kwargs)      
+    else:
+      quadMesh(data, key, **kwargs)
     plt.savefig("../../results/%s/figs/%s.png" %(dir,filename.rstrip(".out").split(dir)[1]))
     plt.close()
+
+
 
 
