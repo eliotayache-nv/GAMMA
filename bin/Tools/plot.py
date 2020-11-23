@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-11-23 21:07:31
+# @Last Modified time: 2020-11-23 21:10:04
 
 
 import numpy as np
@@ -76,9 +76,11 @@ def plot1D(data, key,
   r2=False):
 
   if key=="lfac":
-    key="vx"
+    var = "vx"
+  else
+    var = key
 
-  z = data[key].to_numpy()
+  z = data[var].to_numpy()
   x  = data["x"].to_numpy()
 
   if key=="lfac":
