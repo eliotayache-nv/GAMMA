@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-11-23 20:00:05
+# @Last Modified time: 2020-11-23 21:07:31
 
 
 import numpy as np
@@ -74,8 +74,15 @@ def plot1D(data, key,
   v1min=None,
   color=None, 
   r2=False):
+
+  if key=="lfac":
+    key="vx"
+
   z = data[key].to_numpy()
   x  = data["x"].to_numpy()
+
+  if key=="lfac":
+    z = 1./np.sqrt(1 - z**2)
 
   if r2:
     z*=x**2
