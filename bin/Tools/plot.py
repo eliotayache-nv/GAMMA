@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-11-23 21:10:04
+# @Last Modified time: 2020-11-23 21:10:41
 
 
 import numpy as np
@@ -77,7 +77,7 @@ def plot1D(data, key,
 
   if key=="lfac":
     var = "vx"
-  else
+  else:
     var = key
 
   z = data[var].to_numpy()
