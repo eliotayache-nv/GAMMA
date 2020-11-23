@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-11-23 21:30:15
+# @Last Modified time: 2020-11-23 21:31:03
 
 
 import numpy as np
@@ -103,7 +103,7 @@ def plot1D(data, key,
   if log==True:
     plt.yscale('log')
 
-   plt.plot(x,z,'ko-', mfc='r', mec='r', ms=3)
+    plt.plot(x,z,'ko-', mfc='r', mec='r', ms=3)
 
 
 
