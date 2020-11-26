@@ -19,6 +19,7 @@ public:
   void state2flux(double r);
 
   double lfac();
+  double cs();
 
 };
 

@@ -262,7 +262,7 @@ int Grid::checkCellForRegrid(int j, int i){
   double merge_AR   = 0.2;                  // set upper bound as ratio of target_AR
 
   if (ar > split_AR * target_AR) {          // if cell is too long for its width
-      // return(split_);                       // split
+      return(split_);                       // split
   }
   if (ar < merge_AR * target_AR) {          // if cell is too short for its width
       return(merge_);                       // merge

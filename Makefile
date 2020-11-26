@@ -1,7 +1,7 @@
-INITIAL    = test_RT_gravity
+INITIAL    = fireball
 TIMESTEP   = rk3
-GEOMETRY   = cartesian
-HYDRO      = rel_cart
+GEOMETRY   = spherical
+HYDRO      = rel_sph
 SOLVER     = hllc
 DIMENSIONS = 2d
 IO         = text2d
@@ -30,7 +30,7 @@ ifeq ($(HOME), /u/g/rwe22)
 	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/lib/openmpi/include
 else
 ifeq ($(OS_NAME), linux)
-	CXX     = /usr/bin/g++
+	CXX     = mpicxx
 	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 		#run this line on distant
 	LFLAGS = -L/usr/local/lib -fopenmp -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5 -lgsl -lgslcblas -lm	#run this line on distant
 else
@@ -38,7 +38,7 @@ ifeq ($(OS_NAME), darwin)
 	CXX     = /usr/local/bin/mpic++
 # 	CXXFLAGS = -Wall -Wextra -g -std=c++11 -O0  	#run this line on local
 # 	CXXFLAGS = -Wall -Wextra -Qunused-arguments -std=c++11 -g  	#run this line on local
-	CXXFLAGS = -Wall -Wextra -std=c++11 -g -fopenmp	#run this line on local
+	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 -fopenmp	#run this line on local
 # 	LFLAGS = -L/usr/local/lib -fopenmp -lhdf5 -lgsl -lm 		#run this line on local
 	LFLAGS = -L/usr/local/lib -fopenmp -lgsl -lm	#run this line on local
 	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial

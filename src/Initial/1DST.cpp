@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-05 14:00:32
+* @Last Modified time: 2020-11-19 11:14:33
 */
 
 #include "../environment.h"
@@ -12,7 +12,7 @@
 void loadParams(s_par *par){
 
   par->tini      = 0.;
-  par->ncell[x_] = 40;
+  par->ncell[x_] = 100;
   par->ncell[y_] = 1;
   par->nmax      = 110;    // max number of cells in MV direction
   par->ngst      = 2;
@@ -48,15 +48,15 @@ int Grid::initialValues(){
       Cell *c = &Cinit[j][i];
 
       if (c->G.x[x_] >= 0){
-        c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = 0.;
+        c->S.prim[RHO] = 1.;
+        c->S.prim[VV1] = 0.5;
         c->S.prim[VV2] = 0.;
-        c->S.prim[PPP] = 0.01;
+        c->S.prim[PPP] = 0.1;
         c->S.cons[NUM_C] = 1.;
       }
       if (c->G.x[x_] < 0){
         c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = 0.99;
+        c->S.prim[VV1] = 0.;
         c->S.prim[VV2] = 0.;
         c->S.prim[PPP] = 1.;
         c->S.cons[NUM_C] = 2.;
@@ -70,20 +70,52 @@ int Grid::initialValues(){
 }
 
 
-int Cell::checkCellForRegrid(){
+void Grid::userKinematics(){
 
-  return(skip_)
+}
+
+void Cell::userSourceTerms(double dt){
+
+  UNUSED(dt);
+
+}
+
+void Grid::userBoundaries(int it, double t){
+
+  UNUSED(it);
+  UNUSED(t);
 
 }
 
 
+int Grid::checkCellForRegrid(int j, int i){
+
+  UNUSED(j);
+  UNUSED(i);
+
+  return(skip_);
+}
 
 
+void Cell::user_regridVal(double *res){
+  // user function to find regrid victims
+  // adapts the search to special target resolution requirements
+  // depending on the tracer value
+  
+  UNUSED(*res);
+
+}
 
 
+void FluidState::cons2prim_user(double *rho, double *p, double *uu){
 
+  UNUSED(uu);
+  UNUSED(*p);
 
+  if (*rho < 0.05) *rho = 0.05;
 
+  return;
 
+}
 
 

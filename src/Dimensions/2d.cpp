@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-11-19 10:12:06
+* @Last Modified time: 2020-11-26 13:20:44
 */
 
 #include "../environment.h"
@@ -585,11 +585,10 @@ void Grid::targetRegridVictims(int j){
 
   double minVal = 1.e20;
   double maxVal = 0.;
-  for (int i = iLbnd[j]+2; i <= iRbnd[j]-2; ++i){   // not allowing edges to be victims
+  for (int i = iLbnd[j]+3; i <= iRbnd[j]-3; ++i){   // not allowing edges to be victims
     Cell *c = &Ctot[j][i];
 
     double val = c->regridVal();
-
     if (val < 0) continue; 
 
     if (val < minVal){
@@ -745,9 +744,9 @@ void Grid::merge(int j, int i){
   double dV_loc = c->G.dV;
   double dV_vic = cVic->G.dV;
   for (int q = 0; q < NUM_Q; ++q){
-    double Q_loc = c->S.prim[q];
-    double Q_vic = cVic->S.prim[q];
-    c->S.prim[q] = (Q_loc * dV_loc + Q_vic * dV_vic) / (dV_loc + dV_vic);
+    double Q_loc = c->S.cons[q];
+    double Q_vic = cVic->S.cons[q];
+    c->S.cons[q] = (Q_loc * dV_loc + Q_vic * dV_vic) / (dV_loc + dV_vic);
   }
 
   // updating geometry
@@ -761,7 +760,7 @@ void Grid::merge(int j, int i){
   c->G.dx[MV] += cVic->G.dx[MV];
   c->computeAllGeom();
 
-  c->S.prim2cons(c->G.x[r_]);
+  c->S.cons2prim(c->G.x[r_]);
   c->S.state2flux(c->G.x[r_]);
 
   // shifting cells and interfaces around
