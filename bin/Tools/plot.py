@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
-# @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-11-23 21:47:08
+# @Last Modified by:   eliotayache
+# @Last Modified time: 2020-11-26 14:38:00
 
 
 import numpy as np
@@ -105,8 +105,9 @@ def plot1D(data, key,
   if log==True:
     plt.yscale('log')
 
-    plt.plot(x,z,'k',zorder=1)
-    plt.scatter(x,z, c=tracvals, edgecolors='k', lw=1, zorder=2)
+  plt.plot(x,z,'k',zorder=1)
+  plt.scatter(x,z, c='None', edgecolors='k', lw=2, zorder=2)
+  plt.scatter(x,z, c=tracvals, edgecolors='None', zorder=3)
 
 
 
