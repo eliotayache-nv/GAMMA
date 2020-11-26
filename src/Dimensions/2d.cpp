@@ -1,8 +1,8 @@
 /*
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
-* @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-11-26 13:20:44
+* @Last Modified by:   eliotayache
+* @Last Modified time: 2020-11-26 14:08:33
 */
 
 #include "../environment.h"
@@ -740,6 +740,8 @@ void Grid::merge(int j, int i){
     cVic = cR;
   }
 
+  c->S.prim2cons(c->G.x[r_]);
+  cVic->S.prim2cons(cVic->G.x[r_]);
   // updating values
   double dV_loc = c->G.dV;
   double dV_vic = cVic->G.dV;
