@@ -31,7 +31,7 @@ ifeq ($(HOME), /u/g/rwe22)
 else
 ifeq ($(OS_NAME), linux)
 	CXX     = mpicxx
-	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 		#run this line on distant
+	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 -fopenmp		#run this line on distant
 	LFLAGS = -L/usr/local/lib -fopenmp -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5 -lgsl -lgslcblas -lm	#run this line on distant
 else
 ifeq ($(OS_NAME), darwin)
