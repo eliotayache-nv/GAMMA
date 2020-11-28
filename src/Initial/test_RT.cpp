@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-23 12:04:44
+* @Last Modified time: 2020-11-28 11:37:29
 */
 
 #include "../environment.h"
@@ -12,8 +12,6 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_rng.h>
 
-
-double g = 9.81;   // (cm.s-2)
 
 void loadParams(s_par *par){
 
@@ -70,11 +68,11 @@ int Grid::initialValues(){
       c->S.prim[PPP] = p0;
       c->S.prim[TR1] = 2.;
 
-      if (x*x + y*y < 0.2*0.2){
+      if (fabs(y) < 0.2 and x<-0.5){
         c->S.prim[RHO] = rho1;
-        c->S.prim[VV1] = 0.0;
+        c->S.prim[VV1] = 0.99999;
         c->S.prim[VV2] = 0.;
-        c->S.prim[PPP] = 1000*p0;
+        c->S.prim[PPP] = p0;
         c->S.prim[TR1] = 1.;
 
       }
@@ -90,13 +88,13 @@ int Grid::initialValues(){
 }
 
 
-void Grid::userKinematics(){
+void Grid::userKinematics(int it, double t){
 
   // setting lower and higher i boundary interface velocities to zero
-  double vIn     = 0.;     // can't be lower than 1 for algo to work
-  double vOut    = 0.;     
+  double vIn     = 0.3;
+  double vOut    = 1.05;     
   for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int n = 0; n <= ngst; ++n){
+    for (int n = 0; n < ngst; ++n){
       int    iL = n;
       int    iR = ntrack[j]-2-n;
       Itot[j][iL].v = vIn;
@@ -133,10 +131,15 @@ int Grid::checkCellForRegrid(int j, int i){
   Cell c = Ctot[j][i];
 
   double split_dl = 0.05;
-  double merge_dl = 0.0005;
+  double merge_dl = 0.005;
     // careful, dx != dl
+  double x = c.G.x[x_];
+  double dx = c.G.dx[x_];
+  double x1 = Ctot[j-1][iRbnd[j-1]-1].G.x[x_];
+  double dx1 = Ctot[j-1][iRbnd[j-1]-1].G.dx[x_];
 
   if (c.G.dx[MV] > split_dl) {
+    printf("split %d %d %d %d %le %le \n", j, i, iLbnd[j], iRbnd[j], x+dx/2., x1+dx1/2.);
     return(split_);
   }
   if (c.G.dx[MV] < merge_dl) {

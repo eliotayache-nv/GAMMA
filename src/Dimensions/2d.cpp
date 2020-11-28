@@ -1,8 +1,8 @@
 /*
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
-* @Last Modified by:   eliotayache
-* @Last Modified time: 2020-11-26 14:08:33
+* @Last Modified by:   Eliot Ayache
+* @Last Modified time: 2020-11-28 11:38:20
 */
 
 #include "../environment.h"
@@ -622,6 +622,7 @@ void Grid::applyRegrid(int j, int i, int action){
     #endif
 
     split(j,isplit);
+    printf("%le\n", Ctot[j][iRbnd[j]-1].G.x[x_] + Ctot[j][iRbnd[j]-1].G.dx[x_]/2.);
   }
 
   if (action == merge_ and ntrack[j] > 2*ngst+2){
@@ -799,7 +800,7 @@ void Grid::movDir_ComputeLambda(){
 
 }
 
-void Grid::updateKinematics(){
+void Grid::updateKinematics(int it, double t){
 
   #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]; ++j){
@@ -810,7 +811,7 @@ void Grid::updateKinematics(){
       Itot[j][i].lfac = lfac;
     }
   }  
-  userKinematics();   // overriding with user preferences
+  userKinematics(it, t);   // overriding with user preferences
 
 }
 

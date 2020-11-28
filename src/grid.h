@@ -68,8 +68,8 @@ class Grid{
   void computeNeighbors(bool print=false);
   void assignId(int ind[NUM_D]);
   void movDir_ComputeLambda();
-  void updateKinematics();
-  void userKinematics();
+  void updateKinematics(int it, double t);
+  void userKinematics(int it, double t);
   void gradients(Cell *c);
   void prepForUpdate(int it, double t);
   void computeFluxes();

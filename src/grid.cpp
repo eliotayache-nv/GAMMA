@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-06 09:26:35
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-11 22:33:47
+* @Last Modified time: 2020-11-28 11:36:47
 */
 
 #include "grid.h"
@@ -46,7 +46,7 @@ void Grid::prepForUpdate(int it, double t){
   state2flux();
   computeNeighbors();
   movDir_ComputeLambda();   // has to be done before kinematics update (and flux calc)
-  updateKinematics();
+  updateKinematics(it, t);
   computeFluxes();
   
 }
