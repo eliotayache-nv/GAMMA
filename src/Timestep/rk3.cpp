@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:57:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-11-22 19:58:58
+* @Last Modified time: 2020-12-03 10:32:42
 */
 
 #include "../environment.h"
@@ -18,6 +18,7 @@ void Grid::evolve(int it, double t, double dt){
   update(dt);
 
   // second intermediate step
+  updateGhosts(it, t);
   prepForUpdate(it, t);
   update(dt);
   // do not evolve border cells because they are going to be copied anyways
@@ -61,7 +62,7 @@ void Grid::evolve(int it, double t, double dt){
   }
   
   // third intermediate step
-  // updateGhosts(it, t);
+  updateGhosts(it, t);
   prepForUpdate(it, t);
   update(dt);
 

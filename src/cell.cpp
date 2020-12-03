@@ -92,8 +92,8 @@ void Cell::update(double dt, double xL, double xR){
     S.cons[q] *= G.dV;
   }
 
-  // for (int d = 0; d < NUM_D; ++d){
-  for (int d = 0; d < 1; ++d){  
+  for (int d = 0; d < NUM_D; ++d){
+  // for (int d = 0; d < 1; ++d){  
     for (int q = 0; q < NUM_Q; ++q){
       S.cons[q] += (flux[0][d][q] - flux[1][d][q]) * dt;
     }
