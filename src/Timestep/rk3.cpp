@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:57:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-03 10:32:42
+* @Last Modified time: 2020-12-15 11:44:12
 */
 
 #include "../environment.h"
@@ -24,8 +24,8 @@ void Grid::evolve(int it, double t, double dt){
   // do not evolve border cells because they are going to be copied anyways
   // and it can lead to non-physical states
   #pragma omp parallel for default(shared)
-  for (int j = 1; j < nde_nax[F1]-1; ++j){
-    for (int i = 1; i < ntrack[j]-1; ++i){
+  for (int j = jLbnd+1; j <= jRbnd-1; ++j){
+    for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
       Cell *c = &Ctot[j][i];
       double dV  = c->G.dV;
       double dV0 = c->G0.dV;
@@ -38,8 +38,8 @@ void Grid::evolve(int it, double t, double dt){
   }
 
   #pragma omp parallel for default(shared)
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int i = 0; i < ntrack[j]-1; ++i){
+  for (int j = jLbnd+1; j <= jRbnd-1; ++j){
+    for (int i = iLbnd[j]+1; i < iRbnd[j]-1; ++i){
       Interface *I = &Itot[j][i];
       double x  = I->x[MV];
       double x0 = I->x0[MV];
@@ -51,8 +51,8 @@ void Grid::evolve(int it, double t, double dt){
   CellGeomFromInterfacePos();
 
   #pragma omp parallel for default(shared)
-  for (int j = 1; j < nde_nax[F1]-1; ++j){
-    for (int i = 1; i < ntrack[j]-1; ++i){
+  for (int j = jLbnd+1; j <= jRbnd-1; ++j){
+    for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
       Cell *c = &Ctot[j][i];
       for (int q = 0; q < NUM_Q; ++q){
         c->S.cons[q] /= c->G.dV;
@@ -67,8 +67,8 @@ void Grid::evolve(int it, double t, double dt){
   update(dt);
 
   #pragma omp parallel for default(shared)
-  for (int j = 1; j < nde_nax[F1]-1; ++j){
-    for (int i = 1; i < ntrack[j]-1; ++i){
+  for (int j = jLbnd+1; j <= jRbnd-1; ++j){
+    for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
       Cell *c = &Ctot[j][i];
       double dV  = c->G.dV;
       double dV0 = c->G0.dV;
@@ -81,8 +81,8 @@ void Grid::evolve(int it, double t, double dt){
   }
 
   #pragma omp parallel for default(shared)
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int i = 0; i < ntrack[j]-1; ++i){
+  for (int j = jLbnd+1; j <= jRbnd-1; ++j){
+    for (int i = iLbnd[j]+1; i < iRbnd[j]-1; ++i){
       Interface *I = &Itot[j][i];
       double x  = I->x[MV];
       double x0 = I->x0[MV];
@@ -94,8 +94,8 @@ void Grid::evolve(int it, double t, double dt){
   CellGeomFromInterfacePos();
 
   #pragma omp parallel for default(shared)
-  for (int j = 1; j < nde_nax[F1]-1; ++j){
-    for (int i = 1; i < ntrack[j]-1; ++i){
+  for (int j = jLbnd+1; j <= jRbnd-1; ++j){
+    for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
       Cell *c = &Ctot[j][i];
       for (int q = 0; q < NUM_Q; ++q){
         c->S.cons[q] /= c->G.dV;

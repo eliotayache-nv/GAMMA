@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-11-28 11:38:20
+* @Last Modified time: 2020-12-15 11:46:52
 */
 
 #include "../environment.h"
@@ -320,12 +320,13 @@ void Grid::updateGhosts(int it, double t){
 
   static void grad(Cell cL, Cell cR, int dim, double *grad){
 
+    double xL = cL.G.cen[dim];
+    double xR = cR.G.cen[dim];
+
     for (int q = 0; q < NUM_Q; ++q){
       // reconstruction using primitive variables
       double qL = cL.S.prim[q];
       double qR = cR.S.prim[q];
-      double xL = cL.G.cen[dim];
-      double xR = cR.G.cen[dim];
       grad[q] = (qR - qL) / (xR-xL);
     }
 
@@ -353,22 +354,6 @@ void Grid::updateGhosts(int it, double t){
   }
 
 #endif
-
-
-// void Grid::gradients(Cell *c){
-
-//   for (int d = 0; d < NUM_D; ++d){
-//     int indL[NUM_D];
-//     int indR[NUM_D];
-//     indL[d] = c->nde_ind[d] - 1;
-//     indR[d] = c->nde_ind[d] + 1;
-//     Cell cL = Ctot[indL[F1]][indL[MV]];
-//     Cell cR = Ctot[indR[F1]][indR[MV]];
-//     grad(cL, cR, d, &(c->grad));
-//   }
-
-// }
-
 
 void Grid::reconstructStates(int j, int i, int dim, int idn, Interface *Int){
 
@@ -415,7 +400,7 @@ void Grid::reconstructStates(int j, int i, int dim, int idn, Interface *Int){
         double xI = Int->x[dim];
         for (int s = 0; s < 2; ++s){
           for (int q = 0; q < NUM_Q; ++q){
-            double xc = c[s]->G.x[dim];
+            double xc = c[s]->G.cen[dim];
             double Sc = c[s]->S.prim[q];
             double g = grad[s][q];
             IS[s]->prim[q] = Sc + g * (xI - xc);
@@ -434,7 +419,7 @@ void Grid::reconstructStates(int j, int i, int dim, int idn, Interface *Int){
       if (j == 0  
           or j == nde_nax[F1]-2
           or cL->neigh[F1][0].size() == 0
-          or cR->neigh[F1][0].size() == 0){
+          or cR->neigh[F1][1].size() == 0){
         Int->SL = Ctot[j][i].S;
         Int->SR = Ctot[0][idn].S;
       }
@@ -446,44 +431,34 @@ void Grid::reconstructStates(int j, int i, int dim, int idn, Interface *Int){
         double xf = Int->x[F1];
         cLL = findNeighbor(cL, left_,  xm, this);
         cRR = findNeighbor(cR, right_, xm, this);
-        double dxmL  = xm - cL->G.x[MV];
-        double dxmR  = xm - cR->G.x[MV];
-        double dxmLL = xm - cLL->G.x[MV];
-        double dxmRR = xm - cRR->G.x[MV];
-        double dxfL  = xf - cL->G.x[F1];
-        double dxfR  = xf - cR->G.x[F1];
+        double dxmL  = xm - cL->G.cen[MV];
+        double dxmR  = xm - cR->G.cen[MV];
+        double dxmLL = xm - cLL->G.cen[MV];
+        double dxmRR = xm - cRR->G.cen[MV];
+        double dxfL  = xf - cL->G.cen[F1];
+        double dxfR  = xf - cR->G.cen[F1];
 
         for (int q = 0; q < NUM_Q; ++q){
           double qL = cL->S.prim[q] + cL->grad_mv[q] * dxmL;
           double qR = cR->S.prim[q] + cR->grad_mv[q] * dxmR;
           double qLL = cLL->S.prim[q] + cLL->grad_mv[q] * dxmLL;
           double qRR = cRR->S.prim[q] + cRR->grad_mv[q] * dxmRR;
-          double gradL = (qL - qLL) / (cL->G.x[F1] - cLL->G.x[F1]);
-          double grad0 = (qR - qL)  / (cR->G.x[F1] - cL->G.x[F1]);
-          double gradR = (qR - qRR) / (cR->G.x[F1] - cRR->G.x[F1]);
-          gradL = minmod(gradL, grad0);
-          gradR = minmod(grad0, gradR);
-          Int->SL.prim[q] = qL + gradL * dxfL;
-          Int->SR.prim[q] = qR + gradR * dxfR;
-          Int->SL.prim2cons(Int->x[x_]);
-          Int->SR.prim2cons(Int->x[x_]);
-          Int->SL.state2flux(Int->x[x_]);
-          Int->SR.state2flux(Int->x[x_]);
+          double gradL = (qL - qLL) / (cL->G.cen[F1] - cLL->G.cen[F1]);
+          double grad0 = (qR - qL)  / (cR->G.cen[F1] - cL->G.cen[F1]);
+          double gradR = (qR - qRR) / (cR->G.cen[F1] - cRR->G.cen[F1]);
+          double mgradL = minmod(gradL, grad0);
+          double mgradR = minmod(grad0, gradR);
+          Int->SL.prim[q] = qL + mgradL * dxfL;
+          Int->SR.prim[q] = qR + mgradR * dxfR;
         }
+
+        Int->SL.prim2cons(Int->x[x_]);
+        Int->SR.prim2cons(Int->x[x_]);
+        Int->SL.state2flux(Int->x[x_]);
+        Int->SR.state2flux(Int->x[x_]);
       }
     }
-    // double gradL[NUM_Q], gradR[NUM_Q];
-    // if (dim == MV){
-    //   Cell *cL  = &Ctot[j][i  ];
-    //   Cell *cR  = &Ctot[j][i+1];
-    //   gradients(cL); gradients(cR);
-    //   Int->SL = cL->S;
-    //   Int->SR = cR->S;
-    //   UNUSED(iplus);
-    // } else {
-    //   Int->SL = Ctot[j][i].S;
-    //   Int->SR = Ctot[j+1][iplus].S;
-    // }
+
   #endif
 
 }
@@ -528,9 +503,8 @@ void Grid::computeNeighbors(bool print){
               } 
             while (xp < xjR){
               c->neigh[d][1].push_back(Ctot[j+1][ip+1].nde_id);
-              ip++; 
               if (ip > ntrack[j+1]-1) break;
-              xp = Itot[j+1][ip].x[MV];
+              ip++; xp = Itot[j+1][ip].x[MV];
             }
           }
         }
@@ -622,7 +596,6 @@ void Grid::applyRegrid(int j, int i, int action){
     #endif
 
     split(j,isplit);
-    printf("%le\n", Ctot[j][iRbnd[j]-1].G.x[x_] + Ctot[j][iRbnd[j]-1].G.dx[x_]/2.);
   }
 
   if (action == merge_ and ntrack[j] > 2*ngst+2){
@@ -791,6 +764,7 @@ void Grid::merge(int j, int i){
 void Grid::movDir_ComputeLambda(){
 
   #pragma omp parallel for default(shared)
+  // this needs to be done on all j tracks because we use the gradients later on
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < ntrack[j]-1; ++i){
       reconstructStates(j,i,MV);
@@ -837,7 +811,7 @@ void Grid::computeFluxes(){
   // flux in F1 direction (building the interfaces from neighbor ids)
   #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]-1; ++j){
-    double jpos = ( Ctot[j][1].G.x[F1] + Ctot[j+1][1].G.x[F1] )/2.;
+    double jpos = ( Ctot[j][iLbnd[j]+1].G.x[F1] + Ctot[j+1][iLbnd[j+1]+1].G.x[F1] )/2.;
 
     // resetting fluxes
     for (int i = 0; i < ntrack[j]; ++i){
@@ -871,7 +845,6 @@ void Grid::computeFluxes(){
         reconstructStates(j,i,F1,idn,&Int);
         Int.computeLambda();
         Int.computeFlux();
-        // printf("flux %d %d %le %le\n", j, i, Int.flux[TAU]/Int.dA, Int.dx[0]);
 
         c0->update_dt(F1, Int.lL);
         cn->update_dt(F1, Int.lR);
@@ -908,16 +881,15 @@ double Grid::collect_dt(){
 void Grid::update(double dt){
 
   #pragma omp parallel for default(shared)
-  for (int j = 1; j < nde_nax[F1]-1; ++j){
-    for (int i = 0; i < ntrack[j]-1; ++i){ // F1 -1 because there's one less interface
-      // printf("%d %d\n", j, i);
+  for (int j = jLbnd+1; j <= jRbnd-1; ++j){
+    for (int i = 0; i < ntrack[j]-1; ++i){
       Itot[j][i].move(dt);
     }
   }
   // do not update border cells because can lead to non-physical states
   #pragma omp parallel for default(shared)
-  for (int j = 1; j < nde_nax[F1]-1; ++j){
-    for (int i = 1; i < ntrack[j]-1; ++i){
+  for (int j = jLbnd+1; j <= jRbnd-1; ++j){
+    for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
       double xL = Itot[j][i-1].x[MV];
       double xR = Itot[j][i].x[MV];
       double vL = Itot[j][i-1].v;

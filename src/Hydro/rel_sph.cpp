@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-11-26 13:23:44
+* @Last Modified time: 2020-12-09 10:28:13
 */
 
 #include "../fluid.h"
@@ -270,7 +270,7 @@ void FluidState::cons2prim(double r, double pin){
   double rho = D/lfac;
 
   double uu[NUM_D];
-  if (fabs(S) == 0) {
+  if (fabs(S) == 0.) {
     for (int d = 0; d < NUM_D; ++d) uu[d] = 0;
   }
   else {

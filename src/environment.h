@@ -25,6 +25,8 @@
 #define UNUSED(x) (void)(x)
 #define ENABLED_  0
 #define DISABLED_ 1
+#define PIECEWISE_CONSTANT_ 0
+#define PIECEWISE_LINEAR_   1
 
 enum{RHO,PPP,UU1,UU2,UU3};  // 3rd dimension optional so must be last
 enum{TP1,TP2,VV1,VV2,VV3};
@@ -36,7 +38,7 @@ enum{R_,T_,P_};      // in case of typo
 enum{left_,right_};    
 enum{skip_,merge_,split_};
 
-enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
+
 
 // ---------------------------------------------------------------------------------------
 // ENVIRONMENT OPTIONS
@@ -49,7 +51,7 @@ enum{PIECEWISE_CONSTANT_,PIECEWISE_LINEAR_};
 #define F1    y_            // fixed dimension 1
 #define F2    z_            // fixed dimension 2
 #define VI      1.            // interface velocity (units of CD velocity)
-#define GAMMA_  (4./3.)
+#define GAMMA_  1.4 //(5./3.)
 #define CFL_    0.2
 
 #define DUMPSTEP_ 100

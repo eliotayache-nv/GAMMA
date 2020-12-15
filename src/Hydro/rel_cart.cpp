@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-22 15:21:25
+* @Last Modified time: 2020-12-09 10:29:35
 */
 
 #include "../fluid.h"
@@ -125,7 +125,7 @@ static double f(double p, void *params){
 void FluidState::cons2prim(double r, double pin){
 
   int     status;
-  int     iter = 0, max_iter = 100;
+  int     iter = 0, max_iter = 1000;
   double  res;
   struct  f_params                params;
   const   gsl_root_fsolver_type   *T;
@@ -158,7 +158,7 @@ void FluidState::cons2prim(double r, double pin){
 
   // Looking for pressure only if current one doesn't work;
   double f_init = f(pCand, &params);
-  if (fabs(f_init) > 1.e-13) {
+  if (fabs(f_init) > 0.) {
 
     double p_lo, p_hi;
     T = gsl_root_fsolver_brent;
@@ -190,7 +190,7 @@ void FluidState::cons2prim(double r, double pin){
         res = gsl_root_fsolver_root (s);
         p_lo = gsl_root_fsolver_x_lower (s);
         p_hi = gsl_root_fsolver_x_upper (s);
-        status = gsl_root_test_interval (p_lo, p_hi, 1.e-13, 1.e-13);
+        status = gsl_root_test_interval (p_lo, p_hi, 0., 1.e-13);
       } while (status == GSL_CONTINUE && iter < max_iter);
       gsl_root_fsolver_free (s);
       pCand = res;
@@ -204,7 +204,7 @@ void FluidState::cons2prim(double r, double pin){
   double rho = D/lfac;
 
   double uu[NUM_D];
-  if (fabs(S) < 1.e-14) {
+  if (fabs(S) == 0.) {
     for (int d = 0; d < NUM_D; ++d) uu[d] = 0;
   }
   else {
