@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2019-12-13 11:34:21
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-11-22 12:09:38
+# @Last Modified time: 2020-12-07 17:29:58
 
 
 """
@@ -42,7 +42,7 @@ L       = 0.3
 # Domain parameters
 xmin    = -0.35
 xmax    = 1
-npts    = 1000
+npts    = 500
 
 # Simulation parameters
 tstart  = 0.
@@ -264,7 +264,7 @@ def computeL1(x, xth, dl):
 
 
 # ----------------------------------------------------------------------------------------
-def plotIsen1D(time, key):
+def plotIsen1D(time, key, ax = None, **kwargs):
 
   U_ref = State(rho_ref,v_ref,p_ref)
   U_ref.prim2aux()
@@ -294,7 +294,10 @@ def plotIsen1D(time, key):
   if key == "p":
     zth   = np.array([U.p for U in U_arr])
 
-  plt.plot(x, zth)
+  if ax is None:
+    ax = plt.gca()
+
+  ax.plot(x, zth, **kwargs)
 
 
 
