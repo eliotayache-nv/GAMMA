@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-12-08 15:18:59
+# @Last Modified time: 2020-12-10 15:25:45
 
 
 import numpy as np
@@ -149,7 +149,8 @@ def plot1D(data, key,
 
 
 
-def quadMesh(data, key, 
+def quadMesh(data, key,
+  z_override = None,
   mov="x",
   log=False, 
   key2=None,
@@ -171,11 +172,22 @@ def quadMesh(data, key,
     print("Use polar geometry with key2")
     return
 
-  z = data.pivot(index='j', columns='i', values=key).to_numpy()
+  if z_override is not None:
+    z = z_override
+  else:
+    z = data.pivot(index='j', columns='i', values=key).to_numpy()
   x  = data.pivot(index='j', columns='i', values='x').to_numpy()
   dx = data.pivot(index='j', columns='i', values='dx').to_numpy()
   y  = data.pivot(index='j', columns='i', values='y').to_numpy()
   dy = data.pivot(index='j', columns='i', values='dy').to_numpy()
+
+  # duplicating last row for plotting
+  z = np.append(z,np.expand_dims(z[-1,:], axis=0), axis=0)
+  x = np.append(x,np.expand_dims(x[-1,:], axis=0), axis=0)
+  dx = np.append(dx,np.expand_dims(dx[-1,:], axis=0), axis=0)
+  y = np.append(y,np.expand_dims(y[-1,:], axis=0), axis=0)
+  dy = np.append(dy,np.expand_dims(dy[-1,:], axis=0), axis=0)
+
   z = np.ma.masked_array(z, np.isnan(z))
   x = np.ma.masked_array(x, np.isnan(x))
   y = np.ma.masked_array(y, np.isnan(y))
@@ -184,10 +196,12 @@ def quadMesh(data, key,
 
   if key2:
     z2 = data.pivot(index='j', columns='i', values=key2).to_numpy()
+    z2 = np.append(z2,np.expand_dims(z2[-1,:], axis=0), axis=0)
     z2 = np.ma.masked_array(z2, np.isnan(z2))
 
   if (quiver):
     vx = data.pivot(index='j', columns='i', values='vx').to_numpy()
+    vx = np.append(vx,np.expand_dims(vx[-1,:], axis=0), axis=0)
     vx = np.ma.masked_array(vx, np.isnan(vx))
 
   if r2:
@@ -208,13 +222,20 @@ def quadMesh(data, key,
   if v2min:
     vmin2 = v2min
 
-  f = plt.figure()
-  ax = plt.axes(projection="polar")
-  ax.set_thetamax(ymax*180./np.pi)
-  if key2:
-    ax.set_thetamin(-ymax*180./np.pi)
+  if geometry == "polar":
+    projection="polar"
   else:
-    ax.set_thetamin(ymin*180./np.pi)
+    projection=None
+
+  f = plt.figure()
+  ax = plt.axes(projection=projection)
+
+  if geometry == "polar":
+    ax.set_thetamax(ymax*180./np.pi)
+    if key2:
+      ax.set_thetamin(-ymax*180./np.pi)
+    else:
+      ax.set_thetamin(ymin*180./np.pi)
 
   if slick:
     ax.axis("off")
