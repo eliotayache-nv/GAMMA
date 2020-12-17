@@ -39,20 +39,17 @@ enum{left_,right_};
 enum{skip_,merge_,split_};
 
 
-
 // ---------------------------------------------------------------------------------------
 // ENVIRONMENT OPTIONS
-#define NUM_C 4               // conserved (changes with number of dimensions)
-#define NUM_T 1               // tracers
-#define NUM_Q (NUM_C+NUM_T)   // advected variables (tracers are placed at end of list)
-#define TR1   NUM_C         // index of first tracer 
-#define NUM_D 2             // number of dimensions
-#define MV    x_            // moving dimension
-#define F1    y_            // fixed dimension 1
-#define F2    z_            // fixed dimension 2
-#define VI      1.            // interface velocity (units of CD velocity)
-#define GAMMA_  1.4 //(5./3.)
-#define CFL_    0.2
+#define NUM_C  4             // conserved (changes with number of dimensions)
+#define NUM_TR 2             // user-specified tracers
+#define NUM_D  2             // number of dimensions
+#define MV     x_            // moving dimension
+#define F1     y_            // fixed dimension 1
+#define F2     z_            // fixed dimension 2
+#define VI     1.            // interface velocity (units of CD velocity)
+#define GAMMA_ (5./3.)
+#define CFL_   0.2
 
 #define DUMPSTEP_ 100
 
@@ -60,7 +57,23 @@ enum{skip_,merge_,split_};
 #define OMP_ ENABLED_
 
 #define SPATIAL_RECONSTRUCTION_ PIECEWISE_LINEAR_
-#define CIRC_REGRID_ DISABLED_
+#define CIRC_REGRID_            DISABLED_
+#define SHOCK_DETECTION_        ENABLED_
+#define LOCAL_SYNCHROTRON_      DISABLED_
+
+// ---------------------------------------------------------------------------------------
+// DO NOT MODIFY!
+#if LOCAL_SYNCHROTRON_ == ENABLED_
+  #define NUM_S 2
+  #define GMN_  (NUM_C+NUM_TR)    // gamma_min
+  #define GMX_  (NUM_C+NUM_TR+1)  // gamma_max
+#else
+  #define NUM_S 0
+#endif 
+
+#define TR1   NUM_C                 // index of first tracer 
+#define NUM_T (NUM_TR+NUM_S)        // total num of tracers
+#define NUM_Q (NUM_C+NUM_T)   // advected variables (tracers are placed at end of list)
 
 // ---------------------------------------------------------------------------------------
 // GLOBAL VARIABLES

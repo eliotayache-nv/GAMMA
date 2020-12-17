@@ -100,6 +100,10 @@ class Grid{
 
   void mpi_exchangeGhostTracks();
 
+  #if SHOCK_DETECTION_ == ENABLED_
+    void resetShocks();
+  #endif
+
 };
 
 #endif

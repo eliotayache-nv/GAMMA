@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-13 10:39:12
+* @Last Modified time: 2020-12-17 10:40:00
 */
 
 #include "../simu.h"
@@ -129,6 +129,14 @@ void reloadFromData(Grid *g, vector<Data> *data){
 
 void Grid::printCols(int it, double t){
 
+  #if SHOCK_DETECTION_ == ENABLED
+    for (int j = 0; j < nde_nax[F1]; ++j){
+      for (int i = 0; i < ntrack[j]; ++i){
+        Ctot[j][i].S.prim[TR1+1] = Ctot[j][i].Sd;
+      }
+    }
+  #endif
+
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Datatype cell_mpi = {0}; 
   generate_mpi_cell(&cell_mpi);
@@ -168,13 +176,13 @@ void Grid::printCols(int it, double t){
     const char* strfout = s.c_str();
     FILE* fout = fopen(strfout, "w");
 
-    fprintf(fout, "t nact j i x y dx dy dlx dly rho vx vy p D sx sy tau trac\n");
+    fprintf(fout, "t nact j i x y dx dy dlx dly rho vx vy p D sx sy tau trac Sd\n");
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
       for (int i = ngst; i < ntrackd[j]-ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
         double lfac = Cdump[j][i].S.lfac();
         int nactd = ntrackd[j]-2*ngst;
-        fprintf(fout, "%le %d %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
+        fprintf(fout, "%le %d %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
           t,
           nactd,
           j-ngst,
@@ -193,7 +201,8 @@ void Grid::printCols(int it, double t){
           Cdump[j][i].S.cons[SS1],
           Cdump[j][i].S.cons[SS2],
           Cdump[j][i].S.cons[TAU],
-          Cdump[j][i].S.prim[TR1]);
+          Cdump[j][i].S.prim[TR1],
+          Cdump[j][i].S.prim[TR1+1]);
       }
     }
     fclose(fout);

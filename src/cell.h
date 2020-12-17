@@ -37,7 +37,9 @@ public:
   double grad_mv[NUM_Q];          // gradient in moving direction
 
   #if SHOCK_DETECTION_ == ENABLED_
-    bool isShocked;
+    bool    isShocked;
+    double  Sd;
+    void resetShocks();
   #endif
 
   void update(double dt, double xL, double xR);

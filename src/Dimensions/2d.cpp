@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-15 11:46:52
+* @Last Modified time: 2020-12-17 11:11:17
 */
 
 #include "../environment.h"
@@ -797,6 +797,13 @@ void Grid::computeFluxes(){
     // flux in MV direction (looping over interfaces)
     for (int i = 0; i < ntrack[j]-1; ++i){
       Itot[j][i].computeFlux();
+
+      #if SHOCK_DETECTION_ == ENABLED_
+        Cell *cL = &Ctot[j][i];
+        Cell *cR = &Ctot[j][i+1];
+        Itot[j][i].detectShock(cL, cR);
+      #endif
+        
     }
     for (int i = 1; i < ntrack[j]-1; ++i){
       // can't do the edges
@@ -845,6 +852,10 @@ void Grid::computeFluxes(){
         reconstructStates(j,i,F1,idn,&Int);
         Int.computeLambda();
         Int.computeFlux();
+
+        #if SHOCK_DETECTION_ == ENABLED_
+          Int.detectShock(c0, cn);
+        #endif
 
         c0->update_dt(F1, Int.lL);
         cn->update_dt(F1, Int.lR);
@@ -981,7 +992,10 @@ void Grid::destruct(){
 
 
 void Grid::apply(void (Cell::*func)()){
-    
+
+  // usage: grid.apply(&Cell::func_name);
+  
+  #pragma omp parallel for default(shared)  
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < nde_nax[MV]; ++i){
       (Ctot[j][i].*func)();

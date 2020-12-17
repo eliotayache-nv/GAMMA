@@ -38,6 +38,10 @@ public:
   void move(double dt);
   void computedA();
 
+  #if SHOCK_DETECTION_ == ENABLED_
+    void detectShock(Cell *cL, Cell *cR);
+  #endif
+
 };
 
 #endif

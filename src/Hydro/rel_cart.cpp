@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-09 10:29:35
+* @Last Modified time: 2020-12-17 10:30:33
 */
 
 #include "../fluid.h"
@@ -59,7 +59,7 @@ void FluidState::prim2cons(double r){
   cons[TAU] = tau;
   for (int i = 0; i < NUM_D; ++i) cons[SS1+i] = ss[i];
 
-  for (int t = 0; t < NUM_T; ++t) cons[TR1+t] = prim[TR1+t]*D; 
+  for (int t = 0; t < NUM_T; ++t) cons[TR1+t] = prim[TR1+t]*D;
 
 }
 
