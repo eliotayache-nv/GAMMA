@@ -1,7 +1,8 @@
-INITIAL    = Rupert/RT
+INITIAL    = Tests/cart_slab
 TIMESTEP   = rk3
 GEOMETRY   = cartesian
 HYDRO      = rel_cart
+RADIATION  = radiation_sph
 SOLVER     = hllc
 DIMENSIONS = 2d
 IO         = text2d
@@ -59,12 +60,13 @@ INITIALL   =$(SOURCE)/Initial/$(INITIAL)
 TIMESTEPP  =$(SOURCE)/Timestep/$(TIMESTEP)
 GEOMETRYY  =$(SOURCE)/Geometry/$(GEOMETRY)
 HYDROO     =$(SOURCE)/Hydro/$(HYDRO)
+RADIATIONN =$(SOURCE)/Hydro/$(RADIATION)
 SOLVERR    =$(SOURCE)/Solver/$(SOLVER)
 DIMENSIONSS=$(SOURCE)/Dimensions/$(DIMENSIONS)
 IOO        =$(SOURCE)/IO/$(IO)
 
 SOURCES = $(wildcard $(SOURCE)/*.cpp) 
-OBJECTS = $(SOURCES:.cpp=.o) $(INITIALL).o $(TIMESTEPP).o $(GEOMETRYY).o $(HYDROO).o $(SOLVERR).o $(DIMENSIONSS).o $(IOO).o
+OBJECTS = $(SOURCES:.cpp=.o) $(INITIALL).o $(TIMESTEPP).o $(GEOMETRYY).o $(HYDROO).o $(RADIATIONN).o $(SOLVERR).o $(DIMENSIONSS).o $(IOO).o
 
 all : $(BIN)/GAMMA
 
@@ -104,6 +106,9 @@ $(GEOMETRYY).o: $(GEOMETRYY).cpp
 	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $< -o $@
 
 $(HYDROO).o: $(HYDROO).cpp
+	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $< -o $@
+
+$(RADIATIONN).o: $(RADIATIONN).cpp
 	$(CXX) $(CXXFLAGS) $(IFLAGS) -c $< -o $@
 
 $(SOLVERR).o: $(SOLVERR).cpp
