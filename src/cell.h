@@ -39,7 +39,15 @@ public:
   #if SHOCK_DETECTION_ == ENABLED_
     bool    isShocked;
     double  Sd;
-    void resetShocks();
+    void detectShock();
+    void resetShock();
+  #endif
+
+  #if LOCAL_SYNCHROTRON_ == ENABLED_
+    void radiation_initGammas();
+    void radiation_injectParticles();
+    void radiation_apply_trac2gammae();
+    void radiativeSourceTerms(double dt);
   #endif
 
   void update(double dt, double xL, double xR);

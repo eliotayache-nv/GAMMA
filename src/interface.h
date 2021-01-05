@@ -39,7 +39,7 @@ public:
   void computedA();
 
   #if SHOCK_DETECTION_ == ENABLED_
-    void detectShock(Cell *cL, Cell *cR);
+    void measureShock(Cell *cL, Cell *cR);
   #endif
 
 };

@@ -2,14 +2,15 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-17 11:12:23
+* @Last Modified time: 2021-01-03 15:53:35
 */
 
 
-#include "environment.h"
-#include "interface.h"
-#include "cell.h"
-#include "grid.h"
+#include "../environment.h"
+#include "../interface.h"
+#include "../cell.h"
+#include "../grid.h"
+#include "../constants.h"
 
 
 #if SHOCK_DETECTION_ == ENABLED_
@@ -18,7 +19,8 @@
     return(sqrt(GAMMA_*p / (rho + p*GAMMA_/(GAMMA_-1.))));
   }
 
-  static double compute_Sd(FluidState S1, FluidState S2, int dim, bool reverse=false){
+  static double compute_Sd(FluidState S1, FluidState S2, int dim, 
+                           bool reverse=false, double radius = -1){
 
     #if NUM_D == 2
       int uux = UU1+dim;
@@ -41,8 +43,6 @@
     double h1 = 1 + p1*GAMMA_/(GAMMA_-1.)/rho1;
     double h2 = 1 + p2*GAMMA_/(GAMMA_-1.)/rho2;
 
-    // projecting the velocity field in a local tetrad (R&Z13 p244)
-    // in cartesian coordinates, gamma = diag(1,1,1) => M = diag(1,1,1) => no projection
     double lfac1 = S1.lfac();
     double lfac2 = S2.lfac();
     double vx1 = S1.prim[uux] / lfac1;
@@ -52,6 +52,19 @@
       vx2 *= -1;
     }
     double ut1 = S1.prim[uut];
+    double v12 = (vx1 - vx2) / (1 - vx1*vx2);
+      // has to be computed pre-projection
+
+    // projecting the velocity field in a local tetrad (R&Z13 p244) (Pons+98) (Zanotti+10)
+    // in spherical coordinates, gamma = diag(1,r2,r2sin2(theta)) 
+    // => M = diag(1,r,rsin(theta)) 
+    // if (dim == r_){
+    //   ut1 *= radius;
+    // } else {
+    //   vx1 *= radius;
+    //   vx2 *= radius;
+    // }
+
     double A1 = h1*ut1;
 
     double I = 0;
@@ -102,18 +115,12 @@
     
     // Shock detection threshold:
     double vlim = vSR + chi*(v2S - vSR);
-    double v12 = (vx1 - vx2) / (1 - vx1*vx2);
     double Sd = v12 - vlim;
-
-    // to avoid spurious shocks in still medium:
-    // if (fabs(v12) < 1.e-15 and fabs(vlim) < 1.e-15) Sd = -1;
 
     return(Sd);
   }
 
-
-
-  void Interface :: detectShock(Cell *cL, Cell *cR){
+  void Interface :: measureShock(Cell *cL, Cell *cR){
 
     double Sd;
     // Forward shocks
@@ -125,7 +132,13 @@
 
   }  
 
-  void Cell :: resetShocks(){
+  void Cell :: detectShock(){
+
+    if (fabs(Sd) > DETECT_SHOCK_THRESHOLD_) isShocked = true;
+
+  }
+
+  void Cell :: resetShock(){
 
     Sd = 0;
     isShocked = false;
@@ -137,11 +150,80 @@
 
 #if LOCAL_SYNCHROTRON_ == ENABLED_
 
+  double radiation_gammae2trac(double gme, FluidState S){
+
+    double lfac = S.lfac();
+    double rho = S.prim[RHO];
+
+    if (gme != 0.) return(lfac * pow(rho, 4./3.) / gme);
+    else return(0);
+
+  }
+
+  double radiation_trac2gammae(double gme_trac, FluidState S){
+    // same function as above, but avoids confusion
+
+    double lfac = S.lfac();
+    double rho = S.prim[RHO];
+
+    if (gme_trac != 0.) return(lfac * pow(rho, 4./3.) / gme_trac);
+    else return(0);
+
+  }
+
+  void Cell :: radiation_apply_trac2gammae(){
+    // To apply only on Cdump cells in output!
+
+    double lfac = S.lfac();
+    double rho = S.prim[RHO];
+    double gmin = S.prim[GMN] * (lfac*rho);
+    double gmax = S.prim[GMX] * (lfac*rho);
+    S.prim[GMN] = radiation_trac2gammae(gmin, S);
+    S.prim[GMX] = radiation_trac2gammae(gmax, S);
+
+  }
+
+  void Cell :: radiation_initGammas(){
+
+    double lfac = S.lfac();
+    double rho = S.prim[RHO];
+    double lim = lfac * pow(rho, 4./3.);  // equiv. gammae = 1.
+    S.prim[GMN] = lim / (lfac*rho);
+    S.prim[GMX] = lim / (lfac*rho);
+    S.cons[GMN] = lim;
+    S.cons[GMX] = lim;
+
+  }
+
   void Cell :: radiation_injectParticles(){
 
-    if (isShocked){
+    double lfac = S.lfac();
+    double rho = S.prim[RHO];
+    double lim = lfac * pow(rho, 4./3.) / (lfac*rho);  // equiv. gammae = 1.
+    double *gmax = &S.prim[GMX];
+    double *gmin = &S.prim[GMN];
 
+    if (isShocked){
+      *gmax = radiation_gammae2trac(GAMMA_MAX_INIT_, S) / (lfac*rho);
+      *gmin = radiation_gammae2trac(1., S) / (lfac*rho);
     }
+    if (*gmax > lim or *gmax == 0.) *gmax = lim;
+    if (*gmin > lim or *gmin == 0.) *gmin = lim;
+
+  }
+
+  void Cell :: radiativeSourceTerms(double dt){
+
+    double rho = S.prim[RHO];
+    double p = S.prim[PPP];
+    double h = 1 + p*GAMMA_/(GAMMA_-1.)/rho;
+    double eps = rho * (h-1.) / GAMMA_;
+    double eB = eps_B_ * eps;
+    double B = sqrt(8.*PI*eB);
+
+    double dgmax = Nalpha_ * pow(rho, 4./3.) * B*B * G.dV * dt;
+    // printf("%le\n", dgmax);
+    S.prim[GMX] += dgmax;
 
   }
 

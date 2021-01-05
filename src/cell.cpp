@@ -103,7 +103,12 @@ void Cell::update(double dt, double xL, double xR){
       S.cons[q] += (flux[0][d][q] - flux[1][d][q]) * dt;
     }
   }
-  sourceTerms(dt); userSourceTerms(dt);
+  sourceTerms(dt); userSourceTerms(dt); 
+
+  #if LOCAL_SYNCHROTRON_ == ENABLED_
+    radiativeSourceTerms(dt);
+  #endif
+    
   move(xL, xR);
 
   for (int q = 0; q < NUM_Q; ++q){

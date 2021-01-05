@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-01 18:26:25
+* @Last Modified time: 2020-12-26 15:21:23
 */
 
 #include "main.h"
@@ -33,8 +33,10 @@ int main(int argc, char *argv[]){
     DIR* dir = opendir("../results/Last");
     simu.reinitialise(dir);    
   }
-  else
+  else{
     simu.initialise();
+  }
+
 
   simu.run();
 

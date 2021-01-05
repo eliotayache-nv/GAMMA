@@ -1,6 +1,8 @@
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_ 
 
+#include "environment.h"
+
 #define PI      M_PI            // Pi
 #define mp_     1.6726219e-24   // Proton mass (g)
 #define me_     9.1093835e-28   // electron mass (g)
@@ -21,10 +23,11 @@
 #define p_          2.3     // slope of electron population
 #define eps_e_      0.1     // constribution to electron acceleration
 #define eps_B_      0.1     // contribution to magnetic field
-#define FS_rad_eff_ 0.00001   // Forward shock radiative efficiency
 #define zeta_       0.1    // fraction of accelerated electrons
 
 // Normalized constants:
 extern double Nmp_, Nme_, Nqe_, NsigmaT_, Nalpha_;
+
+void normalizeConstants(double rhoNorm, double vNorm, double lNorm);
 
 #endif

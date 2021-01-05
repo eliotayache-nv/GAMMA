@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-17 11:11:17
+* @Last Modified time: 2020-12-17 11:39:47
 */
 
 #include "../environment.h"
@@ -801,7 +801,7 @@ void Grid::computeFluxes(){
       #if SHOCK_DETECTION_ == ENABLED_
         Cell *cL = &Ctot[j][i];
         Cell *cR = &Ctot[j][i+1];
-        Itot[j][i].detectShock(cL, cR);
+        Itot[j][i].measureShock(cL, cR);
       #endif
         
     }
@@ -854,7 +854,7 @@ void Grid::computeFluxes(){
         Int.computeFlux();
 
         #if SHOCK_DETECTION_ == ENABLED_
-          Int.detectShock(c0, cn);
+          Int.measureShock(c0, cn);
         #endif
 
         c0->update_dt(F1, Int.lL);

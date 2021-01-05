@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-17 11:07:12
+* @Last Modified time: 2020-12-26 15:22:24
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -31,6 +31,10 @@ void Simu::initialise(){
   mpi_distribute(&grid);
   grid.prepForRun();
 
+  #if LOCAL_SYNCHROTRON_ == ENABLED_
+    grid.apply(&Cell::radiation_initGammas);
+  #endif
+
 }
 
 
@@ -43,10 +47,15 @@ void Simu::run(){
     grid.regrid();
 
     #if SHOCK_DETECTION_ == ENABLED_
-      grid.apply(&Cell::resetShocks);
+      grid.apply(&Cell::resetShock);
     #endif
+      
     grid.updateGhosts(it, t);
     grid.prepForUpdate(it, t);
+
+    #if SHOCK_DETECTION_ == ENABLED_
+      grid.apply(&Cell::detectShock);
+    #endif
 
     dt = CFL_ * grid.collect_dt();
 
@@ -55,12 +64,16 @@ void Simu::run(){
     t += dt;
     it++;
 
+    #if LOCAL_SYNCHROTRON_ == ENABLED_
+      grid.apply(&Cell::radiation_injectParticles);
+    #endif
+
     // printing grid (everything is ready right after grid prepare)
     //if (it%20000 == 0){ grid.printCols(it, t); }
     //if (it%10000 == 0){ grid.printCols(it, t); }
     // if (it%1000 == 0){ grid.printCols(it, t); }
+    // if (it%100 == 0){ grid.printCols(it, t); }
     if (it%10 == 0){ grid.printCols(it, t); }
-    // if (it%10 == 0){ grid.printCols(it, t); }
     // if (it%1 == 0){ grid.printCols(it, t); }
 
     //if ((worldrank == 0) and (it%1000 == 0)){ printf("it: %ld time: %le\n", it, t);}

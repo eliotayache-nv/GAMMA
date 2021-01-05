@@ -2,18 +2,23 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-16 19:18:05
+* @Last Modified time: 2020-12-18 10:16:13
 */
 
 #include "../../environment.h"
 #include "../../grid.h"
+#include "../../constants.h"
+
+double rhoNorm = mp_;
+double vNorm = c_;
+double lNorm = c_;
 
 void loadParams(s_par *par){
 
   par->tini      = 0.;
   par->ncell[x_] = 200;
-  par->ncell[y_] = 100;
-  par->nmax      = 400;    // max number of cells in MV direction
+  par->ncell[y_] = 200;
+  par->nmax      = 800;    // max number of cells in MV direction
   par->ngst      = 2;
 
 }
@@ -39,6 +44,8 @@ int Grid::initialGeometry(){
 
 int Grid::initialValues(){
 
+  normalizeConstants(rhoNorm, vNorm, lNorm);
+
   for (int j = 0; j < ncell[F1]; ++j){
     for (int i = 0; i < ncell[MV]; ++i){
       Cell *c = &Cinit[j][i];
@@ -46,17 +53,17 @@ int Grid::initialValues(){
       double x = c->G.x[x_];
       double y = c->G.x[y_];
       if (fabs(y) < 0.2 and x < 0.3){
-        c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = 0.9;
+        c->S.prim[RHO] = 1.;
+        c->S.prim[VV1] = 0.999;
         c->S.prim[VV2] = 0.;
-        c->S.prim[PPP] = 1.;
+        c->S.prim[PPP] = 1.e-3;
         c->S.cons[NUM_C] = 1.;
       }
       else {
         c->S.prim[RHO] = 1.;
         c->S.prim[VV1] = 0.;
         c->S.prim[VV2] = 0.;
-        c->S.prim[PPP] = 1.;
+        c->S.prim[PPP] = 1.e-3;
         c->S.cons[NUM_C] = 2.;
       }
     }
@@ -115,8 +122,8 @@ int Grid::checkCellForRegrid(int j, int i){
 
   Cell c = Ctot[j][i];
 
-  double split_dl = 0.02;
-  double merge_dl = 0.005;
+  double split_dl = 0.01;
+  double merge_dl = 0.002;
     // careful, dx != dl
 
   if (c.G.dx[MV] > split_dl) {
