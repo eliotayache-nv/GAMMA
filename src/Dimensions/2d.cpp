@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-17 11:39:47
+* @Last Modified time: 2021-01-06 12:18:59
 */
 
 #include "../environment.h"
@@ -332,26 +332,83 @@ void Grid::updateGhosts(int it, double t){
 
   }
 
-  static Cell* findNeighbor(Cell *c, int side, double x_mv, Grid *g){
+  // static Cell* findNeighbor(Cell *c, int side, double x_mv, Grid *g){
 
-    Cell *c_out;
-    Cell **Ctot = g->Ctot;
-    int n = 0;
-    int idn;
-    int n_neigh = c->neigh[F1][side].size();
-    double xn_mv, dln_mv;
-    do {
-      idn = c->neigh[F1][side][n];
-      c_out  = &Ctot[0][idn];
-      xn_mv  = c_out->G.x[MV];
-      dln_mv = c_out->G.dx[MV];
-      n++;
-    } while (xn_mv + 0.5*dln_mv < x_mv and n < n_neigh);
-      // if no aligned neighbor, we return state from closest left neighbor to the left
+  //   Cell *c_out;
+  //   Cell **Ctot = g->Ctot;
+  //   int n = 0;
+  //   int idn;
+  //   int n_neigh = c->neigh[F1][side].size();
+  //   double xn_mv, dln_mv;
+  //   do {
+  //     idn = c->neigh[F1][side][n];
+  //     c_out  = &Ctot[0][idn];
+  //     xn_mv  = c_out->G.x[MV];
+  //     dln_mv = c_out->G.dx[MV];
+  //     n++;
+  //   } while (xn_mv + 0.5*dln_mv < x_mv and n < n_neigh);
+  //     // if no aligned neighbor, we return state from closest left neighbor to the left
 
-    return c_out;
+  //   return c_out;
 
+  void Grid::computeTransGradients(int j, int i){
+
+    Cell *c0 = &Ctot[j][i];
+    double x0 = c0->G.x[MV];
+    double xL0 = x0 - c0->G.dx[MV]/2.;
+    double xR0 = x0 + c0->G.dx[MV]/2.;
+    const int n_neighs = (int) (c0->neigh[F1][0].size() + c0->neigh[F1][1].size());
+    double grads[n_neighs][NUM_Q];
+    double grad_avg[NUM_Q] = {0};
+    double dAtot = 0;
+
+    int ind = 0;
+    for (int d = 0; d < 2; ++d){      
+      for (std::vector<int>::size_type n = 0; n < c0->neigh[F1][d].size(); ++n){
+        int idn = c0->neigh[F1][d][n];
+        Cell *cn = &Ctot[0][idn];
+        double xn = cn->G.x[MV];
+        double xLn = xn - cn->G.dx[MV]/2.;
+        double xRn = xn + cn->G.dx[MV]/2.;
+
+        Interface Int;
+        Int.dim   = F1;
+        Int.v     = 0;
+        Int.x[F1] = (c0->G.x[F1] + cn->G.x[F1]) / 2.;
+        Int.x[MV] = ( fmax(xL0,xLn) + fmin(xR0,xRn) )/2.;
+        Int.dx[0] = fmax(0, fmin(xR0,xRn) - fmax(xL0,xLn));
+        Int.computedA();
+        dAtot += Int.dA;
+
+        double xm = Int.x[MV]; 
+        double dxmL  = xm - c0->G.cen[MV];
+        double dxmR  = xm - cn->G.cen[MV];
+
+        for (int q = 0; q < NUM_Q; ++q){
+          double qL = c0->S.prim[q] + c0->grad_mv[q] * dxmL;
+          double qR = cn->S.prim[q] + cn->grad_mv[q] * dxmR;
+          double grad = (qR - qL)  / (cn->G.cen[F1] - c0->G.cen[F1]);
+          grads[ind][q] = grad;
+          grad_avg[q] += grad * Int.dA;
+        }
+        ind++;
+      }
+    }
+
+    for (int q = 0; q < NUM_Q; ++q){
+      grad_avg[q] /= dAtot;
+      c0->grad_f1[q] = grad_avg[q]; // initialising for following minmod
+    }
+
+    // applying slope limiter
+    for (int n = 0; n < n_neighs; ++n){
+      for (int q = 0; q < NUM_Q; ++q){
+        double tmp = c0->grad_f1[q];
+        c0->grad_f1[q] = minmod(tmp, grads[n][q]);
+      }
+    }
   }
+
 
 #endif
 
@@ -426,30 +483,20 @@ void Grid::reconstructStates(int j, int i, int dim, int idn, Interface *Int){
       else {
         // recover gardients in moving direction and compute states at projected location
         // careful with the boundaries for LL and RR
-        Cell *cLL, *cRR;
-        double xm = Int->x[MV]; 
+        double xm = Int->x[MV];
         double xf = Int->x[F1];
-        cLL = findNeighbor(cL, left_,  xm, this);
-        cRR = findNeighbor(cR, right_, xm, this);
         double dxmL  = xm - cL->G.cen[MV];
         double dxmR  = xm - cR->G.cen[MV];
-        double dxmLL = xm - cLL->G.cen[MV];
-        double dxmRR = xm - cRR->G.cen[MV];
         double dxfL  = xf - cL->G.cen[F1];
         double dxfR  = xf - cR->G.cen[F1];
 
         for (int q = 0; q < NUM_Q; ++q){
           double qL = cL->S.prim[q] + cL->grad_mv[q] * dxmL;
           double qR = cR->S.prim[q] + cR->grad_mv[q] * dxmR;
-          double qLL = cLL->S.prim[q] + cLL->grad_mv[q] * dxmLL;
-          double qRR = cRR->S.prim[q] + cRR->grad_mv[q] * dxmRR;
-          double gradL = (qL - qLL) / (cL->G.cen[F1] - cLL->G.cen[F1]);
-          double grad0 = (qR - qL)  / (cR->G.cen[F1] - cL->G.cen[F1]);
-          double gradR = (qR - qRR) / (cR->G.cen[F1] - cRR->G.cen[F1]);
-          double mgradL = minmod(gradL, grad0);
-          double mgradR = minmod(grad0, gradR);
-          Int->SL.prim[q] = qL + mgradL * dxfL;
-          Int->SR.prim[q] = qR + mgradR * dxfR;
+          double gradL = cL->grad_f1[q];
+          double gradR = cR->grad_f1[q];
+          Int->SL.prim[q] = qL + gradL * dxfL;
+          Int->SR.prim[q] = qR + gradR * dxfR;
         }
 
         Int->SL.prim2cons(Int->x[x_]);
@@ -834,6 +881,10 @@ void Grid::computeFluxes(){
       double xL0 = x0 - c0->G.dx[MV]/2.;
       double xR0 = x0 + c0->G.dx[MV]/2.;
 
+      computeTransGradients(j,i);
+
+      // We reconstruct on the (+) side of the track (or R-side)
+      // this will be taken into account in the choice of gradients of reconstructStates()
       for (std::vector<int>::size_type n = 0; n < c0->neigh[F1][1].size(); ++n){
         int idn = c0->neigh[F1][1][n];
         Cell *cn = &Ctot[0][idn];

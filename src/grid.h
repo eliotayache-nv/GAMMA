@@ -70,7 +70,7 @@ class Grid{
   void movDir_ComputeLambda();
   void updateKinematics(int it, double t);
   void userKinematics(int it, double t);
-  void gradients(Cell *c);
+  void computeTransGradients(int j, int i);
   void prepForUpdate(int it, double t);
   void computeFluxes();
   double collect_dt();

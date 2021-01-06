@@ -12,6 +12,11 @@ Cell::Cell(){
 
   for (int d = 0; d < NUM_D; ++d){ S.prim[VV1+d] = 0.; }
 
+  for (int q = 0; q < NUM_Q; ++q){
+    grad_mv[q] = 0;
+    grad_f1[q] = 0;
+  }
+
   #if SHOCK_DETECTION_ == ENABLED_
     isShocked = false;
     Sd = -1.;

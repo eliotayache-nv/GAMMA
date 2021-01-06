@@ -35,6 +35,7 @@ public:
   double flux[2][NUM_D][NUM_Q];   // L and R fluxes in all dimensions and directions
   vector<int> neigh[NUM_D][2];    // neighboring cells in each direction (id)
   double grad_mv[NUM_Q];          // gradient in moving direction
+  double grad_f1[NUM_Q];          // gradient in fixed direction
 
   #if SHOCK_DETECTION_ == ENABLED_
     bool    isShocked;
