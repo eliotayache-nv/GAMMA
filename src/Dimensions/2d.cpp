@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-06 12:18:59
+* @Last Modified time: 2021-01-07 16:46:52
 */
 
 #include "../environment.h"
@@ -287,21 +287,24 @@ void Grid::updateGhosts(int it, double t){
       Ctot[j][i].computeAllGeom();
       int ind[] = {j,i};
       assignId(ind);
-
+    }
+    for (int i = 0; i <= iLbnd[j]-1; ++i){
       Itot[j][i] = Itot[j][iLbnd[j]+1];
       Itot[j][i].x[MV] -= (iLbnd[j]-i+1) * Ctot[j][iLbnd[j]+1].G.dx[MV];
       Itot[j][i].computedA();
     }
+
     for (int i = iRbnd[j]; i < ntrack[j]; ++i){
       Ctot[j][i] = Ctot[j][iRbnd[j]-1];
       Ctot[j][i].G.x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dx[MV];
       Ctot[j][i].computeAllGeom();
       int ind[] = {j,i};
       assignId(ind);
-
-      Itot[j][i-1] = Itot[j][iRbnd[j]-2];
-      Itot[j][i-1].x[MV] += (i-iRbnd[j]+1) * Ctot[j][iRbnd[j]-1].G.dx[MV];
-      Itot[j][i-1].computedA();
+    }
+    for (int i = iRbnd[j]; i < ntrack[j]-1; ++i){
+      Itot[j][i] = Itot[j][iRbnd[j]-1];
+      Itot[j][i].x[MV] += (i-iRbnd[j]) * Ctot[j][iRbnd[j]-1].G.dx[MV];
+      Itot[j][i].computedA();
     }
   }
   userBoundaries(it, t); // overiding with user-specific boundary conditions
@@ -984,7 +987,9 @@ void Grid::copyState0(){
       for (int d = 0; d < NUM_D; ++d) I->x0[d] = I->x[d];
       I->v0 = I->v;
     }
+    // printf("%le %le\n", Itot[j][iRbnd[j]-1].x0[MV], Itot[j][iRbnd[j]-1].v0);
   }  
+  // printf("---\n");
 
 }
 
@@ -1011,9 +1016,15 @@ void Grid::interfaceGeomFromCellPos(){
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
     double xj = Ctot[j][iLbnd[j]+1].G.x[F1];
     for (int i = 0; i < ntrack[j]-1; ++i){
-      Itot[j][i].x[MV] = Ctot[j][i+1].G.x[MV] - Ctot[j][i+1].G.dx[MV]/2.;
+      if (i != iLbnd[j]){
+        Itot[j][i].x[MV] = Ctot[j][i].G.x[MV] + Ctot[j][i].G.dx[MV]/2.;
+        Itot[j][i].dx[0] = Ctot[j][i].G.dx[F1];
+      }
+      else{
+        Itot[j][i].x[MV] = Ctot[j][i+1].G.x[MV] - Ctot[j][i+1].G.dx[MV]/2.;
+        Itot[j][i].dx[0] = Ctot[j][i+1].G.dx[F1];
+      }
       Itot[j][i].x[F1] = xj;
-      Itot[j][i].dx[0] = Ctot[j][i].G.dx[F1];
       Itot[j][i].computedA();
     }
   }

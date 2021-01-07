@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:57:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-15 11:44:12
+* @Last Modified time: 2021-01-07 16:47:18
 */
 
 #include "../environment.h"
@@ -15,12 +15,17 @@ void Grid::evolve(int it, double t, double dt){
   copyState0();
 
   // first intermediate step
+  // printf("%le %d %d\n", Itot[2][iRbnd[2]-1].x[MV], ntrack[2], iRbnd[2]);
   update(dt);
 
+  // printf("%le\n", Itot[2][iRbnd[2]-1].x[MV]);
   // second intermediate step
   updateGhosts(it, t);
+  // printf("%le\n", Itot[2][iRbnd[2]-1].x[MV]);
   prepForUpdate(it, t);
   update(dt);
+  // printf("%le\n", Itot[2][iRbnd[2]-1].x[MV]);
+  // printf("----\n");
   // do not evolve border cells because they are going to be copied anyways
   // and it can lead to non-physical states
   #pragma omp parallel for default(shared)
@@ -39,7 +44,7 @@ void Grid::evolve(int it, double t, double dt){
 
   #pragma omp parallel for default(shared)
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
-    for (int i = iLbnd[j]+1; i < iRbnd[j]-1; ++i){
+    for (int i = iLbnd[j]; i <= iRbnd[j]-1; ++i){
       Interface *I = &Itot[j][i];
       double x  = I->x[MV];
       double x0 = I->x0[MV];
@@ -47,6 +52,7 @@ void Grid::evolve(int it, double t, double dt){
       I->computedA();
     }
   }
+  // printf("%le\n", Itot[2][iRbnd[2]-1].x[MV]);
 
   CellGeomFromInterfacePos();
 
@@ -65,6 +71,7 @@ void Grid::evolve(int it, double t, double dt){
   updateGhosts(it, t);
   prepForUpdate(it, t);
   update(dt);
+  // printf("%le\n", Itot[2][iRbnd[2]-1].x[MV]);
 
   #pragma omp parallel for default(shared)
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
@@ -82,7 +89,7 @@ void Grid::evolve(int it, double t, double dt){
 
   #pragma omp parallel for default(shared)
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
-    for (int i = iLbnd[j]+1; i < iRbnd[j]-1; ++i){
+    for (int i = iLbnd[j]; i <= iRbnd[j]-1; ++i){
       Interface *I = &Itot[j][i];
       double x  = I->x[MV];
       double x0 = I->x0[MV];
@@ -91,6 +98,7 @@ void Grid::evolve(int it, double t, double dt){
     }
   }
 
+  // printf("%le\n", Itot[2][iRbnd[2]-1].x[MV]);
   CellGeomFromInterfacePos();
 
   #pragma omp parallel for default(shared)
