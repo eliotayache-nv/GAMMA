@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2019-12-13 11:34:21
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-12-07 17:29:58
+# @Last Modified time: 2020-12-17 09:47:38
 
 
 """
@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import h5py
 import argparse
 import os
+from plot import *
 
 # plt.rc('text', usetex=True)
 # plt.rc('font', family='serif')
@@ -227,7 +228,7 @@ def findU(U_ref, x, teval, U0_arr):
 
     # checking that x is still between xL_tar and xR_tar:
     if (x-xL_tar)*(x-xR_tar) > 0.:
-      print("x left the target interval! x = %e %i") %(x,c)
+      print("x left the target interval! x = %e %i" %(x,c))
       exit(1)
 
     if x_tar < x:
@@ -239,7 +240,7 @@ def findU(U_ref, x, teval, U0_arr):
 
     c += 1
     if c > 100:
-      print("findU() timeout. Prec = %e") %(x_tar - x)
+      print("findU() timeout. Prec = %e" %(x_tar - x))
       break
 
   return(U0)
@@ -301,116 +302,102 @@ def plotIsen1D(time, key, ax = None, **kwargs):
 
 
 
+def computeOrderOfPrec(data):
 
-# # ----------------------------------------------------------------------------------------
-# # Script starts here
-# # ----------------------------------------------------------------------------------------
-# # args = parseArguments()
+  U_ref = State(rho_ref,v_ref,p_ref)
+  U_ref.prim2aux()
+  U_ref.Jm = Jm(U_ref)
+  U_ref.Jp = Jp(U_ref)
 
-# # os.chdir(args.datadir)
+  # Evaluating initial conditions for reference:
+  # These values are used to constrain the bisection used to derive future fluid states.
+  x0, U0 = fillU0(U_ref)
 
-# U_ref = State(rho_ref,v_ref,p_ref)
-# U_ref.prim2aux()
-# U_ref.Jm = Jm(U_ref)
-# U_ref.Jp = Jp(U_ref)
+  # loading numerical data
+  time = data["t"][0]
+  x   = getArray(data, "x")[0]
+  rho = getArray(data, "rho")[0]
+  vx  = getArray(data, "vx")[0]
+  p   = getArray(data, "p")[0]
+  D   = getArray(data, "D")[0]
+  sx  = getArray(data, "sx")[0]
+  tau = getArray(data, "tau")[0]
+  dx  = getArray(data, "dx")[0]
+  E = tau + D
 
-# # Evaluating initial conditions for reference:
-# # These values are used to constrain the bisection used to derive future fluid states.
-# x0, U0 = fillU0(U_ref)
+  # Computing exact solution:
+  print("Computing exact solution:")
+  U_arr = []
+  for i in range(len(x)):
+    if i%10 == 0:
+      print(i)
+    U = findU(U_ref, x[i], time, U0)
+    U_arr.append(U)
 
-# # Solving for later conditions:
-# # if not args.filename:
-# x = setup_x()
+  rhoth = np.array([U.rho for U in U_arr])
+  vxth   = np.array([U.v for U in U_arr])
+  pth   = np.array([U.p for U in U_arr])
 
-# # else:
-# #   file, status = openfile(args.filename)
-# #   if status == 1:
-# #     exit(1)
-
-# #   time = file.get('/').attrs["time"]
-
-# #   x   = file["/cells"]["x"]
-# #   rho = file["/cells"]["rho"]
-# #   v   = file["/cells"]["v"]
-# #   p   = file["/cells"]["p"]
-# #   D   = file["/cells"]["D"]
-# #   E   = file["/cells"]["E"]
-# #   dl  = file["/cells"]["dl"]
-
-# # Computing exact solution:
-# print("Computing exact solution:")
-# U_arr = []
-# for i in range(len(x)):
-#   if i%10 == 0:
-#     print("%i/%i") %(i, len(x))
-#   U = findU(U_ref, x[i], time, U0)
-#   U_arr.append(U)
-
-# rhoth = np.array([U.rho for U in U_arr])
-# vth   = np.array([U.v for U in U_arr])
-# pth   = np.array([U.p for U in U_arr])
+  # Computing the L1 error: (only possible when comparing with files)
+  L1 = computeL1(vx,vxth,dx)
+  print("t=%f, L1=%e" %(time, L1))
 
 
-# # Computing the L1 error: (only possible when comparing with files)
-# # L1 = computeL1(v,vth,dl)
-# # print("t=%f, L1=%e") %(time, L1)
+  # pcolor = "tab:green"
+  # rcolor = "tab:orange"
+  # vcolor = "tab:blue"
 
 
-# pcolor = "tab:green"
-# rcolor = "tab:orange"
-# vcolor = "tab:blue"
+  # if args.plot:
 
+  #   if args.initial_state:
+  #     file_ini, status = openfile("phys0000000000.h5")
+  #     if status == 1:
+  #       exit(1)
 
-# if args.plot:
+  #     time_ini = file_ini.get('/').attrs["time"]
 
-#   if args.initial_state:
-#     file_ini, status = openfile("phys0000000000.h5")
-#     if status == 1:
-#       exit(1)
+  #     x_ini   = file_ini["/cells"]["x"]
+  #     rho_ini = file_ini["/cells"]["rho"]
+  #     v_ini   = file_ini["/cells"]["v"]
+  #     p_ini   = file_ini["/cells"]["p"]
+  #     D_ini   = file_ini["/cells"]["D"]
+  #     E_ini   = file_ini["/cells"]["E"]
+  #     dl_ini  = file_ini["/cells"]["dl"]
 
-#     time_ini = file_ini.get('/').attrs["time"]
+  #     rhoth_ini = np.array([U.rho for U in U0])
+  #     vth_ini   = np.array([U.v for U in U0])
+  #     pth_ini   = np.array([U.p for U in U0])
 
-#     x_ini   = file_ini["/cells"]["x"]
-#     rho_ini = file_ini["/cells"]["rho"]
-#     v_ini   = file_ini["/cells"]["v"]
-#     p_ini   = file_ini["/cells"]["p"]
-#     D_ini   = file_ini["/cells"]["D"]
-#     E_ini   = file_ini["/cells"]["E"]
-#     dl_ini  = file_ini["/cells"]["dl"]
+  #     plt.scatter(x_ini,rho_ini/np.min(rhoth), marker='x', c=rcolor)
+  #     plt.plot(x0,rhoth_ini/np.min(rhoth), c='k')
+  #     plt.scatter(x_ini,v_ini, marker='+', c=vcolor)
+  #     plt.plot(x0,vth_ini, c='k')
+  #     plt.scatter(x_ini,p_ini/np.min(pth), marker='1', c=pcolor)
+  #     plt.plot(x0,pth_ini/np.min(pth), c='k')
 
-#     rhoth_ini = np.array([U.rho for U in U0])
-#     vth_ini   = np.array([U.v for U in U0])
-#     pth_ini   = np.array([U.p for U in U0])
+  #   # Plot:
+  #   plt.plot(x,rho/np.min(rhoth), label='rho, numerical', marker='x', c=rcolor)
+  #   plt.plot(x,rhoth/np.min(rhoth), c='k')
+  #   plt.plot(x,v, label='v, numerical', marker='+', c=vcolor)
+  #   plt.plot(x,vth, c='k')
+  #   plt.plot(x,p/np.min(pth), label='p, numerical', marker='1', c=pcolor)
+  #   plt.plot(x,pth/np.min(pth), c='k')
 
-#     plt.scatter(x_ini,rho_ini/np.min(rhoth), marker='x', c=rcolor)
-#     plt.plot(x0,rhoth_ini/np.min(rhoth), c='k')
-#     plt.scatter(x_ini,v_ini, marker='+', c=vcolor)
-#     plt.plot(x0,vth_ini, c='k')
-#     plt.scatter(x_ini,p_ini/np.min(pth), marker='1', c=pcolor)
-#     plt.plot(x0,pth_ini/np.min(pth), c='k')
+  #   if args.cell_size:
+  #     plt.plot(x,dl/np.max(dl), label='dl/dlmax')
 
-#   # Plot:
-#   plt.plot(x,rho/np.min(rhoth), label='rho, numerical', marker='x', c=rcolor)
-#   plt.plot(x,rhoth/np.min(rhoth), c='k')
-#   plt.plot(x,v, label='v, numerical', marker='+', c=vcolor)
-#   plt.plot(x,vth, c='k')
-#   plt.plot(x,p/np.min(pth), label='p, numerical', marker='1', c=pcolor)
-#   plt.plot(x,pth/np.min(pth), c='k')
+  #   # plt.plot(x,(rho-rhoth)/np.min(rhoth), label='rho, residual', marker='+')
+  #   # plt.plot(x,(v-vth)/np.min(vth), label='v, residual', marker='+')
+  #   # plt.plot(x,(p-pth)/np.min(pth), label='p, residual', marker='+')
 
-#   if args.cell_size:
-#     plt.plot(x,dl/np.max(dl), label='dl/dlmax')
+  #   # plt.plot(x,np.zeros(len(x)),'k--')
 
-#   # plt.plot(x,(rho-rhoth)/np.min(rhoth), label='rho, residual', marker='+')
-#   # plt.plot(x,(v-vth)/np.min(vth), label='v, residual', marker='+')
-#   # plt.plot(x,(p-pth)/np.min(pth), label='p, residual', marker='+')
+  #   plt.xlabel("x")
+  #   plt.title("Isentropic wave at t=0.8s")
 
-#   # plt.plot(x,np.zeros(len(x)),'k--')
-
-#   plt.xlabel("x")
-#   plt.title("Isentropic wave at t=0.8s")
-
-#   plt.legend()
-#   plt.show()
+  #   plt.legend()
+  #   plt.show()
 
 
 
