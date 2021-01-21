@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-07 16:46:52
+* @Last Modified time: 2021-01-20 18:32:28
 */
 
 #include "../environment.h"
@@ -668,6 +668,7 @@ void Grid::applyRegrid(int j, int i, int action){
 
 void Grid::split(int j, int i){
 
+
   // freeing space on the right (so we can keep same i)
   std::copy_backward(&Ctot[j][i+1], &Ctot[j][ntrack[j]],   &Ctot[j][ntrack[j]+1]);
   std::copy_backward(&Itot[j][i],   &Itot[j][ntrack[j]-1], &Itot[j][ntrack[j]]  );
@@ -725,7 +726,7 @@ void Grid::split(int j, int i){
 
     double xL = c->G.cen[MV];
     double xR = cR->G.cen[MV];
-    double xI = c->G.x[MV] + c->G.dx[MV];
+    double xI = c->G.x[MV] + c->G.dx[MV]/2.;
 
     for (int q = 0; q < NUM_Q; ++q){
       double Sc = c->S.prim[q];
@@ -735,6 +736,9 @@ void Grid::split(int j, int i){
     }
 
   #endif
+
+  c->S.prim2cons(c->G.x[r_]);
+  c->S.state2flux(c->G.x[r_]);
 
   cR->S.prim2cons(cR->G.x[r_]);
   cR->S.state2flux(cR->G.x[r_]);

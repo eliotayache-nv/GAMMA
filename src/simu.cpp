@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-07 16:51:52
+* @Last Modified time: 2021-01-21 11:07:43
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -74,16 +74,18 @@ void Simu::run(){
     // if (it%1000 == 0){ grid.printCols(it, t); }
     if (it%100 == 0){ grid.printCols(it, t); }
     // if (it%10 == 0){ grid.printCols(it, t); }
-    // if (it%1 == 0){ grid.printCols(it, t); }
+    if (it%1 == 0){ grid.printCols(it, t); }
 
     //if ((worldrank == 0) and (it%1000 == 0)){ printf("it: %ld time: %le\n", it, t);}
-    if ((worldrank == 0) and (it%10 == 0)){ printf("it: %ld time: %le\n", it, t);}
+    if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
+    // if ((worldrank == 0) and (it%10 == 0)){ printf("it: %ld time: %le\n", it, t);}
+    if ((worldrank == 0) and (it%1 == 0)){ printf("it: %ld time: %le\n", it, t);}
 
     //if (it > 8870000){ stop = true; }
     //if (it > 50000){ stop = true; }
     //if (t > 2.5e6){ stop = true; }
     // if (it > 10000){ stop = true; }
-    if (t > 1.e7){ stop = true; }
+    if (t > 1.e8){ stop = true; }
     // exit(12);
   }
 

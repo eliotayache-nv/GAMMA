@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-09 10:28:13
+* @Last Modified time: 2021-01-21 10:05:04
 */
 
 #include "../fluid.h"
@@ -220,7 +220,7 @@ void FluidState::cons2prim(double r, double pin){
 
   double pCand;
   if (pin != 0) pCand = pin;
-  else pCand = prim[PPP];
+  else pCand = fmax(1.e-13,prim[PPP]);
 
   // Looking for pressure only if current one doesn't work;
   double f_init = f(pCand, &params);
@@ -243,7 +243,7 @@ void FluidState::cons2prim(double r, double pin){
     }
     else {
       p_hi = pCand;
-      while (f(p_hi, &params) > 0) {p_hi *= 10; }
+      while (f(p_hi, &params) > 0) {p_hi *= 10;}
     }
 
     if (p_hi<p_lo) {find_p = false; } // no solution

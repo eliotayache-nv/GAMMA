@@ -48,7 +48,7 @@ enum{skip_,merge_,split_};
 #define F1     y_            // fixed dimension 1
 #define F2     z_            // fixed dimension 2
 #define VI     1.            // interface velocity (units of CD velocity)
-#define GAMMA_ (5./3.)
+#define GAMMA_ (4./3.)
 #define CFL_   0.2
 
 #define DUMPSTEP_ 100
