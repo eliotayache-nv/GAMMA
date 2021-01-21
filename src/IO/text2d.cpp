@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-26 15:13:42
+* @Last Modified time: 2021-01-21 10:14:26
 */
 
 #include "../simu.h"
@@ -197,7 +197,7 @@ void Grid::printCols(int it, double t){
         double lfac = Cdump[j][i].S.lfac();
         int nactd = ntrackd[j]-2*ngst;
         Cdump[j][i].radiation_apply_trac2gammae();
-        fprintf(fout, "%le %d %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
+        fprintf(fout, "%1.15le %d %d %d %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le\n", 
           t,
           nactd,
           j-ngst,
