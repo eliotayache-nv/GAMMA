@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-21 10:05:04
+* @Last Modified time: 2021-01-21 17:25:54
 */
 
 #include "../fluid.h"
@@ -280,6 +280,9 @@ void FluidState::cons2prim(double r, double pin){
   }
 
   cons2prim_user(&rho, &p, uu);
+
+  // no matter what we did with the rest, we can't allow the pressure to drop to zero:
+  p = fmax(p,P_FLOOR_);
 
   prim[PPP] = p;
   prim[RHO] = rho;
