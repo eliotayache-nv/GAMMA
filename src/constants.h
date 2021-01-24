@@ -3,6 +3,8 @@
 
 #include "environment.h"
 
+#define P_FLOOR_ 1.e-10         // pressure flooring
+
 #define PI      M_PI            // Pi
 #define mp_     1.6726219e-24   // Proton mass (g)
 #define me_     9.1093835e-28   // electron mass (g)

@@ -57,7 +57,7 @@ enum{skip_,merge_,split_};
 #define OMP_ ENABLED_
 
 #define SPATIAL_RECONSTRUCTION_ PIECEWISE_LINEAR_
-#define CIRC_REGRID_            DISABLED_
+#define CIRC_REGRID_            ENABLED_
 #define SHOCK_DETECTION_        ENABLED_
 #define DETECT_SHOCK_THRESHOLD_ 0.1
 #define LOCAL_SYNCHROTRON_      ENABLED_

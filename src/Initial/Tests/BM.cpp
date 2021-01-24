@@ -20,7 +20,7 @@ static double pNorm = rhoNorm*vNorm*vNorm;    // pressure normalised to rho_CMB/
 // BM parameters
 static double Etot = 1.e53;     // erg
 static double n_ext = 1.e0;      // external medium number density
-static double tstart = 8.e6;    // s,starting time (determines initial position of BW)
+static double tstart = 4.e6;    // s,starting time (determines initial position of BW)
 static double Rscale = 1.e17;   // cm
 static double k = 0.;           // ext medium density profile
 
@@ -61,7 +61,7 @@ static void calcBM(double r, double t, double *rho, double *u, double *p){
   double chi = (1. + 2.*(4.-k)*lfacShock2) * (1. - r/(c_*t));
   *p = pf*pow(chi, -(17.-4.*k)/(12.-3.*k)) / pNorm;
   double lfac = sqrt(lfacf*lfacf/chi + 1);  // (+1) to ensure lfac>1
-  double D = Df+pow(chi, -(7.-2.*k)/(4.-k));
+  double D = Df*pow(chi, -(7.-2.*k)/(4.-k));
     // Blandford&McKee(1976) eq. 28-30 / 65-67
   *rho = D/lfac / rhoNorm;
   *u = c_*sqrt(1.-1./(lfac*lfac))*lfac / vNorm;
@@ -72,10 +72,10 @@ static void calcBM(double r, double t, double *rho, double *u, double *p){
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 200;              // number of cells in r direction
+  par->ncell[x_] = 100;              // number of cells in r direction
   par->ncell[y_] = 100;               // number of cells in theta direction
   if (onedim) par->ncell[y_] = 1;
-  par->nmax      = 1000;              // max number of cells in MV direction
+  par->nmax      = 110;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
 }
@@ -151,7 +151,7 @@ int Grid::initialValues(){
       else{
 
         // computing an average over each cell
-        int nbins = 100;
+        int nbins = 20;
         double ddx = dr_denorm / nbins;
         double xl = r_denorm - dr_denorm/2.;
         double xr = xl+ddx;
@@ -164,7 +164,7 @@ int Grid::initialValues(){
           double chi = (1. + 2.*(4.-k)*lfacShock2) * (1. - x/(c_*tstart));
           double dp = pf*pow(chi, -(17.-4.*k)/(12.-3.*k));
           double dlfac = sqrt(lfacf*lfacf/chi + 1);  // (+1) to ensure lfac>1
-          double dD = Df+pow(chi, -(7.-2.*k)/(4.-k));
+          double dD = Df*pow(chi, -(7.-2.*k)/(4.-k));
             // Blandford&McKee(1976) eq. 28-30 / 65-67
           double drho = dD/dlfac;
           double dv = c_*sqrt(1.-1./(dlfac*dlfac));
@@ -204,7 +204,7 @@ void Grid::userKinematics(int it, double t){
 
   int j = jLbnd+1;
   int i = iRbnd[j]-20;
-  if (Ctot[j][i].S.prim[UU1] < 1.e-3){
+  if (Ctot[j][i].S.prim[UU1] < 1.e-3 and it > 1000){
     vOut = 0.;  
   }
   
@@ -255,16 +255,22 @@ int Grid::checkCellForRegrid(int j, int i){
   // double rOut = Ctot[j][iRbnd[j]-1].G.x[x_];
   // double ar  = dr / (rOut*dth);                // calculate cell aspect ratio
 
-  double target_AR  = 0.001;
+  // printf("%le\n", ar);
 
-  double split_AR   = 3.;                   // set upper bound as ratio of target_AR
-  double merge_AR   = 0.2;                  // set upper bound as ratio of target_AR
+  int jtrk = jLbnd+1;
+  double rmin = Ctot[jtrk][iLbnd[jtrk]+1].G.x[r_];
+  double rmax = Ctot[jtrk][iRbnd[jtrk]-1].G.x[r_];
+  double delta_r = rmax - rmin;
+  double target_dr = delta_r / nact[jtrk];
 
-  if (ar > split_AR * target_AR) {          // if cell is too long for its width
-      return(split_);                       // split
+  double split_DR   = 3.;                   // set upper bound as ratio of target_AR
+  double merge_DR   = 0.2;                  // set upper bound as ratio of target_AR
+
+  if (dr > split_DR * target_dr) {          // if cell is too long for its width
+    return(split_);                       // split
   }
-  if (ar < merge_AR * target_AR) {          // if cell is too short for its width
-      return(merge_);                       // merge
+  if (dr < merge_DR * target_dr) {          // if cell is too short for its width
+    return(merge_);                       // merge
   }
   return(skip_);
 }

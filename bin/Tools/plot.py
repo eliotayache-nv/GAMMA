@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2020-12-10 15:25:45
+# @Last Modified time: 2021-01-22 16:59:46
 
 
 import numpy as np
@@ -18,6 +18,7 @@ import os
 import string
 import glob
 from isentropic import *
+from BM import *
 
 # plt.rc('text', usetex=True)
 plt.rc('font', family='serif', size=12)
@@ -345,6 +346,25 @@ def isenwave(data):
   plotIsen1D(time, "p", ax=axes[1], color="r")
   plotIsen1D(time, "vx", ax=axes[2], color="r")
   plt.xlabel("x")
+  axes[0].legend()
+  plt.tight_layout()
+  return(f, axes)
+
+
+# ----------------------------------------------------------------------------------------
+# Specific functions
+def BMwave(data):
+  f, axes = plotMulti(data, ["rho","p","lfac"], 
+    tracer=False, 
+    line=False, 
+    labels={"rho":"$\\rho/\\rho_0$", "p":"$p/p_0$","lfac":"$\\gamma$"})
+  plotBM1D(data, "rho", ax=axes[0], color="r", label="exact")
+  plotBM1D(data, "p", ax=axes[1], color="r")
+  plotBM1D(data, "lfac", ax=axes[2], color="r")
+  axes[0].set_yscale("log")
+  axes[1].set_yscale("log")
+  axes[2].set_yscale("log")
+  plt.xlabel("$r$ (light-seconds)")
   axes[0].legend()
   plt.tight_layout()
   return(f, axes)

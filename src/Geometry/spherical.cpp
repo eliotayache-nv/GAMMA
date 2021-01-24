@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 15:17:31
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-11-18 10:41:37
+* @Last Modified time: 2021-01-21 17:25:09
 */
 
 
@@ -65,11 +65,8 @@ void Cell::computeCentroid(){
 
 void Cell::move(double xL, double xR){
 
-  double dxold = G.dx[MV];
-
   G.x[MV]  = (xR + xL) / 2.;
   G.dx[MV] = (xR - xL);
-  // if  (G.dx[MV] <= 0) printf("%le %le %le %le\n", dxold, G.dx[MV], xL, xR);
   computeAllGeom();
 
 }

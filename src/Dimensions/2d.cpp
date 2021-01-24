@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-20 18:32:28
+* @Last Modified time: 2021-01-21 17:01:41
 */
 
 #include "../environment.h"
@@ -991,9 +991,7 @@ void Grid::copyState0(){
       for (int d = 0; d < NUM_D; ++d) I->x0[d] = I->x[d];
       I->v0 = I->v;
     }
-    // printf("%le %le\n", Itot[j][iRbnd[j]-1].x0[MV], Itot[j][iRbnd[j]-1].v0);
   }  
-  // printf("---\n");
 
 }
 
