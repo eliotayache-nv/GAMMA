@@ -20,7 +20,7 @@ static double pNorm = rhoNorm*vNorm*vNorm;    // pressure normalised to rho_CMB/
 // BM parameters
 static double Etot = 1.e53;     // erg
 static double n_ext = 1.e0;      // external medium number density
-static double tstart = 4.e6;    // s,starting time (determines initial position of BW)
+static double tstart = 2.e6;    // s,starting time (determines initial position of BW)
 static double Rscale = 1.e17;   // cm
 static double k = 0.;           // ext medium density profile
 
@@ -72,10 +72,10 @@ static void calcBM(double r, double t, double *rho, double *u, double *p){
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 100;              // number of cells in r direction
+  par->ncell[x_] = 200;              // number of cells in r direction
   par->ncell[y_] = 100;               // number of cells in theta direction
   if (onedim) par->ncell[y_] = 1;
-  par->nmax      = 110;              // max number of cells in MV direction
+  par->nmax      = 210;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
 }
@@ -226,18 +226,19 @@ void Cell::userSourceTerms(double dt){
 
 void Grid::userBoundaries(int it, double t){
 
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int i = 0; i <= iLbnd[j]; ++i){
-      Cell *c = &Ctot[j][i];
-      double rho, u, p;
-      double r = c->G.x[r_]*lNorm;
-      calcBM(r, t, &rho, &u, &p);
-      c->S.prim[RHO] = rho;
-      c->S.prim[UU1] = u;
-      c->S.prim[PPP] = p;
-    }
-  }
+  // for (int j = 0; j < nde_nax[F1]; ++j){
+  //   for (int i = 0; i <= iLbnd[j]; ++i){
+  //     Cell *c = &Ctot[j][i];
+  //     double rho, u, p;
+  //     double r = c->G.x[r_]*lNorm;
+  //     calcBM(r, t, &rho, &u, &p);
+  //     c->S.prim[RHO] = rho;
+  //     c->S.prim[UU1] = u;
+  //     c->S.prim[PPP] = p;
+  //   }
+  // }
 
+  UNUSED(t);
   UNUSED(it);
 
 }
@@ -263,8 +264,8 @@ int Grid::checkCellForRegrid(int j, int i){
   double delta_r = rmax - rmin;
   double target_dr = delta_r / nact[jtrk];
 
-  double split_DR   = 3.;                   // set upper bound as ratio of target_AR
-  double merge_DR   = 0.2;                  // set upper bound as ratio of target_AR
+  double split_DR   = 5.;                   // set upper bound as ratio of target_AR
+  double merge_DR   = 0.3;                  // set upper bound as ratio of target_AR
 
   if (dr > split_DR * target_dr) {          // if cell is too long for its width
     return(split_);                       // split

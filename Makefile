@@ -1,4 +1,4 @@
-INITIAL    = fireball
+INITIAL    = Tests/BM
 TIMESTEP   = rk3
 GEOMETRY   = spherical
 HYDRO      = rel_sph
