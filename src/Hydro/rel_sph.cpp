@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-25 16:48:59
+* @Last Modified time: 2021-01-25 17:47:44
 */
 
 #include "../fluid.h"
@@ -42,13 +42,12 @@ double FluidState::gamma(){
   #elif EOS_ == SYNGE_EOS_
     double rho = prim[RHO];
     double p   = prim[PPP];
-    double lfactor = lfac();
 
     double a = p/rho / (GAMMA_-1.);
     double e_ratio = a + sqrt(a*a+1.);
 
     double gamma_eff = GAMMA_ - (GAMMA_-1.)/2. * (1.-1./(e_ratio*e_ratio));
-    printf("%le\n", gamma_eff);
+    printf("%le %le\n", rho, gamma_eff);
     return(gamma_eff);
 
   #endif
@@ -68,7 +67,8 @@ void FluidState::prim2cons(double r){
   }
   u = sqrt(u);
   double lfac = sqrt(1+u*u);
-  double h   = 1.+p*GAMMA_/(GAMMA_-1.)/rho; // ideal gas EOS (TBC)
+  double gma = gamma();
+  double h   = 1.+p*gma/(gma-1.)/rho; // ideal gas EOS (TBC)
 
   double D   = lfac*rho;
   double tau = D*h*lfac-p-D;
@@ -187,23 +187,27 @@ void FluidState::state2flux(double r){
 // }
 
 struct f_params{
-  double D,S,E,gamma;
+  double D,S,E;
 };
 
 // This is the function we need to set to zero:
 static double f(double p, void *params){
 
-  double lfac; 
   // parsing parameters
   struct f_params *par = (struct f_params *) params;
   double  D = par->D;
   double  S = par->S;
   double  E = par->E;
-  double  gamma = par->gamma;
+  double  lfac = 1. / sqrt(fabs(1. - (S*S) / ((E+p) * (E+p))));
 
-  lfac = 1. / sqrt(fabs(1. - (S*S) / ((E+p) * (E+p))));
+  FluidState state;
+  state.prim[RHO] = D/lfac;
+  state.prim[PPP] = p;
+  double gma = state.gamma();
+    // Meliani+(2008) eq. A.9
+    // v doesn't come into play as these are comoving quantities.
 
-  return( (E + p - D * lfac - (gamma * p * lfac * lfac) / (gamma - 1.)) );
+  return( (E + p - D * lfac - (gma * p * lfac * lfac) / (gma - 1.)) );
     // Mignone (2006) eq. 5
 
 }
@@ -238,7 +242,6 @@ void FluidState::cons2prim(double r, double pin){
   params.D = D;
   params.S = S;
   params.E = E;
-  params.gamma = GAMMA_;
 
   double pCand;
   if (pin != 0) pCand = pin;
