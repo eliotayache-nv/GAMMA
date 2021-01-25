@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-25 17:47:44
+* @Last Modified time: 2021-01-25 17:48:41
 */
 
 #include "../fluid.h"
@@ -41,13 +41,10 @@ double FluidState::gamma(){
 
   #elif EOS_ == SYNGE_EOS_
     double rho = prim[RHO];
-    double p   = prim[PPP];
-
+    double p = prim[PPP];
     double a = p/rho / (GAMMA_-1.);
     double e_ratio = a + sqrt(a*a+1.);
-
     double gamma_eff = GAMMA_ - (GAMMA_-1.)/2. * (1.-1./(e_ratio*e_ratio));
-    printf("%le %le\n", rho, gamma_eff);
     return(gamma_eff);
 
   #endif
