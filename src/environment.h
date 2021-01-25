@@ -27,6 +27,8 @@
 #define DISABLED_ 1
 #define PIECEWISE_CONSTANT_ 0
 #define PIECEWISE_LINEAR_   1
+#define IDEAL_EOS_      0
+#define SYNGE_EOS_      1
 
 enum{RHO,PPP,UU1,UU2,UU3};  // 3rd dimension optional so must be last
 enum{TP1,TP2,VV1,VV2,VV3};
@@ -48,7 +50,8 @@ enum{skip_,merge_,split_};
 #define F1     y_            // fixed dimension 1
 #define F2     z_            // fixed dimension 2
 #define VI     1.            // interface velocity (units of CD velocity)
-#define GAMMA_ (4./3.)
+#define GAMMA_ (5./3.)
+#define EOS_   SYNGE_EOS_
 #define CFL_   0.2
 
 #define DUMPSTEP_ 100

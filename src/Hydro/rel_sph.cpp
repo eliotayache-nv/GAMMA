@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-21 17:25:54
+* @Last Modified time: 2021-01-25 16:48:59
 */
 
 #include "../fluid.h"
@@ -32,6 +32,28 @@ FluidState::FluidState(){
 }
 
 FluidState::~FluidState(){}
+
+
+double FluidState::gamma(){
+
+  #if EOS_ == IDEAL_EOS_
+    return(GAMMA_);
+
+  #elif EOS_ == SYNGE_EOS_
+    double rho = prim[RHO];
+    double p   = prim[PPP];
+    double lfactor = lfac();
+
+    double a = p/rho / (GAMMA_-1.);
+    double e_ratio = a + sqrt(a*a+1.);
+
+    double gamma_eff = GAMMA_ - (GAMMA_-1.)/2. * (1.-1./(e_ratio*e_ratio));
+    printf("%le\n", gamma_eff);
+    return(gamma_eff);
+
+  #endif
+
+}
 
 
 void FluidState::prim2cons(double r){
