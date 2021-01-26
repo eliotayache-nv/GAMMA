@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-24 17:16:08
+* @Last Modified time: 2021-01-26 18:40:25
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -84,9 +84,8 @@ void Simu::run(){
     //if (it > 8870000){ stop = true; }
     //if (it > 50000){ stop = true; }
     //if (t > 2.5e6){ stop = true; }
-    // if (it > 10000){ stop = true; }
+    // if (it > 5){ stop = true; }
     if (t > 1.e8){ stop = true; }
-    // exit(12);
   }
 
 }

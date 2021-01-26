@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-21 17:01:41
+* @Last Modified time: 2021-01-26 18:34:26
 */
 
 #include "../environment.h"
@@ -539,7 +539,7 @@ void Grid::computeNeighbors(bool print){
             if (xm > xjL and im > 0){ 
               im--; xm = Itot[j-1][im].x[MV];
             }
-            while (xm < xjR){
+            while (xm < xjR and im < ntrack[j-1]-1){
               c->neigh[d][0].push_back(Ctot[j-1][im+1].nde_id);
               if (im > ntrack[j-1]-1) break;
               im++; xm = Itot[j-1][im].x[MV];
@@ -551,7 +551,7 @@ void Grid::computeNeighbors(bool print){
             if (xp > xjL and ip > 0){ 
               ip--; xp = Itot[j+1][ip].x[MV];
               } 
-            while (xp < xjR){
+            while (xp < xjR and ip < ntrack[j+1]-1){
               c->neigh[d][1].push_back(Ctot[j+1][ip+1].nde_id);
               if (ip > ntrack[j+1]-1) break;
               ip++; xp = Itot[j+1][ip].x[MV];
@@ -576,7 +576,7 @@ void Grid::computeNeighbors(bool print){
               Cell *cn = &Ctot[0][id];
               int jn  = cn->nde_ind[0];
               int in  = cn->nde_ind[1];
-              printf(" %d %d %le", jn, in, cn->G.x[MV]);
+              printf(" %d %d %le %le", jn, in, cn->G.x[MV], cn->G.dx[MV]);
             }
             printf("\n");  
           }
@@ -912,6 +912,7 @@ void Grid::computeFluxes(){
         Int.computeFlux();
 
         #if SHOCK_DETECTION_ == ENABLED_
+          // printf("%le %le %d %d\n", c0->S.prim[PPP], cn->S.prim[PPP], c0->nde_ind[1], cn->nde_ind[1]);
           Int.measureShock(c0, cn);
         #endif
 
