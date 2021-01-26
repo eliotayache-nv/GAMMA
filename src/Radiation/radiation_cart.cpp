@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-28 10:18:58
+* @Last Modified time: 2021-01-26 16:05:20
 */
 
 
@@ -35,6 +35,9 @@
 
     double p1 = S1.prim[PPP];
     double p2 = S2.prim[PPP];
+
+    if (p1==p2) return(-1); // no shock possible
+
     double delta_p = p2 - p1;
     double dp = delta_p / (double) n_evals;
 
@@ -124,7 +127,7 @@
 
   void Cell :: detectShock(){
 
-    if (fabs(Sd) > DETECT_SHOCK_THRESHOLD_) isShocked = true;
+    if (Sd > DETECT_SHOCK_THRESHOLD_) isShocked = true;
 
   }
 

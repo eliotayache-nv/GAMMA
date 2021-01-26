@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-03 15:53:35
+* @Last Modified time: 2021-01-26 18:40:44
 */
 
 
@@ -35,6 +35,9 @@
 
     double p1 = S1.prim[PPP];
     double p2 = S2.prim[PPP];
+
+    if (p1==p2) return(-1); // no shock possible
+
     double delta_p = p2 - p1;
     double dp = delta_p / (double) n_evals;
 
@@ -112,7 +115,7 @@
     double v2Sa = (p1 - p2) * (1. - vx2*Vs);
     double v2Sb = (Vs - vx2) * (h2*rho2*lfac22*(1.-vx22) + p1 - p2);
     double v2S = v2Sa / v2Sb;
-    
+
     // Shock detection threshold:
     double vlim = vSR + chi*(v2S - vSR);
     double Sd = v12 - vlim;
@@ -126,6 +129,7 @@
     // Forward shocks
     Sd = compute_Sd(SL, SR, dim);
     cL->Sd = fmax(cL->Sd, Sd);
+
     // Reverse shocks
     Sd = compute_Sd(SR, SL, dim, true);
     cR->Sd = fmax(cR->Sd, Sd);
@@ -134,13 +138,13 @@
 
   void Cell :: detectShock(){
 
-    if (fabs(Sd) > DETECT_SHOCK_THRESHOLD_) isShocked = true;
+    if (Sd > DETECT_SHOCK_THRESHOLD_) isShocked = true;
 
   }
 
   void Cell :: resetShock(){
 
-    Sd = 0;
+    Sd = -1;
     isShocked = false;
 
   }
