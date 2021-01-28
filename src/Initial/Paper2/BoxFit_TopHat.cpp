@@ -2,14 +2,15 @@
 #include "../../grid.h"
 #include "../../constants.h"
 
-bool onedim = true;
+bool onedim = false;
 
 // set shell and CBM parameters
 static double n0      = 1.;           // cm-3:    CBM number density
 static double rho0    = n0*mp_;       // g.cm-3:  comoving CBM mass density
 static double eta     = 1.e-5;        //          eta = p/(rho*c^2)
-static double th_simu = PI/32.;          // rad:     simulation angle
-static double th_min  = 99.*PI/3200.;  //0. // rad:     minimum angle if avioding jet axis
+static double th_simu = 0.3;          // rad:     simulation angle
+static double th_min  = 0.;//99.*PI/3200.; // rad:     minimum angle if avioding jet axis
+static double th0 = 0.1;
 
 // normalisation constants:
 static double rhoNorm = rho0;                 // density normalised to CBM density
@@ -18,9 +19,9 @@ static double vNorm = c_;                     // velocity normalised to c
 static double pNorm = rhoNorm*vNorm*vNorm;    // pressure normalised to rho_CMB/c^2
 
 // BM parameters
-static double Etot = 1.e53;     // erg
+static double Etot = 6.25e51;     // erg
 static double n_ext = 1.e0;      // external medium number density
-static double tstart = 4.e6;    // s,starting time (determines initial position of BW)
+static double tstart = 4.37e6;    // s,starting time (determines initial position of BW)
 static double Rscale = 1.e17;   // cm
 static double k = 0.;           // ext medium density profile
 
@@ -38,8 +39,8 @@ static double Df = 2.*lfacShock2*rhoa;
   // Blandford&McKee(1976) eq. 8-10
 
 // grid size from shock position
-static double rmin0 = RShock*(1.-100./lfacShock2);
-static double rmax0 = RShock*(1.+50./lfacShock2);
+static double rmin0 = RShock*(1.-1./lfacShock2);
+static double rmax0 = RShock*(1.+400./lfacShock2);
 
 
 static void calcBM(double r, double t, double *rho, double *u, double *p){
@@ -72,10 +73,10 @@ static void calcBM(double r, double t, double *rho, double *u, double *p){
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 200;              // number of cells in r direction
-  par->ncell[y_] = 100;               // number of cells in theta direction
+  par->ncell[x_] = 500;              // number of cells in r direction
+  par->ncell[y_] = 64;               // number of cells in theta direction
   if (onedim) par->ncell[y_] = 1;
-  par->nmax      = 210;              // max number of cells in MV direction
+  par->nmax      = 5000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -84,8 +85,10 @@ void loadParams(s_par *par){
 int Grid::initialGeometry(){                              
 
   // slighlty moving the grid to resolve the shock more precisely
-  double rmin = rmin0 + (rmax0-rmin0)/(2.*ncell[r_]);
-  double rmax = rmax0 + (rmax0-rmin0)/(2.*ncell[r_]);
+  // double rmin = rmin0 + (rmax0-rmin0)/(2.*ncell[r_]);
+  // double rmax = rmax0 + (rmax0-rmin0)/(2.*ncell[r_]);
+  double rmin = rmin0;
+  double rmax = rmax0;
 
   // grid defined in length units of light-seconds
   rmin /= lNorm;
@@ -136,58 +139,59 @@ int Grid::initialValues(){
       Cell *c = &Cinit[j][i];
 
       double r = c->G.x[x_];                  // ls:  radial coordinate
+      double th = c->G.x[t_];                  // ls:  radial coordinate
       double dr = c->G.dx[x_];                  // ls:  radial coordinate
       double r_denorm = r*lNorm;
       double dr_denorm = dr*lNorm;
 
-      if ( r_denorm > RShock){   // if in the shell tail
+      // if ( r_denorm > RShock or th > th0){   // if in the shell tail
         double rho = n_ext*mp_*pow(r_denorm/Rscale, -k);
         c->S.prim[RHO]  = rho / rhoNorm;
         c->S.prim[VV1] = 0;
         c->S.prim[VV2] = 0;
         c->S.prim[PPP] = eta*rho*c_*c_/pNorm;
         c->S.prim[TR1] = 1.;
-      }
-      else{
-
-        // computing an average over each cell
-        int nbins = 20;
-        double ddx = dr_denorm / nbins;
-        double xl = r_denorm - dr_denorm/2.;
-        double xr = xl+ddx;
-        double dV = 4./3.*PI*(pow(r_denorm+dr_denorm/2.,3) - pow(r_denorm-dr_denorm/2., 3));
-        double rho=0,v=0,p=0;
-
-        for (int ix = 0; ix < nbins; ++ix){
-          double x = (xr+xl)/2.;
-          double ddV = 4./3.*PI*(xr*xr*xr-xl*xl*xl);
-          double chi = (1. + 2.*(4.-k)*lfacShock2) * (1. - x/(c_*tstart));
-          double dp = pf*pow(chi, -(17.-4.*k)/(12.-3.*k));
-          double dlfac = sqrt(lfacf*lfacf/chi + 1);  // (+1) to ensure lfac>1
-          double dD = Df*pow(chi, -(7.-2.*k)/(4.-k));
-            // Blandford&McKee(1976) eq. 28-30 / 65-67
-          double drho = dD/dlfac;
-          double dv = c_*sqrt(1.-1./(dlfac*dlfac));
-
-          // printf("%le\n", v);
-
-          rho += drho*ddV / dV;
-          v += dv*ddV / dV;
-          p += dp*ddV / dV;
-
-          xl = xr;
-          xr += ddx;
-        }
-
-        c->S.prim[RHO] = rho/rhoNorm;
-        c->S.prim[VV1] = v/vNorm;
-        c->S.prim[VV2] = 0;
-        c->S.prim[PPP] = p/pNorm;
-        c->S.prim[TR1] = 2.;
-
         c->S.prim2cons(c->G.x[r_]);
         c->S.cons2prim(c->G.x[r_]);
-      }
+      // }
+      // else{
+
+      //   // computing an average over each cell
+      //   int nbins = 100;
+      //   double ddx = dr_denorm / nbins;
+      //   double xl = r_denorm - dr_denorm/2.;
+      //   double xr = xl+ddx;
+      //   double dV = 4./3.*PI*(pow(r_denorm+dr_denorm/2.,3) - pow(r_denorm-dr_denorm/2., 3));
+      //   double rho=0,v=0,p=0;
+
+      //   for (int ix = 0; ix < nbins; ++ix){
+      //     double x = (xr+xl)/2.;
+      //     double ddV = 4./3.*PI*(xr*xr*xr-xl*xl*xl);
+      //     double chi = (1. + 2.*(4.-k)*lfacShock2) * (1. - x/(c_*tstart));
+      //     double dp = pf*pow(chi, -(17.-4.*k)/(12.-3.*k));
+      //     double dlfac = sqrt(lfacf*lfacf/chi + 1);  // (+1) to ensure lfac>1
+      //     double dD = Df*pow(chi, -(7.-2.*k)/(4.-k));
+      //       // Blandford&McKee(1976) eq. 28-30 / 65-67
+      //     double drho = dD/dlfac;
+      //     double dv = c_*sqrt(1.-1./(dlfac*dlfac));
+
+      //     rho += drho*ddV / dV;
+      //     v += dv*ddV / dV;
+      //     p += dp*ddV / dV;
+
+      //     xl = xr;
+      //     xr += ddx;
+      //   }
+
+      //   c->S.prim[RHO] = rho/rhoNorm;
+      //   c->S.prim[VV1] = v/vNorm;
+      //   c->S.prim[VV2] = 0;
+      //   c->S.prim[PPP] = p/pNorm;
+      //   c->S.prim[TR1] = 2.;
+
+      //   c->S.prim2cons(c->G.x[r_]);
+      //   c->S.cons2prim(c->G.x[r_]);
+      // }
     }
   } 
   return 0;
@@ -199,20 +203,20 @@ void Grid::userKinematics(int it, double t){
 
   // setting lower and higher i boundary interface velocities
   // set by boundary velocity:
-  // double vIn  = 0;
+  double vIn  = 0.;
   double vOut = 1.05;
 
-  int j = jLbnd+1;
-  int i = iRbnd[j]-20;
-  if (Ctot[j][i].S.prim[UU1] < 1.e-3 and it > 1000){
-    vOut = 0.;  
-  }
+  // int j = jLbnd+1;
+  // int i = iRbnd[j]-20;
+  // if (Ctot[j][i].S.prim[UU1] < 1.e-3 and it > 1000){
+  //   vOut = 0.;  
+  // }
   
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int n = 0; n < ngst; ++n){
       int    iL = n;
       int    iR = ntrack[j]-2-n;
-      // Itot[j][iL].v = vIn;
+      Itot[j][iL].v = vIn;
       Itot[j][iR].v = vOut;
     }
   }
@@ -226,17 +230,39 @@ void Cell::userSourceTerms(double dt){
 
 void Grid::userBoundaries(int it, double t){
 
+  // // REFLECTIVE BOUNDARY
   // for (int j = 0; j < nde_nax[F1]; ++j){
   //   for (int i = 0; i <= iLbnd[j]; ++i){
   //     Cell *c = &Ctot[j][i];
-  //     double rho, u, p;
-  //     double r = c->G.x[r_]*lNorm;
-  //     calcBM(r, t, &rho, &u, &p);
-  //     c->S.prim[RHO] = rho;
-  //     c->S.prim[UU1] = u;
-  //     c->S.prim[PPP] = p;
+  //     c->S.prim[UU1] *= -1;
   //   }
   // }
+
+  // BM BOUNDARY
+  for (int j = 0; j < nde_nax[F1]; ++j){
+    for (int i = 0; i <= iLbnd[j]; ++i){
+      Cell *c = &Ctot[j][i];
+      double rho, u, p;
+      double r = c->G.x[r_]*lNorm;
+      double th = c->G.x[t_];
+
+      if (th < th0){
+        calcBM(r, t, &rho, &u, &p);
+        c->S.prim[RHO] = rho;
+        c->S.prim[UU1] = u;
+        c->S.prim[UU2] = 0;
+        c->S.prim[PPP] = p;
+        c->S.prim[TR1] = 2.;
+      }
+      else{
+        c->S.prim[RHO]  = 1;
+        c->S.prim[UU1] = 0;
+        c->S.prim[UU2] = 0;
+        c->S.prim[PPP] = eta;
+        c->S.prim[TR1] = 1.;
+      }
+    }
+  }
 
   UNUSED(t);
   UNUSED(it);
@@ -258,22 +284,34 @@ int Grid::checkCellForRegrid(int j, int i){
 
   // printf("%le\n", ar);
 
-  int jtrk = jLbnd+1;
-  double rmin = Ctot[jtrk][iLbnd[jtrk]+1].G.x[r_];
-  double rmax = Ctot[jtrk][iRbnd[jtrk]-1].G.x[r_];
-  double delta_r = rmax - rmin;
-  double target_dr = delta_r / nact[jtrk];
+  // double rmin = Ctot[j][iLbnd[j]+1].G.x[r_];
+  // double rmax = Ctot[j][iRbnd[j]-1].G.x[r_];
+  // double delta_r = rmax - rmin;
+  // double target_dr = delta_r / nact[j];
 
-  double split_DR   = 5.;                   // set upper bound as ratio of target_AR
-  double merge_DR   = 0.3;                  // set upper bound as ratio of target_AR
+  // double split_DR   = 3.;                   // set upper bound as ratio of target_AR
+  // double merge_DR   = 0.3;                  // set upper bound as ratio of target_AR
 
-  if (dr > split_DR * target_dr) {          // if cell is too long for its width
+  // if (dr > split_DR * target_dr) {          // if cell is too long for its width
+  //   return(split_);                       // split
+  // }
+  // if (dr < merge_DR * target_dr) {          // if cell is too short for its width
+  //   return(merge_);                       // merge
+  // }
+  // return(skip_);
+
+  double target_ar = 1.;
+  double split_AR   = 5.;                   // set upper bound as ratio of target_AR
+  double merge_AR   = 0.2;                  // set upper bound as ratio of target_AR
+
+  if (ar > split_AR * target_ar) {          // if cell is too long for its width
     return(split_);                       // split
   }
-  if (dr < merge_DR * target_dr) {          // if cell is too short for its width
+  if (ar < merge_AR * target_ar) {          // if cell is too short for its width
     return(merge_);                       // merge
   }
   return(skip_);
+  
 }
 
 
@@ -282,6 +320,8 @@ void Cell::user_regridVal(double *res){
   // adapts the search to special target resolution requirements
   // depending on the tracer value
   
+  // *res = G.dx[r_];
+
   UNUSED(*res);
 
 }

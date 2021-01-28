@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-25 17:48:41
+* @Last Modified time: 2021-01-28 18:32:00
 */
 
 #include "../fluid.h"
@@ -471,7 +471,7 @@ void Cell::sourceTerms(double dt){
   // S.cons[SS1] += (rho*ut*ut + 2.*p) * (r/rsq)* dV * dt;
   // S.cons[SS1] += (rho*h*ut*ut + 2.*p) / r * dV * dt;
   // S.cons[SS1] += (rho*ut*ut + 2.*p) / r * dV * dt;
-  // S.cons[SS2] += p*cos(th)/sin(th) * dV * dt;
+  S.cons[SS2] += p*cos(th)/fabs(sin(th)) * dV * dt;
     // fabs to cope with negative thetas (ghost cells)
   // S.cons[SS2] += 2./3.* PI * p * (r2*r2*r2 - r1*r1*r1) * (sin(th2) - sin(th1)) * dt;
 
