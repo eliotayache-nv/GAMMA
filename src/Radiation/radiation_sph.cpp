@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-26 18:40:44
+* @Last Modified time: 2021-01-28 11:11:28
 */
 
 
@@ -159,7 +159,8 @@
     double lfac = S.lfac();
     double rho = S.prim[RHO];
 
-    if (gme != 0.) return(lfac * pow(rho, 4./3.) / gme);
+    // if (gme != 0.) return(lfac * pow(rho, 4./3.) / gme);
+    if (gme != 0.) return(lfac * pow(rho, 1./3.) / gme);
     else return(0);
 
   }
@@ -170,7 +171,8 @@
     double lfac = S.lfac();
     double rho = S.prim[RHO];
 
-    if (gme_trac != 0.) return(lfac * pow(rho, 4./3.) / gme_trac);
+    // if (gme_trac != 0.) return(lfac * pow(rho, 4./3.) / gme_trac);
+    if (gme_trac != 0.) return(lfac * pow(rho, 1./3.) / gme_trac);
     else return(0);
 
   }
@@ -191,7 +193,8 @@
 
     double lfac = S.lfac();
     double rho = S.prim[RHO];
-    double lim = lfac * pow(rho, 4./3.);  // equiv. gammae = 1.
+    // double lim = lfac * pow(rho, 4./3.);  // equiv. gammae = 1.
+    double lim = lfac * pow(rho, 1./3.);  // equiv. gammae = 1.
     S.prim[GMN] = lim / (lfac*rho);
     S.prim[GMX] = lim / (lfac*rho);
     S.cons[GMN] = lim;
@@ -203,7 +206,8 @@
 
     double lfac = S.lfac();
     double rho = S.prim[RHO];
-    double lim = lfac * pow(rho, 4./3.) / (lfac*rho);  // equiv. gammae = 1.
+    // double lim = lfac * pow(rho, 4./3.) / (lfac*rho);  // equiv. gammae = 1.
+    double lim = lfac * pow(rho, 1./3.) / (lfac*rho);  // equiv. gammae = 1.
     double *gmax = &S.prim[GMX];
     double *gmin = &S.prim[GMN];
 
@@ -227,7 +231,7 @@
 
     double dgmax = Nalpha_ * pow(rho, 4./3.) * B*B * G.dV * dt;
     // printf("%le\n", dgmax);
-    S.prim[GMX] += dgmax;
+    S.cons[GMX] += dgmax;
 
   }
 
