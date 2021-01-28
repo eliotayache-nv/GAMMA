@@ -1,4 +1,4 @@
-INITIAL    = Tests/BM
+INITIAL    = Paper2/BoxFit_TopHat
 TIMESTEP   = rk3
 GEOMETRY   = spherical
 HYDRO      = rel_sph
