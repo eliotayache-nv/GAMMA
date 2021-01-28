@@ -78,6 +78,8 @@ void loadParams(s_par *par){
   par->nmax      = 210;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
+  normalizeConstants(rhoNorm, vNorm, lNorm);
+
 }
 
 int Grid::initialGeometry(){                              
@@ -121,8 +123,7 @@ int Grid::initialGeometry(){
 int Grid::initialValues(){
 
   // Careful, geometrical quantities are already normalised when using this function.
-  normalizeConstants(rhoNorm, vNorm, lNorm);
-  
+
   if (GAMMA_ != 4./3.){
     printf("WARNING - Set GAMMA_ to 4./3.\n");
   }
