@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2019-04-09 11:22:46
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-01-27 17:59:02
+# @Last Modified time: 2021-01-28 10:39:08
 
 # -*- coding: utf-8 -*-
 # @Author: Eliot Ayache
@@ -39,6 +39,9 @@ lNorm = c_
 vNorm = c_
 rhoNorm = rho0
 pNorm = rhoNorm * vNorm * vNorm
+
+Nme_ = me_/(rhoNorm * lNorm**3)
+NsigmaT_ = sigmaT_ / lNorm**2
 
 
 # ---------------------------------------------------------------------------------------
@@ -116,20 +119,20 @@ class BM(object):
 
     else:
       chi = (1. + 2. * (4.-self.k) * self.lfacShock_sqrd) * ( 1. - r / (c_ * self.t))
-      S.p = self.Sf.p * chi**(-17. / 12.) 
+      S.p = self.Sf.p * chi**(-17. / 12.)
       S.lfac = np.sqrt(self.Sf.lfac**2 / chi + 1)
       S.D = self.Sf.D * chi**(-7./4.) 
       S.rho = S.D/S.lfac
 
       t0 = self.t/chi**(1./4.)
-      p0 = self.Sf.p
-      rho0 = self.Sf.rho
-      h0 = c_**2 + p0*GAMMA_/(GAMMA_-1.)/rho0
-      eps0 = rho0*(h0 - c_**2) / GAMMA_
-      eB0 = eps_B_ *eps0
+      p0 = self.Sf.p / pNorm
+      rho0 = self.Sf.rho /rhoNorm
+      h0 = 1. + p0*GAMMA_/(GAMMA_-1.)/rho0
+      eps0 = rho0*(h0 - 1.) / GAMMA_
+      eB0 = eps_B_ * eps0
       B0 = np.sqrt(8.*np.pi*eB0)
-      S.gmax = 2.*19.*np.pi*me_*c_*self.Sf.lfac / (sigmaT_*B0**2*t0) \
-        * chi**(25./24.) / (chi**(19./12.)-1.)
+      S.gmax = 2.*19.*np.pi*Nme_*self.Sf.lfac / (NsigmaT_*B0**2*t0) \
+        * chi**(25./24.) / (chi**(19./12.)-1.) # gmax = +ifnty for chi=1
       print(S.gmax)
 
     return(S)
