@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-01-22 16:59:46
+# @Last Modified time: 2021-01-29 09:47:29
 
 
 import numpy as np
@@ -17,6 +17,7 @@ import glob
 import os
 import string
 import glob
+
 from isentropic import *
 from BM import *
 
@@ -26,7 +27,6 @@ plt.rc('xtick', labelsize=12)
 plt.rc('ytick', labelsize=12) 
 plt.rc('legend', fontsize=12) 
 plt.rcParams['savefig.dpi'] = 300
-
 
 def plot(key, it, contour=False):
   f = plt.figure()
@@ -307,6 +307,9 @@ def quadMesh(data, key,
 
   if geometry != "polar":
     ax.set_aspect('equal')
+  if geometry == "polar":
+    ax.set_rorigin(-xmin)
+    ax.set_rmin(xmin)
 
   if colorbar:
     cb = f.colorbar(im, ax=ax, orientation='horizontal')
