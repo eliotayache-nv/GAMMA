@@ -8,9 +8,9 @@ bool onedim = false;
 static double n0      = 1.;           // cm-3:    CBM number density
 static double rho0    = n0*mp_;       // g.cm-3:  comoving CBM mass density
 static double eta     = 1.e-5;        //          eta = p/(rho*c^2)
-static double th_simu = 0.3;          // rad:     simulation angle
+static double th_simu = 0.6;          // rad:     simulation angle
 static double th_min  = 0.;//99.*PI/3200.; // rad:     minimum angle if avioding jet axis
-static double th0 = 0.1;
+static double th0 = 0.2;
 
 // normalisation constants:
 static double rhoNorm = rho0;                 // density normalised to CBM density
@@ -19,9 +19,9 @@ static double vNorm = c_;                     // velocity normalised to c
 static double pNorm = rhoNorm*vNorm*vNorm;    // pressure normalised to rho_CMB/c^2
 
 // BM parameters
-static double Etot = 6.25e51;     // erg
+static double Etot = 5e51;     // erg
 static double n_ext = 1.e0;      // external medium number density
-static double tstart = 4.37e6;    // s,starting time (determines initial position of BW)
+static double tstart = 2.5e6;    // s,starting time (determines initial position of BW)
 static double Rscale = 1.e17;   // cm
 static double k = 0.;           // ext medium density profile
 
@@ -39,8 +39,8 @@ static double Df = 2.*lfacShock2*rhoa;
   // Blandford&McKee(1976) eq. 8-10
 
 // grid size from shock position
-static double rmin0 = RShock*(1.-200./lfacShock2);
-static double rmax0 = RShock*(1.+100./lfacShock2);
+static double rmin0 = 1.5e6*lNorm;//RShock*(1.-200./lfacShock2);
+static double rmax0 = RShock*(1.+500./lfacShock2);
 
 
 static void calcBM(double r, double t, double *rho, double *u, double *p){
@@ -73,10 +73,10 @@ static void calcBM(double r, double t, double *rho, double *u, double *p){
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 500;              // number of cells in r direction
-  par->ncell[y_] = 64;               // number of cells in theta direction
+  par->ncell[x_] = 100;              // number of cells in r direction
+  par->ncell[y_] = 128;               // number of cells in theta direction
   if (onedim) par->ncell[y_] = 1;
-  par->nmax      = 5000;              // max number of cells in MV direction
+  par->nmax      = 10000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
