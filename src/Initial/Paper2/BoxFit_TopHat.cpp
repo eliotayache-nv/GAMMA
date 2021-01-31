@@ -73,7 +73,7 @@ static void calcBM(double r, double t, double *rho, double *u, double *p){
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 500;              // number of cells in r direction
+  par->ncell[x_] = 300;              // number of cells in r direction
   par->ncell[y_] = 64;               // number of cells in theta direction
   if (onedim) par->ncell[y_] = 1;
   par->nmax      = 5000;              // max number of cells in MV direction

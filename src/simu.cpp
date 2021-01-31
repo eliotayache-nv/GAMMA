@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-29 11:26:12
+* @Last Modified time: 2021-01-30 23:10:56
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -72,8 +72,8 @@ void Simu::run(){
     //if (it%20000 == 0){ grid.printCols(it, t); }
     //if (it%10000 == 0){ grid.printCols(it, t); }
     if (it%1000 == 0){ grid.printCols(it, t); }
-    if (it%100 == 0){ grid.printCols(it, t); }
-    if (it%10 == 0){ grid.printCols(it, t); }
+    // if (it%100 == 0){ grid.printCols(it, t); }
+    // if (it%10 == 0){ grid.printCols(it, t); }
     // if (it%1 == 0){ grid.printCols(it, t); }
 
     //if ((worldrank == 0) and (it%1000 == 0)){ printf("it: %ld time: %le\n", it, t);}
