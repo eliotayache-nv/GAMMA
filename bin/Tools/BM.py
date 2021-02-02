@@ -2,18 +2,15 @@
 # @Author: Eliot Ayache
 # @Date:   2019-04-09 11:22:46
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-01-28 10:39:08
-
-# -*- coding: utf-8 -*-
-# @Author: Eliot Ayache
-# @Date:   2019-03-26 16:53:26
-# @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2019-04-09 11:02:34
+# @Last Modified time: 2021-01-31 21:30:22
 
 # ---------------------------------------------------------------------------------------
 
 import numpy as np
 import matplotlib.pyplot as plt
+import glob
+
+from inout import *
 
 # ---------------------------------------------------------------------------------------
 
@@ -133,7 +130,6 @@ class BM(object):
       B0 = np.sqrt(8.*np.pi*eB0)
       S.gmax = 2.*19.*np.pi*Nme_*self.Sf.lfac / (NsigmaT_*B0**2*t0) \
         * chi**(25./24.) / (chi**(19./12.)-1.) # gmax = +ifnty for chi=1
-      print(S.gmax)
 
     return(S)
 
@@ -160,6 +156,103 @@ def plotBM1D(data, key, ax = None, **kwargs):
     ax = plt.gca()
 
   ax.plot(x/lNorm, y, **kwargs)
+
+
+def AsymptoteBM(dir="Last"):
+
+  lfacMaxArr = []
+  lfacThArr = []
+  lfacSArr = []
+  tArr = []
+  rArr = []
+  rThArr = []
+
+  for filename in glob.glob("../../results/%s/*.out" %dir):
+    print(filename.split("results/")[1])
+    data = readData(filename.split("results/")[1])
+
+    t = data["t"][0]
+    r = data["x"].to_numpy()
+    v = data["vx"].to_numpy()
+    lfac = 1./np.sqrt(1 - v**2)
+    lfacMax = np.max(lfac)
+    imax = np.argmax(lfac)
+    rS = r[imax]
+
+    BW = BM(E0, n0, t)
+    lfacf = BW.Sf.lfac
+    lfacS = BW.lfacShock
+    r_th = BW.RShock
+
+    tArr.append(t)
+    rArr.append(rS)
+    rThArr.append(r_th)
+    lfacMaxArr.append(lfacMax)
+    lfacThArr.append(lfacf)
+    lfacSArr.append(lfacS)
+
+  lfac = np.array(lfacMaxArr)
+  lfac_th = np.array(lfacThArr)
+  lfacS_th = np.array(lfacSArr)
+  t = np.array(tArr)   
+  rS = np.array(rArr)
+  rS_th = np.array(rThArr)
+
+  tinds = t.argsort()
+  tsort = t[tinds]
+  rS = rS[tinds]
+  vS = (rS[1:]-rS[:-1])/(tsort[1:]-tsort[:-1])
+  lfacS = 1./np.sqrt(1.-vS**2)
+  lfacS_th = lfacS_th[tinds]
+
+  plt.plot(tsort, lfac[tinds])
+  plt.plot(tsort, lfac_th[tinds])
+
+  return(t, tsort, lfac, lfac_th, lfacS, lfacS_th, rS, rS_th)
+
+
+def BM_precision(data, key):
+
+  time = data["t"][0]
+  x = data["x"]
+  dx = data["dx"]
+  y = data[key]
+  y_th = np.zeros(x.shape[0])
+
+  BW = BM(E0, n0, time)
+
+  for i in range(x.shape[0]):
+    if key == "rho":
+      y_th[i] = BW.local(x[i]*lNorm).rho/rhoNorm
+    if key == "lfac":
+      y_th[i] = BW.local(x[i]*lNorm).lfac
+    if key == "p":
+      y_th[i] = BW.local(x[i]*lNorm).p/pNorm
+    if key == "gmax":
+      y_th[i] = BW.local(x[i]*lNorm).gmax
+
+  L1 = computeL1(y, y_th, dx)
+  return(L1)
+
+
+def BM_convergence(key, dir="Last"):
+
+  L1 = []
+  t = []
+
+  for filename in glob.glob("../../results/%s/*.out" %dir):
+    print(filename.split("results/")[1])
+    data = readData(filename.split("results/")[1])
+    t.append(data["t"][0])
+    L1.append(BM_precision(data, key))
+
+  t = np.array(t)
+  L1 = np.array(L1)
+
+  plt.scatter(t, L1)
+
+
+
 
 
 

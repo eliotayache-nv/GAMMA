@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-01-29 09:47:29
+# @Last Modified time: 2021-01-30 18:31:32
 
 
 import numpy as np
@@ -16,8 +16,8 @@ import matplotlib.cm as cm
 import glob
 import os
 import string
-import glob
 
+from inout import *
 from isentropic import *
 from BM import *
 
@@ -55,18 +55,6 @@ def tricontour(name, it, key,):
   ax.set(xlim=(-2, 2), ylim=(-2, 2))
 
   return x,y,z
-
-
-def readData(key, it=None, sequence=False):
-  if sequence:
-    filename = '../../results/%s/phys%010d.out'  %(key,it)
-  elif it==None:
-    filename = '../../results/%s'  %(key)
-  else:
-    filename = '../../results/%s%d.out'  %(key,it)
-  data = pd.read_csv(filename, sep=" ")
-  return(data)
-
 
 
 def getArray(data, key):
