@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 11:18:13
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-02 21:13:21
+* @Last Modified time: 2021-02-02 21:40:24
 */
 
 #include "../fluid.h"
@@ -449,33 +449,51 @@ FluidState Interface::starState(FluidState Sin, double lbda){
 
 }
 
+#if NUM_D == 1
+  void Cell::sourceTerms(double dt){
 
-void Cell::sourceTerms(double dt){
+    double p   = S.prim[PPP];
+    double r   = G.x[r_];
+    double dr  = G.dx[r_];
+    double dV  = G.dV;
+    double r1  = r-dr/2.;
+    double r2  = r+dr/2.;
+    double rsq = (r2*r2+r1*r1+r2*r1)/3.;
 
-  double rho = S.prim[RHO];
-  double ut  = S.prim[UU1+t_];
-  double p   = S.prim[PPP];
-  double h   = 1.+p*GAMMA_/(GAMMA_-1.)/rho; // look at this expression
-  double r   = G.x[r_];
-  double dr  = G.dx[r_];
-  double th  = G.x[t_];
-  double dth = G.dx[t_];
-  double dV  = G.dV;
-  double r1  = r-dr/2.;
-  double r2  = r+dr/2.;
-  double th1 = th-dth/2.;
-  double th2 = th+dth/2.;
-  double rsq = (r2*r2+r1*r1+r2*r1)/3.;
+    S.cons[SS1] += (2.*p) *(r/rsq) * dV * dt;
 
-  S.cons[SS1] += (rho*h*ut*ut + 2.*p) *(r/rsq) * dV * dt;
-  // S.cons[SS1] += (rho*ut*ut + 2.*p) * (r/rsq)* dV * dt;
-  // S.cons[SS1] += (rho*h*ut*ut + 2.*p) / r * dV * dt;
-  // S.cons[SS1] += (rho*ut*ut + 2.*p) / r * dV * dt;
-  S.cons[SS2] += p*cos(th)/fabs(sin(th)) * dV * dt;
-    // fabs to cope with negative thetas (ghost cells)
-  // S.cons[SS2] += 2./3.* PI * p * (r2*r2*r2 - r1*r1*r1) * (sin(th2) - sin(th1)) * dt;
+  }
+#endif
 
-}
+#if NUM_D == 2
+  void Cell::sourceTerms(double dt){
+
+    double rho = S.prim[RHO];
+    double ut  = S.prim[UU1+t_];
+    double p   = S.prim[PPP];
+    double gma = S.gamma();
+    double h   = 1.+p*gma/(gma-1.)/rho; // look at this expression
+    double r   = G.x[r_];
+    double dr  = G.dx[r_];
+    double th  = G.x[t_];
+    double dth = G.dx[t_];
+    double dV  = G.dV;
+    double r1  = r-dr/2.;
+    double r2  = r+dr/2.;
+    double th1 = th-dth/2.;
+    double th2 = th+dth/2.;
+    double rsq = (r2*r2+r1*r1+r2*r1)/3.;
+
+    S.cons[SS1] += (rho*h*ut*ut + 2.*p) *(r/rsq) * dV * dt;
+    // S.cons[SS1] += (rho*ut*ut + 2.*p) * (r/rsq)* dV * dt;
+    // S.cons[SS1] += (rho*h*ut*ut + 2.*p) / r * dV * dt;
+    // S.cons[SS1] += (rho*ut*ut + 2.*p) / r * dV * dt;
+    S.cons[SS2] += p*cos(th)/fabs(sin(th)) * dV * dt;
+      // fabs to cope with negative thetas (ghost cells)
+    // S.cons[SS2] += 2./3.* PI * p * (r2*r2*r2 - r1*r1*r1) * (sin(th2) - sin(th1)) * dt;
+
+  }
+#endif
 
 
 

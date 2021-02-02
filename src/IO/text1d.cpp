@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-02 20:54:20
+* @Last Modified time: 2021-02-02 21:40:58
 */
 
 #include "../simu.h"
@@ -145,7 +145,6 @@ void Grid::printCols(int it, double t){
   // generate_mpi_cell(&cell_mpi);
 
   int size = nde_nax[MV];;
-  int jsize = 1;
   Cell    *Cdump = array_1d<Cell>(nax[MV]);
   s_cell *SCdump = array_1d<s_cell>(nax[MV]);
   for (int i = 0; i < nde_nax[MV]; ++i){
