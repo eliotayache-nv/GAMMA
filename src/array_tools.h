@@ -54,6 +54,15 @@ template <class T> T* array_1d(const int ni)
   return p;
 }
 
+template <class T> T* array_1d_nogst(T* in, const int ngst){
+
+  T* p;
+  p = &in[ngst]; 
+  return p;
+
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template <class T> T** array_2d(const int ni, const int nj)

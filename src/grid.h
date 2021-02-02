@@ -26,9 +26,16 @@ class Grid{
   int origin[NUM_D];    // coordinates of C[0][0] in simulation domain
 
   #if   NUM_D == 1
-    Cell         *C;
-    Interface    *I;     // moving interfaces
-    int n_act;           // adaptive number of active cells in track
+    Cell         *Cinit; // initial simulation domain
+    Cell         *C;     // physical grid (without ghost tracks, but ghosts cells in MV)
+    Cell         *Ctot;  // grid with ghost tracks
+    Interface    *I;     // moving dim interfaces (without ghost to ghost in moving dim)
+                            // does include ghost tracks
+    Interface    *Itot;  // moving dim interfaces 
+    int nact;    // adaptive number of active cells in track
+    int ntrack;  // adaptive number of active and ghost cells in track
+    int iLbnd, iRbnd; // tot index of first ghost cell out of active grid
+    int ibig, ismall; // indexes of biggest and smallest cells along track
 
   #elif NUM_D == 2
     Cell         **Cinit; // initial simulation domain
@@ -57,7 +64,6 @@ class Grid{
   int  initialGeometry();
   int  initialValues();
   void destruct();            // free memory
-  void print(int var);
   void printCols(int it, double t);
   void interfaceGeomFromCellPos();
   void interfaceGeomFromCellPos(int j); // only one track
@@ -94,6 +100,7 @@ class Grid{
   // toools
   void prim2cons();
   void state2flux();
+  void v2u();
   void apply(void (Cell::*func)());
   void apply(void (FluidState::*func)(), bool noborder=false);
     // overloading for FluidState
