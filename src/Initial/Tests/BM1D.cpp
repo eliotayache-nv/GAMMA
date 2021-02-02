@@ -13,8 +13,6 @@ bool onedim = true;
 static double n0      = 1.;           // cm-3:    CBM number density
 static double rho0    = n0*mp_;       // g.cm-3:  comoving CBM mass density
 static double eta     = 1.e-5;        //          eta = p/(rho*c^2)
-static double th_simu = PI/32.;          // rad:     simulation angle
-static double th_min  = 99.*PI/3200.;  //0. // rad:     minimum angle if avioding jet axis
 
 // normalisation constants:
 static double rhoNorm = rho0;                 // density normalised to CBM density
@@ -26,7 +24,7 @@ static double pNorm = rhoNorm*vNorm*vNorm;    // pressure normalised to rho_CMB/
 static double Etot = 1.e53;     // erg
 static double n_ext = 1.e0;      // external medium number density
 static double tinit = 4.e6;    // s,starting time (determines initial position of BW)
-static double lfacstart = 1000;  // starting lfac behind the shock (determines initial position of BW)
+static double lfacstart = 100;  // starting lfac behind the shock (determines initial position of BW)
 static double Rscale = 1.e17;   // cm
 static double k = 0.;           // ext medium density profile
 
@@ -50,7 +48,7 @@ static double Df = 2.*lfacShock2*rhoa;
   // Blandford&McKee(1976) eq. 8-10
 
 // grid size from shock position
-static double rmin0 = RShock*(1.-50./lfacShock2);
+static double rmin0 = RShock*(1.-100./lfacShock2);
 static double rmax0 = RShock*(1.+50./lfacShock2);
 
 
@@ -84,8 +82,8 @@ static void calcBM(double r, double t, double *rho, double *u, double *p){
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 100;              // number of cells in r direction
-  par->nmax      = 110;              // max number of cells in MV direction
+  par->ncell[x_] = 1000;              // number of cells in r direction
+  par->nmax      = 30000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -100,14 +98,12 @@ int Grid::initialGeometry(){
   rmin /= lNorm;
   rmax /= lNorm;
   double dr = (rmax-rmin)/ncell[x_];
-  for (int j = 0; j < ncell[y_]; ++j){
-    for (int i = 0; i < ncell[x_]; ++i){
-      Cell *c = &Cinit[i];
-      double r      = rmin + (i+0.5)*dr;
-      c->G.x[x_]    = r;
-      c->G.dx[x_]   = dr;
-      c->computeAllGeom();
-    }
+  for (int i = 0; i < ncell[x_]; ++i){
+    Cell *c = &Cinit[i];
+    double r      = rmin + (i+0.5)*dr;
+    c->G.x[x_]    = r;
+    c->G.dx[x_]   = dr;
+    c->computeAllGeom();
   }
   return 0;
 }
@@ -197,7 +193,7 @@ void Grid::userKinematics(int it, double t){
   }
   
   for (int n = 0; n < ngst; ++n){
-    int    iL = n;
+    // int    iL = n;
     int    iR = ntrack-2-n;
     // Itot[j][iL].v = vIn;
     Itot[iR].v = vOut;
@@ -239,32 +235,46 @@ int Grid::checkCellForRegrid(int j, int i){
   // double trac = c.S.prim[TR1];           // get tracer value
   double r   = c.G.x[r_];                   // get cell radial coordinate
   double dr  = c.G.dx[r_];                  // get cell radial spacing
-  double ar  = dr / r;                // calculate cell aspect ratio
+  double dr0 = (rmax0 - rmin0)/lNorm / 1000.;
+  double ar  = dr/dr0 / (r/(RShock/lNorm));    // calculate cell aspect ratio
   // double rOut = Ctot[j][iRbnd[j]-1].G.x[x_];
   // double ar  = dr / (rOut*dth);                // calculate cell aspect ratio
 
   // printf("%le\n", ar);
 
-  double rmin = Ctot[iLbnd+1].G.x[r_];
-  double rmax = Ctot[iRbnd-1].G.x[r_];
-  double delta_r = rmax - rmin;
-  double target_dr = delta_r / nact;
+  // double rmin = Ctot[iLbnd+1].G.x[r_];
+  // double rmax = Ctot[iRbnd-1].G.x[r_];
+  // double delta_r = rmax - rmin;
+  // double target_dr = delta_r / nact;
 
-  double split_DR   = 5.;                   // set upper bound as ratio of target_AR
-  double merge_DR   = 0.3;                  // set upper bound as ratio of target_AR
+  // double split_DR   = 5.;                   // set upper bound as ratio of target_AR
+  // double merge_DR   = 0.3;                  // set upper bound as ratio of target_AR
 
-  if (c.S.lfac() < 2.){
-    split_DR = 20;
-    merge_DR = 1.2;
-  }
+  // if (c.S.lfac() < 2.){
+  //   split_DR = 20;
+  //   merge_DR = 1.2;
+  // }
 
-  if (dr > split_DR * target_dr) {          // if cell is too long for its width
+  // if (dr > split_DR * target_dr) {          // if cell is too long for its width
+  //   return(split_);                       // split
+  // }
+  // if (dr < merge_DR * target_dr) {          // if cell is too short for its width
+  //   return(merge_);                       // merge
+  // }
+  // return(skip_);
+
+  double target_ar = 1.;
+  double split_AR   = 5.;                   // set upper bound as ratio of target_AR
+  double merge_AR   = 0.2;                  // set upper bound as ratio of target_AR
+
+  if (ar > split_AR * target_ar) {          // if cell is too long for its width
     return(split_);                       // split
   }
-  if (dr < merge_DR * target_dr) {          // if cell is too short for its width
+  if (ar < merge_AR * target_ar) {          // if cell is too short for its width
     return(merge_);                       // merge
   }
   return(skip_);
+
 }
 
 
@@ -273,9 +283,9 @@ void Cell::user_regridVal(double *res){
   // adapts the search to special target resolution requirements
   // depending on the tracer value
 
-  if (S.lfac() < 2.){
-    *res /= 4;
-  }
+  // if (S.lfac() < 2.){
+  //   *res /= 4;
+  // }
 
 }
 

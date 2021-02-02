@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-01-28 13:24:58
+* @Last Modified time: 2021-02-02 22:19:57
 */
 
 
@@ -22,10 +22,8 @@
   static double compute_Sd(FluidState S1, FluidState S2, int dim, 
                            bool reverse=false, double radius = -1){
 
-    #if NUM_D == 2
-      int uux = UU1+dim;
-      int uut = UU2-dim;
-    #endif
+    int uux = UU1+dim;
+    int uut = UU2-dim;
 
     // 1S1R Rezzolla&Zanotti2013 eq. 4.211 (p238)
     // ------------------------------------------
