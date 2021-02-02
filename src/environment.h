@@ -45,7 +45,7 @@ enum{skip_,merge_,split_};
 // ENVIRONMENT OPTIONS
 #define NUM_C  4             // conserved (changes with number of dimensions)
 #define NUM_TR 2             // user-specified tracers
-#define NUM_D  2             // number of dimensions
+#define NUM_D  1             // number of dimensions
 #define MV     x_            // moving dimension
 #define F1     y_            // fixed dimension 1
 #define F2     z_            // fixed dimension 2
@@ -61,9 +61,9 @@ enum{skip_,merge_,split_};
 
 #define SPATIAL_RECONSTRUCTION_ PIECEWISE_LINEAR_
 #define CIRC_REGRID_            ENABLED_
-#define SHOCK_DETECTION_        ENABLED_
+#define SHOCK_DETECTION_        DISABLED_
 #define DETECT_SHOCK_THRESHOLD_ 0.1
-#define LOCAL_SYNCHROTRON_      ENABLED_
+#define LOCAL_SYNCHROTRON_      DISABLED_
 #define GAMMA_MAX_INIT_         (1.e7)
 
 // ---------------------------------------------------------------------------------------

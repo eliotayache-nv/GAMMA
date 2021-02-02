@@ -1,11 +1,11 @@
-INITIAL    = Tests/BM
+INITIAL    = Tests/BM1D
 TIMESTEP   = rk3
-GEOMETRY   = spherical
+GEOMETRY   = spherical1D
 HYDRO      = rel_sph
 RADIATION  = radiation_sph
 SOLVER     = hllc
-DIMENSIONS = 2d
-IO         = text2d
+DIMENSIONS = 1d
+IO         = text1d
 
 OS_NAME := $(shell uname -s | tr A-Z a-z)
 HOST_NAME := $(shell hostname | cut -c-6)s
