@@ -184,18 +184,23 @@ void Grid::userKinematics(int it, double t){
 
   // setting lower and higher i boundary interface velocities
   // set by boundary velocity:
-  // double vIn  = 0;
+  double vIn  = 1.;
   double vOut = 1.05;
 
-  int i = iRbnd-10;
-  if (Ctot[i].S.prim[UU1] < 1.e-3 and it > 1000){
+  int iout = iRbnd-10;
+  if (Ctot[iout].S.prim[UU1] < 1.e-3 and it > 1000){
     vOut = 0.;  
+  }
+  double xL = Ctot[iLbnd].G.x[r_];
+  double xR = Ctot[iRbnd].G.x[r_];
+  if (xL > 0.995*xR){
+    vIn = 0.;
   }
   
   for (int n = 0; n < ngst; ++n){
-    // int    iL = n;
+    int    iL = n;
     int    iR = ntrack-2-n;
-    // Itot[j][iL].v = vIn;
+    Itot[iL].v = vIn;
     Itot[iR].v = vOut;
   }
 
@@ -264,8 +269,8 @@ int Grid::checkCellForRegrid(int j, int i){
   // return(skip_);
 
   double target_ar = 1.;
-  double split_AR   = 5.;                   // set upper bound as ratio of target_AR
-  double merge_AR   = 0.2;                  // set upper bound as ratio of target_AR
+  double split_AR   = 10.;                   // set upper bound as ratio of target_AR
+  double merge_AR   = 0.05;                  // set upper bound as ratio of target_AR
 
   if (ar > split_AR * target_ar) {          // if cell is too long for its width
     return(split_);                       // split
