@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2019-04-09 11:22:46
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-01-31 21:30:22
+# @Last Modified time: 2021-02-03 12:00:32
 
 # ---------------------------------------------------------------------------------------
 
@@ -18,7 +18,7 @@ c_      = 2.99792458e10   # speed of light (cm.s-1)
 mp_     = 1.6726219e-24   # Proton mass (g)
 me_     = 9.1093835e-28   # electron mass (g)
 sigmaT_ = 6.65345871e-25  # Thomson Cross section (cm2)
-GAMMA_  = (4./3.)
+GAMMA_  = (5./3.)
 
 BM_p_rho_ratio_ = 1.e-5    # ratio between p and rho in ISM
 E0 = 1.e53
@@ -60,9 +60,19 @@ class State(object):
 
     self.gmax = 0
 
+  def gamma():
+    rho = self.rho
+    p = self.p
+    a = p/rho / (GAMMA_-1)
+    e_ratio = a + np.sqrt(a**2+1.)
+    gamma_eff = GAMMA_ - (GAMMA_-1.)/2. *(1.-1./(e_ratio**2))
+    return gamma_eff
+ 
+
   def prim2aux(self):
     self.lfac = np.sqrt(1. / (1. - self.v**2 / c_**2))
-    self.h = c_**2 + self.p * GAMMA_ / (GAMMA_ - 1) / self.rho
+    gma = self.gamma()
+    self.h = c_**2 + self.p * gam / (gam - 1) / self.rho
 
 
 class BM(object):
@@ -124,8 +134,9 @@ class BM(object):
       t0 = self.t/chi**(1./4.)
       p0 = self.Sf.p / pNorm
       rho0 = self.Sf.rho /rhoNorm
-      h0 = 1. + p0*GAMMA_/(GAMMA_-1.)/rho0
-      eps0 = rho0*(h0 - 1.) / GAMMA_
+      gma0 = self.Sf.gamma()
+      h0 = 1. + p0*gma0/(gma0-1.)/rho0
+      eps0 = rho0*(h0 - 1.) / gma0
       eB0 = eps_B_ * eps0
       B0 = np.sqrt(8.*np.pi*eB0)
       S.gmax = 2.*19.*np.pi*Nme_*self.Sf.lfac / (NsigmaT_*B0**2*t0) \
