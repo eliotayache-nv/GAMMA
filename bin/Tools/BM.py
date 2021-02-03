@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2019-04-09 11:22:46
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-02-03 12:06:38
+# @Last Modified time: 2021-02-03 12:07:59
 
 # ---------------------------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ class State(object):
 
     self.gmax = 0
 
-  def gamma():
+  def gamma(self):
     rho = self.rho
     p = self.p
     a = p/rho / (GAMMA_-1)
@@ -68,10 +68,9 @@ class State(object):
     gamma_eff = GAMMA_ - (GAMMA_-1.)/2. *(1.-1./(e_ratio**2))
     return gamma_eff
  
-
   def prim2aux(self):
     self.lfac = np.sqrt(1. / (1. - self.v**2 / c_**2))
-    gma = gamma()
+    gma = self.gamma()
     self.h = c_**2 + self.p * gam / (gam - 1) / self.rho
 
 
