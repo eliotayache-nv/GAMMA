@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2019-04-09 11:22:46
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-02-03 12:00:32
+# @Last Modified time: 2021-02-03 12:06:38
 
 # ---------------------------------------------------------------------------------------
 
@@ -71,7 +71,7 @@ class State(object):
 
   def prim2aux(self):
     self.lfac = np.sqrt(1. / (1. - self.v**2 / c_**2))
-    gma = self.gamma()
+    gma = gamma()
     self.h = c_**2 + self.p * gam / (gam - 1) / self.rho
 
 
