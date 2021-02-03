@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 15:17:31
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-01 18:58:25
+* @Last Modified time: 2021-02-03 19:22:30
 */
 
 
@@ -108,9 +108,9 @@ void Interface::computedA(){
 
 double Cell::regridVal(){
 
-  double r = G.x[r_]
-  double dr = G.dx[r_]
-  double dth = G.dx[t_]
+  double r = G.x[r_];
+  double dr = G.dx[r_];
+  double dth = G.dx[t_];
   double res = dr / (r*dth);
   user_regridVal(&res);
   return(res);

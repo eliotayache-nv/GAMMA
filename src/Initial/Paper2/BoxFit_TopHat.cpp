@@ -2,15 +2,13 @@
 #include "../../grid.h"
 #include "../../constants.h"
 
-bool onedim = false;
-
 // set shell and CBM parameters
 static double n0      = 1.;           // cm-3:    CBM number density
 static double rho0    = n0*mp_;       // g.cm-3:  comoving CBM mass density
 static double eta     = 1.e-5;        //          eta = p/(rho*c^2)
-static double th_simu = 0.6;          // rad:     simulation angle
+static double th_simu = 0.3;          // rad:     simulation angle
 static double th_min  = 0.;//99.*PI/3200.; // rad:     minimum angle if avioding jet axis
-static double th0 = 0.2;
+static double th0 = 0.1;
 
 // normalisation constants:
 static double rhoNorm = rho0;                 // density normalised to CBM density
@@ -39,8 +37,8 @@ static double Df = 2.*lfacShock2*rhoa;
   // Blandford&McKee(1976) eq. 8-10
 
 // grid size from shock position
-static double rmin0 = 1.5e6*lNorm;//RShock*(1.-200./lfacShock2);
-static double rmax0 = RShock*(1.+500./lfacShock2);
+static double rmin0 = RShock*(1.-200./lfacShock2); // 1.5e6*lNorm;
+static double rmax0 = RShock*(1.+50./lfacShock2);
 
 
 static void calcBM(double r, double t, double *rho, double *u, double *p){
@@ -74,9 +72,8 @@ void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
   par->ncell[x_] = 300;              // number of cells in r direction
-  par->ncell[y_] = 64;               // number of cells in theta direction
-  if (onedim) par->ncell[y_] = 1;
-  par->nmax      = 10000;              // max number of cells in MV direction
+  par->ncell[y_] = 2000;               // number of cells in theta direction
+  par->nmax      = 30000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -93,26 +90,28 @@ int Grid::initialGeometry(){
   // grid defined in length units of light-seconds
   rmin /= lNorm;
   rmax /= lNorm;
+  double dr = (rmax-rmin)/ncell[x_];
 
-  double logrmin  = log(rmin);
-  double logrmax  = log(rmax);
-  double dlogr    = (logrmax-logrmin);
+  // double logrmin  = log(rmin);
+  // double logrmax  = log(rmax);
+  // double dlogr    = (logrmax-logrmin);
   
   for (int j = 0; j < ncell[y_]; ++j){
     for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
       
-      double rlog   = (double) dlogr*(i+0.5)/ncell[x_] + logrmin;
-      double rlogL  = (double) dlogr*(i  )/ncell[x_] + logrmin;
-      double rlogR  = (double) dlogr*(i+1)/ncell[x_] + logrmin;
-      double r_ls   = exp(rlog);
-      double dr_ls  = exp(rlogR) - exp(rlogL);
+      // double rlog   = (double) dlogr*(i+0.5)/ncell[x_] + logrmin;
+      // double rlogL  = (double) dlogr*(i  )/ncell[x_] + logrmin;
+      // double rlogR  = (double) dlogr*(i+1)/ncell[x_] + logrmin;
+      // double r_ls   = exp(rlog);
+      // double dr_ls  = exp(rlogR) - exp(rlogL);
       
+      double r      = rmin + (i+0.5)*dr;
       double th     = (double) th_min + (th_simu - th_min)*(j+0.5)/ncell[y_];
       double dth    = (th_simu - th_min)/ncell[y_];
 
-      c->G.x[x_]    = r_ls;
-      c->G.dx[x_]   = dr_ls;
+      c->G.x[x_]    = r;
+      c->G.dx[x_]   = dr;
       c->G.x[y_]    = th;
       c->G.dx[y_]   = dth;
 
@@ -126,8 +125,11 @@ int Grid::initialValues(){
 
   // Careful, geometrical quantities are already normalised when using this function.
   
-  if (GAMMA_ != 4./3.){
-    printf("WARNING - Set GAMMA_ to 4./3.\n");
+  if (GAMMA_ != 5./3.){
+    printf("WARNING - Set GAMMA_ to 5./3.\n");
+  }
+  if (NUM_D != 2){
+    printf("WARNING - set NUM_D to 2\n");
   }
   if (VI != 1.){
     printf("WARNING - Set VI to 1.\n");
@@ -157,7 +159,7 @@ int Grid::initialValues(){
       else{
 
         // computing an average over each cell
-        int nbins = 100;
+        int nbins = 1000;
         double ddx = dr_denorm / nbins;
         double xl = r_denorm - dr_denorm/2.;
         double xr = xl+ddx;
@@ -282,6 +284,7 @@ int Grid::checkCellForRegrid(int j, int i){
   double dr  = c.G.dx[r_];                  // get cell radial spacing
   double dth = c.G.dx[t_];                  // get cell angular spacing
   double ar  = dr / (r*dth);                // calculate cell aspect ratio
+  // printf("%le\n", ar);
   // double rOut = Ctot[j][iRbnd[j]-1].G.x[x_];
   // double ar  = dr / (rOut*dth);                // calculate cell aspect ratio
 
