@@ -17,9 +17,9 @@ static double vNorm = c_;                     // velocity normalised to c
 static double pNorm = rhoNorm*vNorm*vNorm;    // pressure normalised to rho_CMB/c^2
 
 // BM parameters
-static double Etot = 5e51;     // erg
+static double Etot = 1e53;     // erg
 static double n_ext = 1.e0;      // external medium number density
-static double tstart = 2.5e6;    // s,starting time (determines initial position of BW)
+static double tstart = 4.36e6;    // s,starting time (determines initial position of BW)
 static double Rscale = 1.e17;   // cm
 static double k = 0.;           // ext medium density profile
 
@@ -72,7 +72,7 @@ void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
   par->ncell[x_] = 300;              // number of cells in r direction
-  par->ncell[y_] = 2000;               // number of cells in theta direction
+  par->ncell[y_] = 3000;               // number of cells in theta direction
   par->nmax      = 30000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
@@ -284,7 +284,7 @@ int Grid::checkCellForRegrid(int j, int i){
   double dr  = c.G.dx[r_];                  // get cell radial spacing
   double dth = c.G.dx[t_];                  // get cell angular spacing
   double ar  = dr / (r*dth);                // calculate cell aspect ratio
-  // printf("%le\n", ar);
+  printf("%le\n", ar);
   // double rOut = Ctot[j][iRbnd[j]-1].G.x[x_];
   // double ar  = dr / (rOut*dth);                // calculate cell aspect ratio
 
