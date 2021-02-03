@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2019-04-09 11:22:46
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-02-03 12:08:47
+# @Last Modified time: 2021-02-03 15:33:16
 
 # ---------------------------------------------------------------------------------------
 
@@ -144,10 +144,10 @@ class BM(object):
     return(S)
 
 
-def plotBM1D(data, key, ax = None, **kwargs):
+def plotBM1D(data, key, x_norm=None, ax = None, **kwargs):
 
   time = data["t"][0]
-  x = data["x"]*lNorm
+  x = np.copy(data["x"]*lNorm)
   y = np.zeros(x.shape[0])
 
   BW = BM(E0, n0, time)
@@ -165,7 +165,11 @@ def plotBM1D(data, key, ax = None, **kwargs):
   if ax is None:
     ax = plt.gca()
 
-  ax.plot(x/lNorm, y, **kwargs)
+  x_plot = np.copy(x/lNorm)
+  if x_norm is not(None):
+    x_plot /= x_norm
+
+  ax.plot(x_plot, y, **kwargs)
 
 
 def AsymptoteBM(dir="Last"):
