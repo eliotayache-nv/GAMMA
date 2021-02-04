@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-02-03 15:50:46
+# @Last Modified time: 2021-02-04 21:05:07
 
 
 import numpy as np
@@ -300,7 +300,8 @@ def quadMesh(data, key,
   if geometry != "polar":
     ax.set_aspect('equal')
   if geometry == "polar":
-    ax.set_rorigin(-xmin)
+    # ax.set_aspect('equal')
+    ax.set_rorigin(0)
     ax.set_rmin(xmin)
 
   if colorbar:
