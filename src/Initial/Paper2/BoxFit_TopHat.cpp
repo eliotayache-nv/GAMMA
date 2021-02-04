@@ -37,8 +37,8 @@ static double Df = 2.*lfacShock2*rhoa;
   // Blandford&McKee(1976) eq. 8-10
 
 // grid size from shock position
-static double rmin0 = RShock*(1.-200./lfacShock2); // 1.5e6*lNorm;
-static double rmax0 = RShock*(1.+50./lfacShock2);
+static double rmin0 = RShock*(1.-300./lfacShock2); // 1.5e6*lNorm;
+static double rmax0 = RShock*(1.+100./lfacShock2);
 
 
 static void calcBM(double r, double t, double *rho, double *u, double *p){
@@ -72,8 +72,8 @@ void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
   par->ncell[x_] = 300;              // number of cells in r direction
-  par->ncell[y_] = 3000;               // number of cells in theta direction
-  par->nmax      = 30000;              // max number of cells in MV direction
+  par->ncell[y_] = 500;               // number of cells in theta direction
+  par->nmax      = 10000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -206,13 +206,13 @@ void Grid::userKinematics(int it, double t){
   // setting lower and higher i boundary interface velocities
   // set by boundary velocity:
   double vIn  = 0.7;
-  double vOut = 1.05;
+  double vOut = 1.01;
 
-  int j = jLbnd+1;
-  int i = iRbnd[j]-30;
-  if (Ctot[j][i].S.prim[UU1] < 1.e-3 and it > 1000){
-    vOut = 0.;  
-  }
+  // int j = jLbnd+1;
+  // int i = iRbnd[j]-30;
+  // if (Ctot[j][i].S.prim[UU1] < 1.e-3 and it > 1000){
+  //   vOut = 0.;  
+  // }
 
   if (t < 1.e7) vIn = 0.;
   
@@ -284,7 +284,7 @@ int Grid::checkCellForRegrid(int j, int i){
   double dr  = c.G.dx[r_];                  // get cell radial spacing
   double dth = c.G.dx[t_];                  // get cell angular spacing
   double ar  = dr / (r*dth);                // calculate cell aspect ratio
-  printf("%le\n", ar);
+  // printf("%le\n", ar);
   // double rOut = Ctot[j][iRbnd[j]-1].G.x[x_];
   // double ar  = dr / (rOut*dth);                // calculate cell aspect ratio
 
@@ -308,7 +308,7 @@ int Grid::checkCellForRegrid(int j, int i){
 
   double target_ar = 1.;
   double split_AR   = 5.;                   // set upper bound as ratio of target_AR
-  double merge_AR   = 0.2;                  // set upper bound as ratio of target_AR
+  double merge_AR   = 0.1;                  // set upper bound as ratio of target_AR
 
   if (ar > split_AR * target_ar) {          // if cell is too long for its width
     return(split_);                       // split
