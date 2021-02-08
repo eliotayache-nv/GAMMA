@@ -145,6 +145,7 @@ int Grid::initialValues(){
       double dr = c->G.dx[x_];                  // ls:  radial coordinate
       double r_denorm = r*lNorm;
       double dr_denorm = dr*lNorm;
+      double gmax = 1.;
 
       if ( r_denorm > RShock or th > th0){   // if in the shell tail
         double rho = n_ext*mp_*pow(r_denorm/Rscale, -k);
@@ -162,7 +163,8 @@ int Grid::initialValues(){
         double xl = r_denorm - dr_denorm/2.;
         double xr = xl+ddx;
         double dV = 4./3.*PI*(pow(r_denorm+dr_denorm/2.,3) - pow(r_denorm-dr_denorm/2., 3));
-        double rho=0,v=0,p=0,gmax=0,lfac=0;
+        double rho=0,v=0,p=0,lfac=0;
+        gmax = 0;
 
         for (int ix = 0; ix < nbins; ++ix){
           double x = (xr+xl)/2.;
@@ -207,8 +209,10 @@ int Grid::initialValues(){
         c->S.prim[VV2] = 0;
         c->S.prim[PPP] = p/pNorm;
         c->S.prim[TR1] = 2.;
-        c->S.prim[GMX] = pow(rho/rhoNorm, 1./3.)/gmax;
       }
+
+      double rho = c->S.prim[RHO];
+      c->S.prim[GMX] = pow(rho, 1./3.)/gmax;
       // don't use cons2prim because doesn't have UU yet, but VV
       // c->S.prim2cons(c->G.x[r_]);
       // c->S.cons2prim(c->G.x[r_]);

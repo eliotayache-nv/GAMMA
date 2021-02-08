@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-02 22:19:57
+* @Last Modified time: 2021-02-08 22:27:03
 */
 
 
@@ -29,7 +29,7 @@
     // ------------------------------------------
     // this equation involves numerically solving an integral over pressure
     int n_evals = 10; // number of points in the integral
-    double chi = 0.2; // param for strength of shocks to detect (0:weak, 1:strong)
+    double chi = 0.1; // param for strength of shocks to detect (0:weak, 1:strong)
 
     double p1 = S1.prim[PPP];
     double p2 = S2.prim[PPP];
@@ -190,10 +190,14 @@
     double lfac = S.lfac();
     double rho = S.prim[RHO];
     double lim = lfac * pow(rho, 4./3.);  // equiv. gammae = 1.
-    S.prim[GMN] = lim / (lfac*rho);
-    S.prim[GMX] = lim / (lfac*rho);
-    S.cons[GMN] = lim;
-    S.cons[GMX] = lim;
+    if (S.prim[GMX] > lim / (lfac*rho)){
+        S.prim[GMX] = lim / (lfac*rho);
+        S.cons[GMX] = lim;
+    }
+    if (S.prim[GMN] > lim / (lfac*rho)){
+        S.prim[GMN] = lim / (lfac*rho);
+        S.cons[GMN] = lim;
+    }
 
   }
 
