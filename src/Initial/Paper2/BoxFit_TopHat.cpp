@@ -149,12 +149,10 @@ int Grid::initialValues(){
       if ( r_denorm > RShock or th > th0){   // if in the shell tail
         double rho = n_ext*mp_*pow(r_denorm/Rscale, -k);
         c->S.prim[RHO]  = rho / rhoNorm;
-        c->S.prim[VV1] = 0;
-        c->S.prim[VV2] = 0;
+        c->S.prim[UU1] = 0;
+        c->S.prim[UU2] = 0;
         c->S.prim[PPP] = eta*rho*c_*c_/pNorm;
         c->S.prim[TR1] = 1.;
-        c->S.prim2cons(c->G.x[r_]);
-        c->S.cons2prim(c->G.x[r_]);
       }
       else{
 
@@ -164,7 +162,7 @@ int Grid::initialValues(){
         double xl = r_denorm - dr_denorm/2.;
         double xr = xl+ddx;
         double dV = 4./3.*PI*(pow(r_denorm+dr_denorm/2.,3) - pow(r_denorm-dr_denorm/2., 3));
-        double rho=0,v=0,p=0;
+        double rho=0,v=0,p=0,gmax=0,lfac=0;
 
         for (int ix = 0; ix < nbins; ++ix){
           double x = (xr+xl)/2.;
@@ -177,23 +175,43 @@ int Grid::initialValues(){
           double drho = dD/dlfac;
           double dv = c_*sqrt(1.-1./(dlfac*dlfac));
 
+          double dt0 = tstart / pow(chi, 0.25);
+          double p0 = pf / pNorm;             // normalised because using EOS afterwards
+          double rho0 = Df / lfacf / rhoNorm;          
+          FluidState S0;
+          S0.prim[RHO] = rho0;
+          S0.prim[PPP] = p0;
+          double gma0 = S0.gamma();
+          double h0 = 1.+p0*gma0/(gma0-1.)/rho0;
+          double eps0 = rho0*(h0-1.)/gma0;
+          double eB0 = eps_B_ * eps0;
+          double B0 = sqrt(8*PI*eB0);
+          double dgmax = 2.*19.*PI*Nme_*lfacf/(NsigmaT_*B0*B0*dt0) 
+            * pow(chi, 25./24.)/(pow(chi, 19./12.)-1.); //gmax = +ifnty for chi=1
+
           rho += drho*ddV / dV;
           v += dv*ddV / dV;
+          lfac += dlfac*ddV/dV;
           p += dp*ddV / dV;
+          gmax += dgmax*ddV / dV;
 
           xl = xr;
           xr += ddx;
         }
+
+        gmax = fmax(1.,gmax);
+        lfac = fmax(1.,lfac);
 
         c->S.prim[RHO] = rho/rhoNorm;
         c->S.prim[VV1] = v/vNorm;
         c->S.prim[VV2] = 0;
         c->S.prim[PPP] = p/pNorm;
         c->S.prim[TR1] = 2.;
-
-        c->S.prim2cons(c->G.x[r_]);
-        c->S.cons2prim(c->G.x[r_]);
+        c->S.prim[GMX] = pow(rho/rhoNorm, 1./3.)/gmax;
       }
+      // don't use cons2prim because doesn't have UU yet, but VV
+      // c->S.prim2cons(c->G.x[r_]);
+      // c->S.cons2prim(c->G.x[r_]);
     }
   } 
   return 0;

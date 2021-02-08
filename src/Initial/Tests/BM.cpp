@@ -202,8 +202,8 @@ int Grid::initialValues(){
         c->S.prim[PPP] = p/pNorm;
         c->S.prim[TR1] = 2.;
 
-        c->S.prim2cons(c->G.x[r_]);
-        c->S.cons2prim(c->G.x[r_]);
+        // c->S.prim2cons(c->G.x[r_]);
+        // c->S.cons2prim(c->G.x[r_]);
       }
     }
   } 
