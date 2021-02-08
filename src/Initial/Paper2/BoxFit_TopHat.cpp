@@ -37,8 +37,8 @@ static double Df = 2.*lfacShock2*rhoa;
   // Blandford&McKee(1976) eq. 8-10
 
 // grid size from shock position
-static double rmin0 = RShock*(1.-300./lfacShock2); // 1.5e6*lNorm;
-static double rmax0 = RShock*(1.+100./lfacShock2);
+static double rmin0 = RShock*(1.-200./lfacShock2); // 1.5e6*lNorm;
+static double rmax0 = RShock*(1.+300./lfacShock2);
 
 
 static void calcBM(double r, double t, double *rho, double *u, double *p){
@@ -71,8 +71,8 @@ static void calcBM(double r, double t, double *rho, double *u, double *p){
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 300;              // number of cells in r direction
-  par->ncell[y_] = 500;               // number of cells in theta direction
+  par->ncell[x_] = 400;              // number of cells in r direction
+  par->ncell[y_] = 100;               // number of cells in theta direction
   par->nmax      = 10000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
@@ -214,7 +214,7 @@ void Grid::userKinematics(int it, double t){
   //   vOut = 0.;  
   // }
 
-  if (t < 1.e7) vIn = 0.;
+  if (t < 6.e6) vIn = 0.;
   
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int n = 0; n < ngst; ++n){
@@ -243,7 +243,7 @@ void Grid::userBoundaries(int it, double t){
   // }
 
   // BM BOUNDARY
-  if (t<1.e7){
+  if (t<6.e6){
     for (int j = 0; j < nde_nax[F1]; ++j){
       for (int i = 0; i <= iLbnd[j]; ++i){
         Cell *c = &Ctot[j][i];
@@ -306,9 +306,9 @@ int Grid::checkCellForRegrid(int j, int i){
   // }
   // return(skip_);
 
-  double target_ar = 1.;
+  double target_ar = 0.2;
   double split_AR   = 5.;                   // set upper bound as ratio of target_AR
-  double merge_AR   = 0.1;                  // set upper bound as ratio of target_AR
+  double merge_AR   = 0.2;                  // set upper bound as ratio of target_AR
 
   if (ar > split_AR * target_ar) {          // if cell is too long for its width
     return(split_);                       // split

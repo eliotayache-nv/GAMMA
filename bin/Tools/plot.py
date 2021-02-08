@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-02-04 21:05:07
+# @Last Modified time: 2021-02-04 22:53:34
 
 
 import numpy as np
@@ -11,6 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.transforms
 from matplotlib.colors import LogNorm
+from matplotlib.ticker import FormatStrFormatter
 import matplotlib.gridspec as gridspec
 import matplotlib.cm as cm
 import glob
@@ -167,6 +168,10 @@ def quadMesh(data, key,
 
   if z_override is not None:
     z = z_override
+  elif key == "lfac":
+    vx = data.pivot(index='j', columns='i', values="vx").to_numpy()
+    vy = data.pivot(index='j', columns='i', values="vy").to_numpy()
+    z = 1./np.sqrt(1 - (vx**2+vy**2))
   else:
     z = data.pivot(index='j', columns='i', values=key).to_numpy()
   x  = data.pivot(index='j', columns='i', values='x').to_numpy()
@@ -303,12 +308,14 @@ def quadMesh(data, key,
     # ax.set_aspect('equal')
     ax.set_rorigin(0)
     ax.set_rmin(xmin)
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+    ax.set_rticks([xmin, xmax])
 
   if colorbar:
-    cb = f.colorbar(im, ax=ax, orientation='horizontal')
+    cb = f.colorbar(im, ax=ax, orientation='vertical')
     cb.set_label(key, fontsize=18)
     if key2:
-      cb2 = f.colorbar(im2, ax=ax, orientation='horizontal')
+      cb2 = f.colorbar(im2, ax=ax, orientation='vertical')
       cb2.set_label(key2, fontsize=18)
 
   if tlayout:
