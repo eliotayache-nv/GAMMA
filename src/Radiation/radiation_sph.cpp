@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-08 22:27:03
+* @Last Modified time: 2021-02-09 14:54:06
 */
 
 
@@ -190,11 +190,11 @@
     double lfac = S.lfac();
     double rho = S.prim[RHO];
     double lim = lfac * pow(rho, 4./3.);  // equiv. gammae = 1.
-    if (S.prim[GMX] > lim / (lfac*rho)){
+    if (S.prim[GMX] > lim / (lfac*rho) or S.prim[GMX] <= 0.){
         S.prim[GMX] = lim / (lfac*rho);
         S.cons[GMX] = lim;
     }
-    if (S.prim[GMN] > lim / (lfac*rho)){
+    if (S.prim[GMN] > lim / (lfac*rho) or S.prim[GMN] <= 0.){
         S.prim[GMN] = lim / (lfac*rho);
         S.cons[GMN] = lim;
     }
