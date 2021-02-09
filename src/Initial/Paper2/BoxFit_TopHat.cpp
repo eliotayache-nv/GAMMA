@@ -41,7 +41,7 @@ static double rmin0 = RShock*(1.-200./lfacShock2); // 1.5e6*lNorm;
 static double rmax0 = RShock*(1.+300./lfacShock2);
 
 
-static void calcBM(double r, double t, double *rho, double *u, double *p){
+static void calcBM(double r, double t, double *rho, double *u, double *p, double *gmax){
   // returns normalised primitive variables for BM solution at position r (denormalised).
 
   // repeating from above (these are local)
@@ -64,6 +64,21 @@ static void calcBM(double r, double t, double *rho, double *u, double *p){
     // Blandford&McKee(1976) eq. 28-30 / 65-67
   *rho = D/lfac / rhoNorm;
   *u = c_*sqrt(1.-1./(lfac*lfac))*lfac / vNorm;
+
+  double dt0 = tstart / pow(chi, 0.25);
+  double p0 = pf / pNorm;             // normalised because using EOS afterwards
+  double rho0 = Df / lfacf / rhoNorm;          
+  FluidState S0;
+  S0.prim[RHO] = rho0;
+  S0.prim[PPP] = p0;
+  double gma0 = S0.gamma();
+  double h0 = 1.+p0*gma0/(gma0-1.)/rho0;
+  double eps0 = rho0*(h0-1.)/gma0;
+  double eB0 = eps_B_ * eps0;
+  double B0 = sqrt(8*PI*eB0);
+  *gmax = 2.*19.*PI*Nme_*lfacf/(NsigmaT_*B0*B0*dt0) 
+    * pow(chi, 25./24.)/(pow(chi, 19./12.)-1.); //gmax = +ifnty for chi=1
+  *gmax = fmax(1.,*gmax);
 
 }
 
@@ -269,17 +284,18 @@ void Grid::userBoundaries(int it, double t){
     for (int j = 0; j < nde_nax[F1]; ++j){
       for (int i = 0; i <= iLbnd[j]; ++i){
         Cell *c = &Ctot[j][i];
-        double rho, u, p;
+        double rho, u, p, gmax;
         double r = c->G.x[r_]*lNorm;
         double th = c->G.x[t_];
 
         if (th < th0){
-          calcBM(r, t, &rho, &u, &p);
+          calcBM(r, t, &rho, &u, &p, &gmax);
           c->S.prim[RHO] = rho;
           c->S.prim[UU1] = u;
           c->S.prim[UU2] = 0;
           c->S.prim[PPP] = p;
           c->S.prim[TR1] = 2.;
+          c->S.prim[GMX] = pow(rho, 1./3.)/gmax;
         }
         else{
           c->S.prim[RHO]  = 1;
@@ -287,6 +303,7 @@ void Grid::userBoundaries(int it, double t){
           c->S.prim[UU2] = 0;
           c->S.prim[PPP] = eta;
           c->S.prim[TR1] = 1.;
+          c->S.prim[GMX] = pow(rho, 1./3.);
         }
       }
     }
