@@ -6,7 +6,7 @@
 static double n0      = 1.;           // cm-3:    CBM number density
 static double rho_ext = n0*mp_;       // g.cm-3:  comoving CBM mass density
 static double eta     = 1.e-5;        //          eta = p/(rho*c^2)
-static double th_simu = 0.3;          // rad:     simulation angle
+static double th_simu = PI/2.;          // rad:     simulation angle
 static double th_min  = 0.;//99.*PI/3200.; // rad:     minimum angle if avioding jet axis
 static double th0 = 0.1;
 
@@ -88,7 +88,7 @@ void loadParams(s_par *par){
   par->tini      = tstart;             // initial time
   par->ncell[x_] = 400;              // number of cells in r direction
   par->ncell[y_] = 100;               // number of cells in theta direction
-  par->nmax      = 10000;              // max number of cells in MV direction
+  par->nmax      = 1000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -122,8 +122,10 @@ int Grid::initialGeometry(){
       // double dr_ls  = exp(rlogR) - exp(rlogL);
       
       double r      = rmin + (i+0.5)*dr;
-      double th     = (double) th_min + (th_simu - th_min)*(j+0.5)/ncell[y_];
-      double dth    = (th_simu - th_min)/ncell[y_];
+      double thL    = (double) th_min + (th_simu - th_min)*pow((double)(j)/ncell[y_],3.);
+      double thR    = (double) th_min + (th_simu - th_min)*pow((double)(j+1)/ncell[y_],3.);
+      double dth    = thR-thL;
+      double th     = (thR+thL)/2.;
 
       c->G.x[x_]    = r;
       c->G.dx[x_]   = dr;
@@ -242,7 +244,7 @@ void Grid::userKinematics(int it, double t){
 
   // setting lower and higher i boundary interface velocities
   // set by boundary velocity:
-  double vIn  = 0.7;
+  double vIn  = 0.;
   double vOut = 1.01;
 
   // int j = jLbnd+1;
@@ -322,10 +324,10 @@ int Grid::checkCellForRegrid(int j, int i){
   double r   = c.G.x[r_];                   // get cell radial coordinate
   double dr  = c.G.dx[r_];                  // get cell radial spacing
   double dth = c.G.dx[t_];                  // get cell angular spacing
-  double ar  = dr / (r*dth);                // calculate cell aspect ratio
+  // double ar  = dr / (r*dth);                // calculate cell aspect ratio
   // printf("%le\n", ar);
-  // double rOut = Ctot[j][iRbnd[j]-1].G.x[x_];
-  // double ar  = dr / (rOut*dth);                // calculate cell aspect ratio
+  double rOut = Ctot[j][iRbnd[j]-1].G.x[x_];
+  double ar  = dr / (rOut*dth);                // calculate cell aspect ratio
 
   // printf("%le\n", ar);
 

@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-09 14:59:06
+* @Last Modified time: 2021-02-10 18:22:00
 */
 
 #include "../environment.h"
@@ -374,10 +374,17 @@ void Grid::updateGhosts(int it, double t){
         double xLn = xn - cn->G.dx[MV]/2.;
         double xRn = xn + cn->G.dx[MV]/2.;
 
+        double xf1I = c0->G.x[F1];
+        if (d == 0){
+          xf1I -= c0->G.dx[F1]/2.;
+        } else if (d==0){
+          xf1I += c0->G.dx[F1]/2.;
+        }
         Interface Int;
         Int.dim   = F1;
         Int.v     = 0;
-        Int.x[F1] = (c0->G.x[F1] + cn->G.x[F1]) / 2.;
+        // Int.x[F1] = (c0->G.x[F1] + cn->G.x[F1]) / 2.;
+        Int.x[F1] = xf1I;
         Int.x[MV] = ( fmax(xL0,xLn) + fmin(xR0,xRn) )/2.;
         Int.dx[0] = fmax(0, fmin(xR0,xRn) - fmax(xL0,xLn));
         Int.computedA();
@@ -872,7 +879,8 @@ void Grid::computeFluxes(){
   // flux in F1 direction (building the interfaces from neighbor ids)
   #pragma omp parallel for default(shared)
   for (int j = 0; j < nde_nax[F1]-1; ++j){
-    double jpos = ( Ctot[j][iLbnd[j]+1].G.x[F1] + Ctot[j+1][iLbnd[j+1]+1].G.x[F1] )/2.;
+    // double jpos = ( Ctot[j][iLbnd[j]+1].G.x[F1] + Ctot[j+1][iLbnd[j+1]+1].G.x[F1] )/2.;
+    double jpos = Ctot[j][iLbnd[j]+1].G.x[F1] + Ctot[j][iLbnd[j]+1].G.dx[F1]/2.;
 
     // resetting fluxes
     for (int i = 0; i < ntrack[j]; ++i){
