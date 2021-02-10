@@ -226,8 +226,8 @@ int Grid::initialValues(){
         c->S.prim[TR1] = 2.;
       }
 
-      double rho = c->S.prim[RHO];
-      c->S.prim[GMX] = pow(rho, 1./3.)/gmax;
+      double rho_local = c->S.prim[RHO];
+      c->S.prim[GMX] = pow(rho_local, 1./3.)/gmax;
       // don't use cons2prim because doesn't have UU yet, but VV
       // c->S.prim2cons(c->G.x[r_]);
       // c->S.cons2prim(c->G.x[r_]);
@@ -303,7 +303,7 @@ void Grid::userBoundaries(int it, double t){
           c->S.prim[UU2] = 0;
           c->S.prim[PPP] = eta;
           c->S.prim[TR1] = 1.;
-          c->S.prim[GMX] = pow(rho, 1./3.);
+          c->S.prim[GMX] = pow(1, 1./3.);
         }
       }
     }
