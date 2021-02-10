@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-09 14:54:06
+* @Last Modified time: 2021-02-10 11:49:42
 */
 
 
@@ -213,8 +213,8 @@
       *gmax = radiation_gammae2trac(GAMMA_MAX_INIT_, S) / (lfac*rho);
       *gmin = radiation_gammae2trac(1., S) / (lfac*rho);
     }
-    if (*gmax > lim or *gmax == 0.) *gmax = lim;
-    if (*gmin > lim or *gmin == 0.) *gmin = lim;
+    if (*gmax > lim or *gmax <= 0.) *gmax = lim;
+    if (*gmin > lim or *gmin <= 0.) *gmin = lim;
 
   }
 

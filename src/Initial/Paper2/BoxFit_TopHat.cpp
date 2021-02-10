@@ -4,14 +4,14 @@
 
 // set shell and CBM parameters
 static double n0      = 1.;           // cm-3:    CBM number density
-static double rho0    = n0*mp_;       // g.cm-3:  comoving CBM mass density
+static double rho_ext = n0*mp_;       // g.cm-3:  comoving CBM mass density
 static double eta     = 1.e-5;        //          eta = p/(rho*c^2)
 static double th_simu = 0.3;          // rad:     simulation angle
 static double th_min  = 0.;//99.*PI/3200.; // rad:     minimum angle if avioding jet axis
 static double th0 = 0.1;
 
 // normalisation constants:
-static double rhoNorm = rho0;                 // density normalised to CBM density
+static double rhoNorm = rho_ext;                 // density normalised to CBM density
 static double lNorm = c_;                     // distance normalised to c
 static double vNorm = c_;                     // velocity normalised to c
 static double pNorm = rhoNorm*vNorm*vNorm;    // pressure normalised to rho_CMB/c^2
