@@ -1,6 +1,7 @@
-#include "../environment.h"
-#include "../grid.h"
-#include "../constants.h"
+#include "../../environment.h"
+#include "../../grid.h"
+#include "../../constants.h"
+#include "../../simu.h"
 
 // initial Fireball (FB) setup
 
@@ -313,12 +314,34 @@ void FluidState::cons2prim_user(double *rho, double *p, double *uu){
 }
 
 
+void Simu::dataDump(){
 
+  if (it%500 == 0){ grid.printCols(it, t); }
 
+  double t_C = 3.e3;
+  double t_S = 9.e4;
+  double t_g = 6.498e6;
+  double t_M = 2.019e7;
 
+  if ((t>=t_C) and ((t-dt)<t_C)){grid.printCols(it,t);}
+  if ((t>=t_S) and ((t-dt)<t_S)){grid.printCols(it,t);}
+  if ((t>=t_g) and ((t-dt)<t_g)){grid.printCols(it,t);}
+  if ((t>=t_M) and ((t-dt)<t_M)){grid.printCols(it,t);}
 
+}
 
+void Simu::runInfo(){
 
+  if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
+
+}
+
+void Simu::evalEnd(){
+
+  if (t > 5.e7){ stop = true; }
+  if (it > 5000000){ stop = true; }
+
+}
 
 
 

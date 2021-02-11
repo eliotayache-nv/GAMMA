@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-02 14:54:12
+* @Last Modified time: 2021-02-11 16:22:40
 */
 
 #include "../simu.h"
@@ -21,7 +21,7 @@ public:
       sscanf(line, 
         "%le %d %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n",
         &t, &nact, &j, &i, 
-        &x, &y, &dx, &dy, &dlx, &dly, &rho, &vx, &vy, &p, &D, &sx, &sy, &tau, &trac,
+        &x, &y, &dx, &dy, &dlx, &dly, &rho, &vx, &vy, &p, &D, &sx, &sy, &tau, &trac
         );
     #else
       sscanf(line, 
@@ -190,36 +190,65 @@ void Grid::printCols(int it, double t){
     const char* strfout = s.c_str();
     FILE* fout = fopen(strfout, "w");
 
-    fprintf(fout, "t nact j i x y dx dy dlx dly rho vx vy p D sx sy tau trac Sd gmin gmax\n");
+    #if LOCAL_SYNCHROTRON_ == ENABLED_
+      fprintf(fout, "t nact j i x y dx dy dlx dly rho vx vy p D sx sy tau trac Sd gmin gmax\n");
+    #else
+      fprintf(fout, "t nact j i x y dx dy dlx dly rho vx vy p D sx sy tau trac Sd\n");
+    #endif
     for (int j = ngst; j < ncell[F1]+ngst; ++j){
       for (int i = ngst; i < ntrackd[j]-ngst; ++i) {
         toClass(SCdump[j][i], &Cdump[j][i]);
         double lfac = Cdump[j][i].S.lfac();
         int nactd = ntrackd[j]-2*ngst;
-        Cdump[j][i].radiation_apply_trac2gammae();
-        fprintf(fout, "%1.15le %d %d %d %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le\n", 
-          t,
-          nactd,
-          j-ngst,
-          i-ngst,
-          Cdump[j][i].G.x[x_],
-          Cdump[j][i].G.x[y_],
-          Cdump[j][i].G.dx[x_],
-          Cdump[j][i].G.dx[y_],
-          Cdump[j][i].G.dl[x_],
-          Cdump[j][i].G.dl[y_],
-          Cdump[j][i].S.prim[RHO],
-          Cdump[j][i].S.prim[UU1]/lfac,
-          Cdump[j][i].S.prim[UU2]/lfac,
-          Cdump[j][i].S.prim[PPP],
-          Cdump[j][i].S.cons[DEN],
-          Cdump[j][i].S.cons[SS1],
-          Cdump[j][i].S.cons[SS2],
-          Cdump[j][i].S.cons[TAU],
-          Cdump[j][i].S.prim[TR1],
-          Cdump[j][i].S.prim[TR1+1],
-          Cdump[j][i].S.prim[GMN],
-          Cdump[j][i].S.prim[GMX]);
+        #if LOCAL_SYNCHROTRON_ == ENABLED_
+          Cdump[j][i].radiation_apply_trac2gammae();
+          fprintf(fout, "%1.15le %d %d %d %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le\n", 
+            t,
+            nactd,
+            j-ngst,
+            i-ngst,
+            Cdump[j][i].G.x[x_],
+            Cdump[j][i].G.x[y_],
+            Cdump[j][i].G.dx[x_],
+            Cdump[j][i].G.dx[y_],
+            Cdump[j][i].G.dl[x_],
+            Cdump[j][i].G.dl[y_],
+            Cdump[j][i].S.prim[RHO],
+            Cdump[j][i].S.prim[UU1]/lfac,
+            Cdump[j][i].S.prim[UU2]/lfac,
+            Cdump[j][i].S.prim[PPP],
+            Cdump[j][i].S.cons[DEN],
+            Cdump[j][i].S.cons[SS1],
+            Cdump[j][i].S.cons[SS2],
+            Cdump[j][i].S.cons[TAU],
+            Cdump[j][i].S.prim[TR1],
+            Cdump[j][i].S.prim[TR1+1],
+            Cdump[j][i].S.prim[GMN],
+            Cdump[j][i].S.prim[GMX]);
+        #else
+          fprintf(fout, "%1.15le %d %d %d %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le\n", 
+            t,
+            nactd,
+            j-ngst,
+            i-ngst,
+            Cdump[j][i].G.x[x_],
+            Cdump[j][i].G.x[y_],
+            Cdump[j][i].G.dx[x_],
+            Cdump[j][i].G.dx[y_],
+            Cdump[j][i].G.dl[x_],
+            Cdump[j][i].G.dl[y_],
+            Cdump[j][i].S.prim[RHO],
+            Cdump[j][i].S.prim[UU1]/lfac,
+            Cdump[j][i].S.prim[UU2]/lfac,
+            Cdump[j][i].S.prim[PPP],
+            Cdump[j][i].S.cons[DEN],
+            Cdump[j][i].S.cons[SS1],
+            Cdump[j][i].S.cons[SS2],
+            Cdump[j][i].S.cons[TAU],
+            Cdump[j][i].S.prim[TR1],
+            Cdump[j][i].S.prim[TR1+1]
+            );
+        #endif
       }
     }
     fclose(fout);

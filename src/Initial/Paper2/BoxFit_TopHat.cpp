@@ -154,6 +154,12 @@ int Grid::initialValues(){
   if (VI != 1.){
     printf("WARNING - Set VI to 1.\n");
   }
+  if (SHOCK_DETECTION_ != ENABLED_){
+    printf("WARNING - Set SHOCK_DETECTION_ to ENABLED_\n");
+  }
+  if (LOCAL_SYNCHROTRON_ != ENABLED_){
+    printf("WARNING - Set LOCAL_SYNCHROTRON_ to ENABLED_\n");
+  }
 
   // initialise grid
   for (int j = 0; j < ncell[F1]; ++j){        // loop through cells along theta

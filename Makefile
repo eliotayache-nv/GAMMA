@@ -1,4 +1,4 @@
-INITIAL    = Paper2/BoxFit_TopHat
+INITIAL    = Rupert_final/2d_noseed
 TIMESTEP   = rk3
 GEOMETRY   = spherical
 HYDRO      = rel_sph
