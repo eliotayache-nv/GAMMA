@@ -188,59 +188,59 @@ void Grid::userBoundaries(int it, double t){
   
   // reflective BCs on inner side (along jet axis)
 
-  if (worldrank==0){
-    for (int j = 0; j < ngst; ++j){
+  // if (worldrank==0){
+  //   for (int j = 0; j < ngst; ++j){
 
-      int target_j = 2*ngst-1-j;
-      ntrack[j] = ntrack[target_j];
-      nact[j] = nact[target_j];
-      iRbnd[j] = iRbnd[target_j];
-      iLbnd[j] = iLbnd[target_j];
-      std::copy_n(&Ctot[target_j][0], ntrack[target_j],   &Ctot[j][0]);
-      std::copy_n(&Itot[target_j][0], ntrack[target_j]-1, &Itot[j][0]);
+  //     int target_j = 2*ngst-1-j;
+  //     ntrack[j] = ntrack[target_j];
+  //     nact[j] = nact[target_j];
+  //     iRbnd[j] = iRbnd[target_j];
+  //     iLbnd[j] = iLbnd[target_j];
+  //     std::copy_n(&Ctot[target_j][0], ntrack[target_j],   &Ctot[j][0]);
+  //     std::copy_n(&Itot[target_j][0], ntrack[target_j]-1, &Itot[j][0]);
 
-      // updating ghost positions, ids and indexes
-      for (int i = 0; i < ntrack[j]; ++i){
-        int ind[] = {j,i};
-        assignId(ind);
-        Ctot[j][i].G.x[F1] -= (jLbnd-j+1)*C[0][0].G.dx[F1];
-        Ctot[j][i].computeAllGeom();
-        if (i != ntrack[j]-1){ 
-          Itot[j][i].x[F1] -= (jLbnd-j+1)*C[0][0].G.dx[F1]; 
-          Itot[j][i].computedA();
-        }
-      }
+  //     // updating ghost positions, ids and indexes
+  //     for (int i = 0; i < ntrack[j]; ++i){
+  //       int ind[] = {j,i};
+  //       assignId(ind);
+  //       Ctot[j][i].G.x[F1] -= (jLbnd-j+1)*C[0][0].G.dx[F1];
+  //       Ctot[j][i].computeAllGeom();
+  //       if (i != ntrack[j]-1){ 
+  //         Itot[j][i].x[F1] -= (jLbnd-j+1)*C[0][0].G.dx[F1]; 
+  //         Itot[j][i].computedA();
+  //       }
+  //     }
 
-      for (int i = 0; i < ntrack[j]; ++i){
-        Ctot[j][i].S.prim[UU2] *= -1;  
-      }
-    }
-  }
+  //     for (int i = 0; i < ntrack[j]; ++i){
+  //       Ctot[j][i].S.prim[UU2] *= -1;  
+  //     }
+  //   }
+  // }
 
   // reflective BCs on outer side (outside of jet cone)
 
   if (worldrank==worldsize-1){
-    for (int j = nde_nax[F1]-ngst; j < nde_nax[F1]; ++j){
+    for (int j = jRbnd; j < nde_nax[F1]; ++j){
 
-      int target_j = nde_nax[F1] - ngst -1 - (j - jRbnd);
-      ntrack[j] = ntrack[target_j];
-      nact[j] = nact[target_j];
-      iRbnd[j] = iRbnd[target_j];
-      iLbnd[j] = iLbnd[target_j];
-      std::copy_n(&Ctot[target_j][0], ntrack[target_j],   &Ctot[j][0]);
-      std::copy_n(&Itot[target_j][0], ntrack[target_j]-1, &Itot[j][0]);
+      // int target_j = nde_nax[F1] - ngst -1 - (j - jRbnd);
+      // ntrack[j] = ntrack[target_j];
+      // nact[j] = nact[target_j];
+      // iRbnd[j] = iRbnd[target_j];
+      // iLbnd[j] = iLbnd[target_j];
+      // std::copy_n(&Ctot[target_j][0], ntrack[target_j],   &Ctot[j][0]);
+      // std::copy_n(&Itot[target_j][0], ntrack[target_j]-1, &Itot[j][0]);
 
-      // updating ghost positions, ids and indexes
-      for (int i = 0; i < ntrack[j]; ++i){
-        int ind[] = {j,i};
-        assignId(ind);
-        Ctot[j][i].G.x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dx[F1];
-        Ctot[j][i].computeAllGeom();
-        if (i != ntrack[j]-1){ 
-          Itot[j][i].x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dx[F1];
-          Itot[j][i].computedA();
-        }
-      }
+      // // updating ghost positions, ids and indexes
+      // for (int i = 0; i < ntrack[j]; ++i){
+      //   int ind[] = {j,i};
+      //   assignId(ind);
+      //   Ctot[j][i].G.x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dx[F1];
+      //   Ctot[j][i].computeAllGeom();
+      //   if (i != ntrack[j]-1){ 
+      //     Itot[j][i].x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dx[F1];
+      //     Itot[j][i].computedA();
+      //   }
+      // }
       for (int i = 0; i < ntrack[j]; ++i){
         Ctot[j][i].S.prim[UU2] *= -1;  
       }
