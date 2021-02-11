@@ -153,7 +153,7 @@ void Grid::userKinematics(int it, double t){
   double vOut = 1.05;
 
   for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int n = 0; n <= ngst; ++n){
+    for (int n = 0; n < ngst; ++n){
       int    iL = n;
       int    iR = ntrack[j]-2-n;
       Itot[j][iL].v = vIn;
@@ -173,18 +173,18 @@ void Grid::userBoundaries(int it, double t){
   // outflow BC at inner boundary
 
   // fixed value BC at outer boundary
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int i = 0; i < ngst; ++i){
-      int nt = ntrack[j];
-      // Ctot[j][nt-1-i] : outer boundary ghost cells
-      // set outer boundary to fixed values of external medium
-      Ctot[j][nt-1-i].S.prim[RHO] = rho0/rhoNorm;         // outer boundary
-      Ctot[j][nt-1-i].S.prim[PPP] = p0/pNorm;             // outer boundary
-      Ctot[j][nt-1-i].S.prim[VV1] = 0.;                   // outer boundary
-      Ctot[j][nt-1-i].S.prim[VV2] = 0.;                   // outer boundary
-      Ctot[j][nt-1-i].S.prim[TR1] = 2.;                   // outer boundary
-    }
-  }
+  // for (int j = 0; j < nde_nax[F1]; ++j){
+  //   int nt = ntrack[j];
+  //   for (int i = 0; i < ngst; ++i){
+  //     // Ctot[j][nt-1-i] : outer boundary ghost cells
+  //     // set outer boundary to fixed values of external medium
+  //     Ctot[j][nt-1-i].S.prim[RHO] = rho0/rhoNorm;         // outer boundary
+  //     Ctot[j][nt-1-i].S.prim[PPP] = p0/pNorm;             // outer boundary
+  //     Ctot[j][nt-1-i].S.prim[VV1] = 0.;                   // outer boundary
+  //     Ctot[j][nt-1-i].S.prim[VV2] = 0.;                   // outer boundary
+  //     Ctot[j][nt-1-i].S.prim[TR1] = 2.;                   // outer boundary
+  //   }
+  // }
   
   // reflective BCs on inner side (along jet axis)
 
