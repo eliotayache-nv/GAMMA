@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-10 23:33:23
+* @Last Modified time: 2021-02-10 23:53:12
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -71,8 +71,8 @@ void Simu::run(){
     // printing grid (everything is ready right after grid prepare)
     //if (it%20000 == 0){ grid.printCols(it, t); }
     //if (it%10000 == 0){ grid.printCols(it, t); }
-    if (it%1000 == 0){ grid.printCols(it, t); }
-    // if (it%100 == 0){ grid.printCols(it, t); }
+    // if (it%1000 == 0){ grid.printCols(it, t); }
+    if (it%100 == 0){ grid.printCols(it, t); }
     // if (it%10 == 0){ grid.printCols(it, t); }
     // if (it%1 == 0){ grid.printCols(it, t); }
 

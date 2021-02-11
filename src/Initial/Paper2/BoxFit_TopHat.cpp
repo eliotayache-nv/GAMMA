@@ -88,7 +88,7 @@ void loadParams(s_par *par){
   par->tini      = tstart;             // initial time
   par->ncell[x_] = 400;              // number of cells in r direction
   par->ncell[y_] = 100;               // number of cells in theta direction
-  par->nmax      = 1000;              // max number of cells in MV direction
+  par->nmax      = 4000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -122,8 +122,10 @@ int Grid::initialGeometry(){
       // double dr_ls  = exp(rlogR) - exp(rlogL);
       
       double r      = rmin + (i+0.5)*dr;
-      double thL    = (double) th_min + (th_simu - th_min)*pow((double)(j)/ncell[y_],3.);
-      double thR    = (double) th_min + (th_simu - th_min)*pow((double)(j+1)/ncell[y_],3.);
+      double jrL    = (double)(j)/ncell[y_];
+      double jrR    = (double)(j+1)/ncell[y_];
+      double thL    = (double) th_min + (th_simu - th_min)*(0.3*jrL + 0.7*pow(jrL,3));
+      double thR    = (double) th_min + (th_simu - th_min)*(0.3*jrR + 0.7*pow(jrR,3));
       double dth    = thR-thL;
       double th     = (thR+thL)/2.;
 
@@ -282,34 +284,34 @@ void Grid::userBoundaries(int it, double t){
   // }
 
   // BM BOUNDARY
-  if (t<6.e6){
-    for (int j = 0; j < nde_nax[F1]; ++j){
-      for (int i = 0; i <= iLbnd[j]; ++i){
-        Cell *c = &Ctot[j][i];
-        double rho, u, p, gmax;
-        double r = c->G.x[r_]*lNorm;
-        double th = c->G.x[t_];
+  // if (t<6.e6){
+  //   for (int j = 0; j < nde_nax[F1]; ++j){
+  //     for (int i = 0; i <= iLbnd[j]; ++i){
+  //       Cell *c = &Ctot[j][i];
+  //       double rho, u, p, gmax;
+  //       double r = c->G.x[r_]*lNorm;
+  //       double th = c->G.x[t_];
 
-        if (th < th0){
-          calcBM(r, t, &rho, &u, &p, &gmax);
-          c->S.prim[RHO] = rho;
-          c->S.prim[UU1] = u;
-          c->S.prim[UU2] = 0;
-          c->S.prim[PPP] = p;
-          c->S.prim[TR1] = 2.;
-          c->S.prim[GMX] = pow(rho, 1./3.)/gmax;
-        }
-        else{
-          c->S.prim[RHO]  = 1;
-          c->S.prim[UU1] = 0;
-          c->S.prim[UU2] = 0;
-          c->S.prim[PPP] = eta;
-          c->S.prim[TR1] = 1.;
-          c->S.prim[GMX] = pow(1, 1./3.);
-        }
-      }
-    }
-  }
+  //       if (th < th0){
+  //         calcBM(r, t, &rho, &u, &p, &gmax);
+  //         c->S.prim[RHO] = rho;
+  //         c->S.prim[UU1] = u;
+  //         c->S.prim[UU2] = 0;
+  //         c->S.prim[PPP] = p;
+  //         c->S.prim[TR1] = 2.;
+  //         c->S.prim[GMX] = pow(rho, 1./3.)/gmax;
+  //       }
+  //       else{
+  //         c->S.prim[RHO]  = 1;
+  //         c->S.prim[UU1] = 0;
+  //         c->S.prim[UU2] = 0;
+  //         c->S.prim[PPP] = eta;
+  //         c->S.prim[TR1] = 1.;
+  //         c->S.prim[GMX] = pow(1, 1./3.);
+  //       }
+  //     }
+  //   }
+  // }
 
   UNUSED(it);
 
