@@ -1,6 +1,7 @@
 #include "../../environment.h"
 #include "../../grid.h"
 #include "../../constants.h"
+#include "../../simu.h"
 
 // set shell and CBM parameters
 static double n0      = 1.;           // cm-3:    CBM number density
@@ -393,6 +394,23 @@ void FluidState::cons2prim_user(double *rho, double *p, double *uu){
 }
 
 
+void Simu::dataDump(){
+
+  if (it%100 == 0){ grid.printCols(it, t); }
+
+}
+
+void Simu::runInfo(){
+
+  if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
+
+}
+
+void Simu::evalEnd(){
+
+  if (t > 3.33e8){ stop = true; } // 3.33e8 BOXFIT simu
+
+}
 
 
 

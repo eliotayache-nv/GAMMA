@@ -23,6 +23,9 @@ public:
     void initialise();   // load configurations
     void reinitialise(DIR *dir); // load configuration from snapshot
     void run();          // Runs the hydro evolution of the grid 
+    void dataDump();
+    void runInfo();
+    void evalEnd();
 
 };
 

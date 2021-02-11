@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-10 23:53:12
+* @Last Modified time: 2021-02-11 14:51:48
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -68,24 +68,10 @@ void Simu::run(){
       grid.apply(&Cell::radiation_injectParticles);
     #endif
 
-    // printing grid (everything is ready right after grid prepare)
-    //if (it%20000 == 0){ grid.printCols(it, t); }
-    //if (it%10000 == 0){ grid.printCols(it, t); }
-    // if (it%1000 == 0){ grid.printCols(it, t); }
-    if (it%100 == 0){ grid.printCols(it, t); }
-    // if (it%10 == 0){ grid.printCols(it, t); }
-    // if (it%1 == 0){ grid.printCols(it, t); }
-
-    //if ((worldrank == 0) and (it%1000 == 0)){ printf("it: %ld time: %le\n", it, t);}
-    if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
-    // if ((worldrank == 0) and (it%10 == 0)){ printf("it: %ld time: %le\n", it, t);}
-    // if ((worldrank == 0) and (it%1 == 0)){ printf("it: %ld time: %le\n", it, t);}
-
-    //if (it > 8870000){ stop = true; }
-    //if (it > 50000){ stop = true; }
-    //if (t > 2.5e6){ stop = true; }
-    // if (it > 5){ stop = true; }
-    if (t > 3.33e8){ stop = true; } // 3.33e8 BOXFIT simu
+    dataDump();
+    runInfo();
+    evalEnd();
+    
   }
 
 }
