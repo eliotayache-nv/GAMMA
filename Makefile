@@ -1,4 +1,4 @@
-INITIAL    = Rupert_final/2d_noseed
+INITIAL    = Rupert_final/2d_200
 TIMESTEP   = rk3
 GEOMETRY   = spherical
 HYDRO      = rel_sph
