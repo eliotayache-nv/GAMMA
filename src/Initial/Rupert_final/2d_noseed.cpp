@@ -48,7 +48,7 @@ static double R1          = 1.e4;             // ls:  radius to use for target_A
 static double R2          = 2.e6;
 static double split_AR    = 5.;               //      set upper bound on AR as ratio of target_AR
 static double merge_AR    = 0.2;              //      set upper bound on AR as ratio of target_AR
-// static double tMove       = 4.e3;             // s:   time at which inner boundary starts to move
+static double tMove       = 3.e6;             // s:   time at which inner boundary starts to move
 
 void loadParams(s_par *par){
 
@@ -141,15 +141,15 @@ void Grid::userKinematics(int it, double t){
   // setting lower and higher i boundary interface velocities
 
   // set by boundary velocity:
-  // double vIn;
-  // if (t < tMove){
-  //   vIn = 0.;
-  // }
-  // else{
-  //   vIn = 0.55;
-  // }
+  double vIn;
+  if (t < tMove){
+    vIn = 0.;
+  }
+  else{
+    vIn = 0.55;
+  }
 
-  double vIn = 0.;
+  // double vIn = 0.;
   double vOut = 1.05;
 
   for (int j = 0; j < nde_nax[F1]; ++j){
