@@ -10,11 +10,18 @@ IO         = text2d
 OS_NAME := $(shell uname -s | tr A-Z a-z)
 HOST_NAME := $(shell hostname | cut -c-6)s
 
+ifeq ($(HOME), /home/ba-eayache)
+	CXX     = CC
+	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 -fopenmp		#run this line on distant
+	LFLAGS = -fopenmp -L/home/ba-eayache/gsl/lib -lgsl -lgslcblas -lm
+	IFLAGS = -I/home/ba-eayache/gsl/include
+else
 ifeq ($(HOME), /home/t/ehra20)
 	CXX     = mpicxx
 	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 -fopenmp 		#run this line on distant
 # 	CXXFLAGS = -Wall -Wextra -std=c++0x -g -fopenmp 		#run this line on distant
 	LFLAGS = -fopenmp -lgsl -lgslcblas -lm	#run this line on distant
+	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
 else
 ifeq ($(HOME), /home/rwe-ubuntu)
 	CXX     = mpicxx
@@ -34,6 +41,7 @@ ifeq ($(OS_NAME), linux)
 	CXX     = mpicxx
 	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 -fopenmp		#run this line on distant
 	LFLAGS = -L/usr/local/lib -fopenmp -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5 -lgsl -lgslcblas -lm	#run this line on distant
+	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
 else
 ifeq ($(OS_NAME), darwin)
 	CXX     = /usr/local/bin/mpic++
@@ -43,6 +51,7 @@ ifeq ($(OS_NAME), darwin)
 # 	LFLAGS = -L/usr/local/lib -fopenmp -lhdf5 -lgsl -lm 		#run this line on local
 	LFLAGS = -L/usr/local/lib -fopenmp -lgsl -lm	#run this line on local
 	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
+endif
 endif
 endif
 endif
