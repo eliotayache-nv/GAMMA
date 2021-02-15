@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-10 16:23:01
+* @Last Modified time: 2021-02-15 22:26:58
 */
 
 
@@ -173,6 +173,24 @@
 
   }
 
+  static double gammaMinInit(FluidState S){
+
+    double rho = S.prim[RHO];
+    double p   = S.prim[PPP];
+    double gma = S.gamma();
+    double h   = 1.+p*gma/(gma-1.)/rho; // ideal gas EOS (TBC)
+    double esp = rho*(h-1.)/gma;
+    double ee = eps_e_ * eps;
+    double eB = eps_B_ * eps;
+    double B = sqrt(8.*PI*eB);
+    double ne = zeta_ * rho / Nmp_;
+    double lfac_av = ee / (ne * Nme_);
+    double gammaMin = (p_-2.) / (p_-1.) *lfac_av;
+
+    return(gammaMin);
+
+  }
+
   void Cell :: radiation_apply_trac2gammae(){
     // To apply only on Cdump cells in output!
 
@@ -211,7 +229,7 @@
 
     if (isShocked){
       *gmax = radiation_gammae2trac(GAMMA_MAX_INIT_, S) / (lfac*rho);
-      *gmin = radiation_gammae2trac(1., S) / (lfac*rho);
+      *gmin = radiation_gammae2trac(gammaMinInit(S), S) / (lfac*rho);
     }
     if (*gmax > lim or *gmax <= 0. or ::isnan(*gmax)) *gmax = lim;
     if (*gmin > lim or *gmin <= 0. or ::isnan(*gmin)) *gmin = lim;
@@ -222,14 +240,16 @@
 
     double rho = S.prim[RHO];
     double p = S.prim[PPP];
-    double h = 1 + p*GAMMA_/(GAMMA_-1.)/rho;
-    double eps = rho * (h-1.) / GAMMA_;
+    double gma = s.gamma();
+    double h = 1 + p*gma/(gma-1.)/rho;
+    double eps = rho * (h-1.) / gma;
     double eB = eps_B_ * eps;
     double B = sqrt(8.*PI*eB);
 
-    double dgmax = Nalpha_ * pow(rho, 4./3.) * B*B * G.dV * dt;
+    double dgma = Nalpha_ * pow(rho, 4./3.) * B*B * G.dV * dt;
     // printf("%le\n", dgmax);
-    S.cons[GMX] += dgmax;
+    S.cons[GMX] += dgma;
+    S.cons[GMN] += dgma;
 
   }
 
