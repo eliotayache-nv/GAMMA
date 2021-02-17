@@ -1,4 +1,4 @@
-INITIAL    = Rupert_final/2d_200
+INITIAL    = Paper2/BoxFit_TopHat
 TIMESTEP   = rk3
 GEOMETRY   = spherical
 HYDRO      = rel_sph
@@ -58,7 +58,7 @@ endif
 endif
 endif
 
-IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
+# IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
 
 BIN    = ./bin
 SOURCE = ./src
