@@ -89,7 +89,7 @@ void loadParams(s_par *par){
   par->tini      = tstart;             // initial time
   par->ncell[x_] = 400;              // number of cells in r direction
   par->ncell[y_] = 150;               // number of cells in theta direction
-  par->nmax      = 4000;              // max number of cells in MV direction
+  par->nmax      = 1000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -253,14 +253,21 @@ void Grid::userKinematics(int it, double t){
 
   // setting lower and higher i boundary interface velocities
   // set by boundary velocity:
+  // DEFAULT VALUES
   double vIn  = 0.;
   double vOut = 1.01;
+  double vb = vOut;
 
-  // int j = jLbnd+1;
-  // int i = iRbnd[j]-30;
-  // if (Ctot[j][i].S.prim[UU1] < 1.e-3 and it > 1000){
-  //   vOut = 0.;  
-  // }
+  // Checking if shock is too far behind.
+  if (worldrank == 0){
+    int ja = jLbnd+1;
+    Cell c = Ctot[ja][iRbnd[ja]-20];
+    if (c.S.prim[UU1] < 0.01){ vb = 0; }
+  }
+
+  // applying updated bounary velocity to ll processes
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Allreduce(&vb, &vOut, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
 
   if (t < 6.e6) vIn = 0.;
   if (t > 6.e7) vOut = 0.;
