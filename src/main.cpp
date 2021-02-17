@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-13 17:25:43
+* @Last Modified time: 2021-02-17 15:36:47
 */
 
 #include "main.h"
@@ -22,6 +22,8 @@ int main(int argc, char *argv[]){
   int status;
   Simu simu;
   Flags flags;
+
+  printf("%d\n", omp_get_num_procs());
 
   chbindir(argv[0]);
   flags.load(argc, argv);

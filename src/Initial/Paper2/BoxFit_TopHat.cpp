@@ -39,7 +39,7 @@ static double Df = 2.*lfacShock2*rhoa;
 
 // grid size from shock position
 static double rmin0 = RShock*(1.-200./lfacShock2); // 1.5e6*lNorm;
-static double rmax0 = RShock*(1.+300./lfacShock2);
+static double rmax0 = RShock*(1.+1000./lfacShock2);
 
 
 static void calcBM(double r, double t, double *rho, double *u, double *p, double *gmax){
@@ -87,9 +87,9 @@ static void calcBM(double r, double t, double *rho, double *u, double *p, double
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 400;              // number of cells in r direction
-  par->ncell[y_] = 150;               // number of cells in theta direction
-  par->nmax      = 1000;              // max number of cells in MV direction
+  par->ncell[x_] = 500;              // number of cells in r direction
+  par->ncell[y_] = 500;               // number of cells in theta direction
+  par->nmax      = 5000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -255,21 +255,21 @@ void Grid::userKinematics(int it, double t){
   // set by boundary velocity:
   // DEFAULT VALUES
   double vIn  = 0.;
-  double vOut = 1.01;
+  double vOut = 1.5;
   double vb = vOut;
 
   // Checking if shock is too far behind.
   if (worldrank == 0){
     int ja = jLbnd+1;
-    Cell c = Ctot[ja][iRbnd[ja]-20];
-    if (c.S.prim[UU1] < 0.01){ vb = 0; }
+    int ia = max(iRbnd[ja]-20,0);
+    Cell c = Ctot[ja][ia];
+    if (c.S.prim[PPP] < 1.1*eta){ vb = 0; }
   }
 
   // applying updated bounary velocity to ll processes
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Allreduce(&vb, &vOut, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
 
-  if (t < 6.e6) vIn = 0.;
   if (t > 6.e7) vOut = 0.;
   
   for (int j = 0; j < nde_nax[F1]; ++j){
@@ -366,8 +366,8 @@ int Grid::checkCellForRegrid(int j, int i){
   // }
   // return(skip_);
 
-  double target_ar = 0.2;
-  double split_AR   = 5.;                   // set upper bound as ratio of target_AR
+  double target_ar = 1.;
+  double split_AR   = 3.;                   // set upper bound as ratio of target_AR
   double merge_AR   = 0.2;                  // set upper bound as ratio of target_AR
 
   if (ar > split_AR * target_ar) {          // if cell is too long for its width
@@ -415,13 +415,12 @@ void Simu::dataDump(){
 
 void Simu::runInfo(){
 
-  if ((worldrank == 0) and (it%10 == 0)){ printf("it: %ld time: %le\n", it, t);}
+  if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
 
 }
 
 void Simu::evalEnd(){
 
-  if (it > 100){ stop = true; } // for testing
   if (t > 3.33e8){ stop = true; } // 3.33e8 BOXFIT simu
 
 }

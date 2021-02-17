@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-17 11:40:38
+* @Last Modified time: 2021-02-17 15:08:23
 */
 
 #include "../environment.h"
@@ -157,9 +157,9 @@ void Grid::mpi_exchangeGhostTracks(){
                    SCin , nin , cell_mpi, rR, tag2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       for (int i = 0; i < nin; ++i) { toClass(SCin[i], &Ctot[jin][i]); }          
     }
-    for (int i = 0; i < nin; ++i){ delete &SCin[i]; }
-    for (int i = 0; i < nout; ++i){ delete &SCout[i]; }
-    delete[](SCin); delete[](SCout);
+    // for (int i = 0; i < nin; ++i){ delete &SCin[i]; }
+    // for (int i = 0; i < nout; ++i){ delete &SCout[i]; }
+    delete(SCin); delete(SCout);
   }
 
   // sending to higher node, receiving from lower node
@@ -203,9 +203,9 @@ void Grid::mpi_exchangeGhostTracks(){
                    SCin , nin , cell_mpi, rL, tag2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       for (int i = 0; i < nin; ++i) { toClass(SCin[i], &Ctot[jin][i]); }          
     }
-    for (int i = 0; i < nin; ++i){ delete &SCin[i]; }
-    for (int i = 0; i < nout; ++i){ delete &SCout[i]; }
-    delete[](SCin); delete[](SCout);
+    // for (int i = 0; i < nin; ++i){ delete &SCin[i]; }
+    // for (int i = 0; i < nout; ++i){ delete &SCout[i]; }
+    delete(SCin); delete(SCout);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
