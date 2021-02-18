@@ -269,8 +269,6 @@ void Grid::userKinematics(int it, double t){
   // applying updated bounary velocity to ll processes
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Allreduce(&vb, &vOut, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-
-  if (t > 6.e7) vOut = 0.;
   
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int n = 0; n < ngst; ++n){
@@ -343,7 +341,7 @@ int Grid::checkCellForRegrid(int j, int i){
   double r   = c.G.x[r_];                   // get cell radial coordinate
   double dr  = c.G.dx[r_];                  // get cell radial spacing
   double dth = c.G.dx[t_];                  // get cell angular spacing
-  // double ar  = dr / (r*dth);                // calculate cell aspect ratio
+  // double ar_local  = dr / (r*dth);          // calculate cell aspect ratio
   // printf("%le\n", ar);
   double rOut = Ctot[j][iRbnd[j]-1].G.x[x_];
   double ar  = dr / (rOut*dth);                // calculate cell aspect ratio
@@ -370,10 +368,10 @@ int Grid::checkCellForRegrid(int j, int i){
   double split_AR   = 3.;                   // set upper bound as ratio of target_AR
   double merge_AR   = 0.2;                  // set upper bound as ratio of target_AR
 
-  if (ar > split_AR * target_ar) {          // if cell is too long for its width
+  if (ar > split_AR * target_ar) { // if cell is too long for its width
     return(split_);                       // split
   }
-  if (ar < merge_AR * target_ar) {          // if cell is too short for its width
+  if (ar < merge_AR * target_ar) { // if cell is too short for its width
     return(merge_);                       // merge
   }
   return(skip_);
