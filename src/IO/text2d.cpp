@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-11 16:22:40
+* @Last Modified time: 2021-02-17 21:35:08
 */
 
 #include "../simu.h"
@@ -202,7 +202,7 @@ void Grid::printCols(int it, double t){
         int nactd = ntrackd[j]-2*ngst;
         #if LOCAL_SYNCHROTRON_ == ENABLED_
           Cdump[j][i].radiation_apply_trac2gammae();
-          fprintf(fout, "%1.15le %d %d %d %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le\n", 
+          fprintf(fout, "%1.15le %d %d %d %1.15le %1.15le %1.15le %1.15le %1.15le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
             t,
             nactd,
             j-ngst,
@@ -226,7 +226,7 @@ void Grid::printCols(int it, double t){
             Cdump[j][i].S.prim[GMN],
             Cdump[j][i].S.prim[GMX]);
         #else
-          fprintf(fout, "%1.15le %d %d %d %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le\n", 
+          fprintf(fout, "%1.15le %d %d %d %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %le %le %le %le %le %le %le %le %le %le\n", 
             t,
             nactd,
             j-ngst,
