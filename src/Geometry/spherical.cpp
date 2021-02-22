@@ -2,62 +2,68 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 15:17:31
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-03 19:22:30
+* @Last Modified time: 2021-02-22 15:14:21
 */
 
 
 #include "../cell.h"
 #include "../constants.h"
 
-void Cell::computedV(){
+void Cell::computedV(s_cell_geometry *geom){
 
-  double r = G.x[r_];
-  double th = G.x[t_];
-  double dr = G.dx[r_];
-  double dth = G.dx[t_];
+  if (geom==NULL) {geom = &G; }
+
+  double r = geom->x[r_];
+  double th = geom->x[t_];
+  double dr = geom->dx[r_];
+  double dth = geom->dx[t_];
   double r1 = r - dr/2.;
   double r2 = r + dr/2.;
   // double th1 = th - dth/2.;
   // double th2 = th + dth/2.;
   double rsq = r1*r1 + r1*r2 + r2*r2;
 
-  // G.dV = fabs(2./3.*PI*(r2*r2*r2 - r1*r1*r1) * (cos(th1) - cos(th2)));
-  // G.dV = 2.*PI*r*r*fabs(sin(th))*dr*dth;
+  // geom->dV = fabs(2./3.*PI*(r2*r2*r2 - r1*r1*r1) * (cos(th1) - cos(th2)));
+  // geom->dV = 2.*PI*r*r*fabs(sin(th))*dr*dth;
 
   // integrated but avoiding machine prec issues:
-  G.dV = 4./3.*PI*rsq*dr*fabs(sin(.5*dth)*sin(th));
+  geom->dV = 4./3.*PI*rsq*dr*fabs(sin(.5*dth)*sin(th));
     // fabs for negative thetas (should only exist for ghost cells, otherwise not allowed)
 
 }
 
 
-void Cell::computedl(){
+void Cell::computedl(s_cell_geometry *geom){
 
-  double r   = G.x[r_];
-  double dr  = G.dx[r_];
-  double dth = G.dx[t_];
-  G.dl[r_] = dr;
-  G.dl[t_] = r*dth;
+  if (geom==NULL) {geom = &G; }
+
+  double r   = geom->x[r_];
+  double dr  = geom->dx[r_];
+  double dth = geom->dx[t_];
+  geom->dl[r_] = dr;
+  geom->dl[t_] = r*dth;
   if (NUM_D == 3) exit(40);
 
 }
 
 
-void Cell::computeCentroid(){
+void Cell::computeCentroid(s_cell_geometry *geom){
 
-  double r = G.x[r_];
-  double dr = G.dx[r_];
-  double th = G.x[t_];
-  double dth = G.dx[t_];
+  if (geom==NULL) {geom = &G; }
+  
+  double r = geom->x[r_];
+  double dr = geom->dx[r_];
+  double th = geom->x[t_];
+  double dth = geom->dx[t_];
   double r2 = r*r;
   double dr2 = dr*dr;
   double th1 = th-dth/2.;
   double th2 = th+dth/2.;
 
-  for (int d = 0; d < NUM_D; ++d){ G.cen[d] = G.x[d]; }
-  // G.cen[r_] = r + (2.* r * pow(dr, 2)) / (12. * pow(r, 2) + pow(dr, 2)); 
-  G.cen[r_] = 3.*r*(r2 + dr2) / (3*r2 + dr2); 
-  G.cen[t_] = (th1*cos(th1) - th2*cos(th2) + fabs(sin(th2)) - fabs(sin(th1))) 
+  for (int d = 0; d < NUM_D; ++d){ geom->cen[d] = geom->x[d]; }
+  // geom->cen[r_] = r + (2.* r * pow(dr, 2)) / (12. * pow(r, 2) + pow(dr, 2)); 
+  geom->cen[r_] = 3.*r*(r2 + dr2) / (3*r2 + dr2); 
+  geom->cen[t_] = (th1*cos(th1) - th2*cos(th2) + fabs(sin(th2)) - fabs(sin(th1))) 
     / (cos(th1) - cos(th2)); 
 
 }

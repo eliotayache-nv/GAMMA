@@ -12,6 +12,9 @@ struct s_cell
   double prim[NUM_Q];
   double x[NUM_D];
   double dx[NUM_D];
+  double prim0[NUM_Q];
+  double x0[NUM_D];
+  double dx0[NUM_D];
 };
 
 void mpi_init(int *argc, char **argv[]);

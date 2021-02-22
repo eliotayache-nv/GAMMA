@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 15:59:03
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-10-26 14:12:39
+* @Last Modified time: 2021-02-22 15:00:49
 */
 #include "mpi.h"
 #include "err.h"
@@ -44,21 +44,32 @@ void mpi_init(int *argc, char **argv[]){
 void toStruct(Cell c, s_cell * sc){
 
   sc->status = c.status;
-  arrcpy<double>(c.S.prim, sc->prim, NUM_Q);
-  arrcpy<double>(c.G.x   , sc->x   , NUM_D);
-  arrcpy<double>(c.G.dx  , sc->dx  , NUM_D);
+  arrcpy<double>(c.S.prim , sc->prim , NUM_Q);
+  arrcpy<double>(c.G.x    , sc->x    , NUM_D);
+  arrcpy<double>(c.G.dx   , sc->dx   , NUM_D);
+  arrcpy<double>(c.S0.prim, sc->prim0, NUM_Q);
+  arrcpy<double>(c.G0.x   , sc->x0   , NUM_D);
+  arrcpy<double>(c.G0.dx  , sc->dx0  , NUM_D);
 
 }
 
 void toClass(s_cell sc, Cell * c){
 
   c->status = sc.status;
-  arrcpy<double>(sc.prim, c->S.prim, NUM_Q);
-  arrcpy<double>(sc.x   , c->G.x   , NUM_D);
-  arrcpy<double>(sc.dx  , c->G.dx  , NUM_D);
-  c->computeAllGeom();
+  arrcpy<double>(sc.prim, c->S.prim , NUM_Q);
+  arrcpy<double>(sc.x   , c->G.x    , NUM_D);
+  arrcpy<double>(sc.dx  , c->G.dx   , NUM_D);
+  arrcpy<double>(sc.prim0,c->S0.prim, NUM_Q);
+  arrcpy<double>(sc.x0  , c->G0.x   , NUM_D);
+  arrcpy<double>(sc.dx0 , c->G0.dx  , NUM_D);
+
+  c->computeAllGeom(&c->G);
   c->S.prim2cons(c->G.x[x_]);
   c->S.state2flux(c->G.x[x_]);
+  
+  c->computeAllGeom(&c->G0);
+  c->S0.prim2cons(c->G0.x[x_]);
+  c->S0.state2flux(c->G0.x[x_]);
 
 }
 
@@ -66,7 +77,7 @@ void generate_mpi_cell( MPI_Datatype * cell_mpi ){
 
   s_cell sc;
   int count = 2; // no. of types: int,double
-  int blocklengths[]={1,NUM_Q+NUM_D+NUM_D};
+  int blocklengths[]={1,NUM_Q+NUM_Q+NUM_D+NUM_D+NUM_D+NUM_D};
   MPI_Datatype types[]={MPI_INT,MPI_DOUBLE};
   MPI_Aint offsets[count];
 

@@ -26,11 +26,13 @@ Cell::Cell(){
 
 Cell::~Cell(){}
 
-void Cell::computeAllGeom(){
+void Cell::computeAllGeom(s_cell_geometry *geom){
 
-  computedl();
-  computedV();
-  computeCentroid();
+  if (geom==NULL) {geom = &G; }
+
+  computedl(geom);
+  computedV(geom);
+  computeCentroid(geom);
 
 }
 

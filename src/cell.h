@@ -55,10 +55,10 @@ public:
   void move(double xL, double xR);
   void sourceTerms(double dt);
   void userSourceTerms(double dt);
-  void computedV();
-  void computedl();
-  void computeCentroid();
-  void computeAllGeom();
+  void computedV(s_cell_geometry *geom = NULL);
+  void computedl(s_cell_geometry *geom = NULL);
+  void computeCentroid(s_cell_geometry *geom = NULL);
+  void computeAllGeom(s_cell_geometry *geom = NULL);
 
   void resetLocaldt();
   void update_dt(int dim, Interface IL, Interface IR=NULL);
