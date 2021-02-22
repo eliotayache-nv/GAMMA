@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-17 15:08:23
+* @Last Modified time: 2021-02-22 16:07:35
 */
 
 #include "../environment.h"
@@ -220,6 +220,11 @@ void Grid::mpi_exchangeGhostTracks(){
         Itot[jn][i].x[MV] = Ctot[jn][i].G.x[MV] + Ctot[jn][i].G.dx[MV]/2.;
         Itot[j][i].x[F1]  = Ctot[j][i].G.x[F1];
         Itot[jn][i].x[F1] = Ctot[jn][i].G.x[F1];
+
+        Itot[j][i].x0[MV]  = Ctot[j][i].G0.x[MV] + Ctot[j][i].G0.dx[MV]/2.;
+        Itot[jn][i].x0[MV] = Ctot[jn][i].G0.x[MV] + Ctot[jn][i].G0.dx[MV]/2.;
+        Itot[j][i].x0[F1]  = Ctot[j][i].G0.x[F1];
+        Itot[jn][i].x0[F1] = Ctot[jn][i].G0.x[F1];
       }
 
       // updating IDs
