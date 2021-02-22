@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-17 21:35:08
+* @Last Modified time: 2021-02-19 17:06:38
 */
 
 #include "../simu.h"
@@ -146,7 +146,7 @@ void Grid::printCols(int it, double t){
   #if SHOCK_DETECTION_ == ENABLED_
     for (int j = 0; j < nde_nax[F1]; ++j){
       for (int i = 0; i < ntrack[j]; ++i){
-        Ctot[j][i].S.prim[TR1+1] = (double) Ctot[j][i].isShocked;
+        Ctot[j][i].S.prim[TR1+1] = (double) Ctot[j][i].Sd;
       }
     }
   #endif
