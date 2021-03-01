@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-02-04 22:53:34
+# @Last Modified time: 2021-03-01 22:25:28
 
 
 import numpy as np
@@ -21,6 +21,7 @@ import string
 from inout import *
 from isentropic import *
 from BM import *
+from synchrotron import *
 
 # plt.rc('text', usetex=True)
 plt.rc('font', family='serif', size=12)
@@ -168,10 +169,14 @@ def quadMesh(data, key,
 
   if z_override is not None:
     z = z_override
+  elif key == "PSyn":
+    PSyn = addSynchPower(data, 1.e14)
+    data["PSyn"] = PSyn
+    z = data.pivot(index='j', columns='i', values="PSyn").to_numpy()
   elif key == "lfac":
     vx = data.pivot(index='j', columns='i', values="vx").to_numpy()
     vy = data.pivot(index='j', columns='i', values="vy").to_numpy()
-    z = 1./np.sqrt(1 - (vx**2+vy**2))
+    z = 1./np.sqrt(1 - (vx**2+vy**2))    
   else:
     z = data.pivot(index='j', columns='i', values=key).to_numpy()
   x  = data.pivot(index='j', columns='i', values='x').to_numpy()

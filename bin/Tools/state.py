@@ -2,7 +2,9 @@
 # @Author: Eliot Ayache
 # @Date:   2021-02-26 10:18:05
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-02-26 10:19:01
+# @Last Modified time: 2021-03-01 20:21:23
+
+import numpy as np
 
 GAMMA_  = (5./3.)
 
@@ -13,17 +15,22 @@ class State(object):
     
     self.rho = 0
     self.p = 0
-    self.v = 0
+    self.v = np.zeros(2)
 
     self.D = 0
     self.m = 0
-    self.E = 0
-
-    self.lfac = 0
-    self.h    = 0
+    self.tau = 0
 
     self.gmax = 0
+    self.gmin = 0
 
+  def vel(self):
+    return(np.sqrt(np.sum(self.v**2)))
+
+  def lfac(self):
+    return(1./np.sqrt(1.-self.vel()**2))
+
+  # Synge type EOS
   def gamma(self):
     rho = self.rho
     p = self.p
