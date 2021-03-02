@@ -69,9 +69,11 @@ enum{skip_,merge_,split_};
 // ---------------------------------------------------------------------------------------
 // DO NOT MODIFY!
 #if LOCAL_SYNCHROTRON_ == ENABLED_
-  #define NUM_S 2
+  #define NUM_S 4
   #define GMN   (NUM_C+NUM_TR)    // gamma_min
   #define GMX   (NUM_C+NUM_TR+1)  // gamma_max
+  #define GMD   (NUM_C+NUM_TR+2)  // gamma_middle
+  #define PSN   (NUM_C+NUM_TR+3)  // spectral index p
 #else
   #define NUM_S 0
 #endif 
