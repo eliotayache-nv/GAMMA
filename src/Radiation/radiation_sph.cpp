@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-02 22:37:30
+* @Last Modified time: 2021-03-02 22:56:29
 */
 
 
@@ -20,7 +20,7 @@
     if (fabs(fvelu) < 1.){
       pspec = 2.;
     } else if (fabs(fvelu) < 10){
-      pspec = 2.+ 0.22*log10(fvelu);
+      pspec = 2.+ 0.22*log10(fabs(fvelu));
     } else {
       pspec = 2.22;
     }
@@ -251,7 +251,7 @@
     double *psyn = &S.prim[PSN];
 
     if (isShocked){
-      *psyn = pspec;
+      if (pspec>*psyn) *psyn = pspec;
       *gmax = radiation_gammae2trac(GAMMA_MAX_INIT_, S) / (lfac*rho);
       *gmin = radiation_gammae2trac(gammaMinInit(S), S) / (lfac*rho);
     }
