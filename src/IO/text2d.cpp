@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-19 17:06:38
+* @Last Modified time: 2021-03-02 22:08:12
 */
 
 #include "../simu.h"
@@ -25,10 +25,10 @@ public:
         );
     #else
       sscanf(line, 
-        "%le %d %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n",
+        "%le %d %d %d %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n",
         &t, &nact, &j, &i, 
         &x, &y, &dx, &dy, &dlx, &dly, &rho, &vx, &vy, &p, &D, &sx, &sy, &tau, &trac,
-        &Sd, &gmin, &gmax
+        &Sd, &gmin, &gmax, &gmid, &psyn
         );
     #endif
 
@@ -38,7 +38,7 @@ public:
   
   char *line;
   int j, i, nact;
-  double t, x, y, dx, dy, dlx, dly, rho, vx, vy, p, D, sx, sy, tau, trac, Sd, gmin, gmax;
+  double t, x, y, dx, dy, dlx, dly, rho, vx, vy, p, D, sx, sy, tau, trac, Sd, gmin, gmax, gmid, psyn;
 
   void toCell(Grid *g){
 
@@ -59,6 +59,8 @@ public:
     #if LOCAL_SYNCHROTRON_ == ENABLED_
       c->S.prim[GMN] = pow(rho,1./3.) / gmin;
       c->S.prim[GMX] = pow(rho,1./3.) / gmax;
+      c->S.prim[GMD] = pow(rho,1./3.) / gmid;
+      c->S.prim[GMX] = psyn;
       // if (gmax > 10) printf("blah %d %d %le %le\n", j, i, gmax, c->S.prim[GMX]);
     #endif
 
@@ -191,7 +193,7 @@ void Grid::printCols(int it, double t){
     FILE* fout = fopen(strfout, "w");
 
     #if LOCAL_SYNCHROTRON_ == ENABLED_
-      fprintf(fout, "t nact j i x y dx dy dlx dly rho vx vy p D sx sy tau trac Sd gmin gmax\n");
+      fprintf(fout, "t nact j i x y dx dy dlx dly rho vx vy p D sx sy tau trac Sd gmin gmax gmid psyn\n");
     #else
       fprintf(fout, "t nact j i x y dx dy dlx dly rho vx vy p D sx sy tau trac Sd\n");
     #endif
@@ -202,7 +204,7 @@ void Grid::printCols(int it, double t){
         int nactd = ntrackd[j]-2*ngst;
         #if LOCAL_SYNCHROTRON_ == ENABLED_
           Cdump[j][i].radiation_apply_trac2gammae();
-          fprintf(fout, "%1.15le %d %d %d %1.15le %1.15le %1.15le %1.15le %1.15le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
+          fprintf(fout, "%1.15le %d %d %d %1.15le %1.15le %1.15le %1.15le %1.15le %le %le %le %le %le %le %le %le %le %le %le %le %le %le %le\n", 
             t,
             nactd,
             j-ngst,
@@ -224,7 +226,9 @@ void Grid::printCols(int it, double t){
             Cdump[j][i].S.prim[TR1],
             Cdump[j][i].S.prim[TR1+1],
             Cdump[j][i].S.prim[GMN],
-            Cdump[j][i].S.prim[GMX]);
+            Cdump[j][i].S.prim[GMX],
+            Cdump[j][i].S.prim[GMD],
+            Cdump[j][i].S.prim[PSN]);
         #else
           fprintf(fout, "%1.15le %d %d %d %1.15le %1.15le %1.15le %1.15le %1.15le %1.15le %le %le %le %le %le %le %le %le %le %le\n", 
             t,
