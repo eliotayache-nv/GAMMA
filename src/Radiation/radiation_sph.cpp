@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-02 22:00:40
+* @Last Modified time: 2021-03-02 22:37:30
 */
 
 
@@ -17,9 +17,9 @@
 
   static double spectral_p(double fvelu){
     double pspec;
-    if (fvelu < 1.){
+    if (fabs(fvelu) < 1.){
       pspec = 2.;
-    } else if (fvelu < 10){
+    } else if (fabs(fvelu) < 10){
       pspec = 2.+ 0.22*log10(fvelu);
     } else {
       pspec = 2.22;
