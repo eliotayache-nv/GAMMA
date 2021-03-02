@@ -40,6 +40,7 @@ public:
   #if SHOCK_DETECTION_ == ENABLED_
     bool    isShocked;
     double  Sd;
+    double  pspec; // spectral index candidate (actual value is a tracer)
     void detectShock();
     void resetShock();
   #endif

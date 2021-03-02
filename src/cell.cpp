@@ -20,6 +20,7 @@ Cell::Cell(){
   #if SHOCK_DETECTION_ == ENABLED_
     isShocked = false;
     Sd = -1.;
+    pspec = 0;
   #endif
 
 }

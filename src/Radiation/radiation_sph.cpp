@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-22 00:18:54
+* @Last Modified time: 2021-03-02 22:00:40
 */
 
 
@@ -15,11 +15,23 @@
 
 #if SHOCK_DETECTION_ == ENABLED_
 
+  static double spectral_p(double fvelu){
+    double pspec;
+    if (fvelu < 1.){
+      pspec = 2.;
+    } else if (fvelu < 10){
+      pspec = 2.+ 0.22*log10(fvelu);
+    } else {
+      pspec = 2.22;
+    }
+    return(pspec);
+  }
+
   static double compute_cs(double rho, double p){
     return(sqrt(GAMMA_*p / (rho + p*GAMMA_/(GAMMA_-1.))));
   }
 
-  static double compute_Sd(FluidState S1, FluidState S2, int dim, 
+  static double compute_Sd(FluidState S1, FluidState S2, int dim, double *pspec, 
                            bool reverse=false, double radius = -1){
 
     int uux = UU1+dim;
@@ -117,23 +129,30 @@
 
     // Shock detection threshold:
     double vlim = vSR + chi*(v2S - vSR);
-    // printf("%d %d %le %le %le %le %le\n", dim, reverse, v12, vSR, v2S, Vs-vx2, p1-p2);
     double Sd = v12 - vlim;
+
+    // spectral index calculation
+    double betau = (vx2 - Vs)/(1 - vx2*Vs);
+    double lfacu = 1./sqrt(1.-betau*betau);
+    double fvelu = lfacu*betau;
+    *pspec = spectral_p(fvelu);
 
     return(Sd);
   }
 
   void Interface :: measureShock(Cell *cL, Cell *cR){
 
-    double Sd;
+    double Sd, pspec;
     
     // Forward shocks
-    Sd = compute_Sd(SL, SR, dim);
+    Sd = compute_Sd(SL, SR, dim, &pspec);
     cL->Sd = fmax(cL->Sd, Sd);
+    cL->pspec = pspec;
 
     // Reverse shocks
-    Sd = compute_Sd(SR, SL, dim, true);
+    Sd = compute_Sd(SR, SL, dim, &pspec, true);
     cR->Sd = fmax(cR->Sd, Sd);
+    cR->pspec = pspec;
 
   }  
 
@@ -147,6 +166,7 @@
 
     Sd = -1;
     isShocked = false;
+    pspec = 0;
 
   }
 
@@ -180,13 +200,14 @@
 
     double rho = S.prim[RHO];
     double p   = S.prim[PPP];
+    double psyn = S.prim[PSN];
     double gma = S.gamma();
     double h   = 1.+p*gma/(gma-1.)/rho; // ideal gas EOS (TBC)
     double eps = rho*(h-1.)/gma;
     double ee = eps_e_ * eps;
     double ne = zeta_ * rho / Nmp_;
     double lfac_av = ee / (ne * Nme_);
-    double gammaMin = (p_-2.) / (p_-1.) *lfac_av;
+    double gammaMin = (psyn-2.) / (psyn-1.) *lfac_av;
 
     return(gammaMin);
 
@@ -227,8 +248,10 @@
     double lim = lfac * pow(rho, 4./3.) / (lfac*rho);  // equiv. gammae = 1.
     double *gmax = &S.prim[GMX];
     double *gmin = &S.prim[GMN];
+    double *psyn = &S.prim[PSN];
 
     if (isShocked){
+      *psyn = pspec;
       *gmax = radiation_gammae2trac(GAMMA_MAX_INIT_, S) / (lfac*rho);
       *gmin = radiation_gammae2trac(gammaMinInit(S), S) / (lfac*rho);
     }
