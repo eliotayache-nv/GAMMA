@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-02 22:56:29
+* @Last Modified time: 2021-03-04 10:50:29
 */
 
 
@@ -147,12 +147,12 @@
     // Forward shocks
     Sd = compute_Sd(SL, SR, dim, &pspec);
     cL->Sd = fmax(cL->Sd, Sd);
-    cL->pspec = pspec;
+    if (pspec > cL->pspec) cL->pspec = pspec;
 
     // Reverse shocks
     Sd = compute_Sd(SR, SL, dim, &pspec, true);
     cR->Sd = fmax(cR->Sd, Sd);
-    cR->pspec = pspec;
+    if (pspec > cR->pspec) cR->pspec = pspec;
 
   }  
 
@@ -251,7 +251,7 @@
     double *psyn = &S.prim[PSN];
 
     if (isShocked){
-      if (pspec>*psyn) *psyn = pspec;
+      if (pspec>*psyn or isnan(*psyn)) *psyn = pspec;
       *gmax = radiation_gammae2trac(GAMMA_MAX_INIT_, S) / (lfac*rho);
       *gmin = radiation_gammae2trac(gammaMinInit(S), S) / (lfac*rho);
     }
