@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-06-10 15:59:03
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-22 15:00:49
+* @Last Modified time: 2021-02-22 16:46:54
 */
 #include "mpi.h"
 #include "err.h"
@@ -66,7 +66,7 @@ void toClass(s_cell sc, Cell * c){
   c->computeAllGeom(&c->G);
   c->S.prim2cons(c->G.x[x_]);
   c->S.state2flux(c->G.x[x_]);
-  
+
   c->computeAllGeom(&c->G0);
   c->S0.prim2cons(c->G0.x[x_]);
   c->S0.state2flux(c->G0.x[x_]);

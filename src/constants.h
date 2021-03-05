@@ -22,7 +22,7 @@
 #define alpha_      1.29251816e-09  // alpha in gammaMax calculation (Van Eerten+2010)
 
 // emissivity parameters:
-#define p_          2.3     // slope of electron population
+#define p_          2.22    // slope of electron population (Kirk2000)
 #define eps_e_      0.1     // constribution to electron acceleration
 #define eps_B_      0.1     // contribution to magnetic field
 #define zeta_       0.1    // fraction of accelerated electrons

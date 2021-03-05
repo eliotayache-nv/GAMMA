@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-04 10:50:29
+* @Last Modified time: 2021-03-05 11:04:49
 */
 
 
@@ -20,9 +20,9 @@
     if (fabs(fvelu) < 1.){
       pspec = 2.;
     } else if (fabs(fvelu) < 10){
-      pspec = 2.+ 0.22*log10(fabs(fvelu));
+      pspec = 2.+ (p_-2.)*log10(fabs(fvelu));
     } else {
-      pspec = 2.22;
+      pspec = p_;
     }
     return(pspec);
   }

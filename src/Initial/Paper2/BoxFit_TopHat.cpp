@@ -87,8 +87,8 @@ static void calcBM(double r, double t, double *rho, double *u, double *p, double
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 500;              // number of cells in r direction
-  par->ncell[y_] = 500;               // number of cells in theta direction
+  par->ncell[x_] = 300;              // number of cells in r direction
+  par->ncell[y_] = 100;               // number of cells in theta direction
   par->nmax      = 5000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
@@ -172,6 +172,7 @@ int Grid::initialValues(){
       double r_denorm = r*lNorm;
       double dr_denorm = dr*lNorm;
       double gmax = 1.;
+      double gmin = 1.;
 
       if ( r_denorm > RShock or th > th0){   // if in the shell tail
         double rho = n_ext*mp_*pow(r_denorm/Rscale, -k);
@@ -191,6 +192,7 @@ int Grid::initialValues(){
         double dV = 4./3.*PI*(pow(r_denorm+dr_denorm/2.,3) - pow(r_denorm-dr_denorm/2., 3));
         double rho=0,v=0,p=0,lfac=0;
         gmax = 0;
+        gmin = 0;
 
         for (int ix = 0; ix < nbins; ++ix){
           double x = (xr+xl)/2.;
@@ -217,17 +219,26 @@ int Grid::initialValues(){
           double dgmax = 2.*19.*PI*Nme_*lfacf/(NsigmaT_*B0*B0*dt0) 
             * pow(chi, 25./24.)/(pow(chi, 19./12.)-1.); //gmax = +ifnty for chi=1
 
+          double psyn = p_;
+          double ee0 = eps_e_ * eps0;
+          double ne0 = zeta_ * rho0 / Nmp_;
+          double lfac_av0 = ee0 / (ne0 * Nme_);
+          double gmin0 = (psyn-2.) / (psyn-1.) * lfac_av0;
+          double dgmin = gmin0 / (pow(chi, 13./24.) + gmin0/dgmax);
+
           rho += drho*ddV / dV;
           v += dv*ddV / dV;
           lfac += dlfac*ddV/dV;
           p += dp*ddV / dV;
           gmax += dgmax*ddV / dV;
+          gmin += dgmin*ddV / dV;
 
           xl = xr;
           xr += ddx;
         }
 
         gmax = fmax(1.,gmax);
+        gmin = fmax(1.,gmin);
         lfac = fmax(1.,lfac);
 
         c->S.prim[RHO] = rho/rhoNorm;
@@ -239,6 +250,8 @@ int Grid::initialValues(){
 
       double rho_local = c->S.prim[RHO];
       c->S.prim[GMX] = pow(rho_local, 1./3.)/gmax;
+      c->S.prim[GMN] = pow(rho_local, 1./3.)/gmin;
+
       // don't use cons2prim because doesn't have UU yet, but VV
       // c->S.prim2cons(c->G.x[r_]);
       // c->S.cons2prim(c->G.x[r_]);
