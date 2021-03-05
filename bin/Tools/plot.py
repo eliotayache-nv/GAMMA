@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-01 22:25:28
+# @Last Modified time: 2021-03-04 15:25:16
 
 
 import numpy as np
@@ -161,6 +161,9 @@ def quadMesh(data, key,
   tlayout=True,
   colorbar=True,
   slick=False,
+  phi=0.,
+  thetaobs=0.,
+  nuobs=1.e17,
   expand=False):
 
   if key2 and geometry!="polar":
@@ -170,7 +173,7 @@ def quadMesh(data, key,
   if z_override is not None:
     z = z_override
   elif key == "PSyn":
-    PSyn = addSynchPower(data, 1.e14)
+    PSyn = addSynchPower(data, phi, thetaobs, nuobs)
     data["PSyn"] = PSyn
     z = data.pivot(index='j', columns='i', values="PSyn").to_numpy()
   elif key == "lfac":
@@ -215,8 +218,10 @@ def quadMesh(data, key,
   ymin = np.min(y)
   ymax = np.max(y)
 
-  vmin = np.min(z)
   vmax = np.max(z[4:,:])
+  vmin = np.min(z)
+  if log == True:
+    vmin = np.min(z[z>0])
   if key2:
     vmin2 = np.min(z2)
     vmax2 = np.max(z2[4:,:])

@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2021-02-26 10:15:40
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-01 21:41:59
+# @Last Modified time: 2021-03-04 16:21:33
 
 from state import *
 
@@ -39,7 +39,7 @@ def nuSyn(gammae, B):
   return(3*gammae**2*Nqe_*B/(16.*Nme_))
 
 
-def SynchPower(S, theta, nuobs):
+def SynchPower(S, theta, phi, thetaobs, nuobs):
 
   rho = S.rho
   p = S.p
@@ -54,9 +54,14 @@ def SynchPower(S, theta, nuobs):
   gmin = S.gmin
   numin = nuSyn(gmin, B)
 
+  vr   = S.v[0]
+  vth  = S.v[1]
   beta = S.vel()
   lfac = S.lfac()
-  mu = np.cos(theta)
+  thetav = theta + np.arctan2(vth,vr)  # angle between velocity and jet axis (phi stays same as cell)
+  thetaeff = np.arccos(np.sin(thetav)*np.cos(phi)*np.sin(thetaobs) 
+                       + np.cos(thetav)*np.cos(thetaobs))
+  mu = np.cos(thetaeff)
   nu = nuPrime(nuobs, lfac, beta, mu)
 
   n = rho / Nme_;
@@ -64,16 +69,16 @@ def SynchPower(S, theta, nuobs):
     * 4./3. * B / (6.*np.pi) * 16.* Nme_ / (3.*Nqe_)
 
   if nu < numin:
-    P =  Pmax * (nu/numin)**(1./3.)
+    P = Pmax * (nu/numin)**(1./3.)
   if numin < nu < numax:
-    P =  Pmax * (nu/numin)**(-(p_-1.)/2.)
+    P = Pmax * (nu/numin)**(-(p_-1.)/2.)
   if numax < nu:
     P = 0
 
   return(P)
 
 
-def PSynFromPandas(rho, p, vr, vth, gmax, gmin, theta, nuobs):
+def PSynFromPandas(rho, p, vr, vth, gmax, gmin, theta, phi, thetaobs, nuobs):
   S = State()  
   S.rho = rho
   S.p = p
@@ -81,13 +86,13 @@ def PSynFromPandas(rho, p, vr, vth, gmax, gmin, theta, nuobs):
   S.v[1] = vth
   S.gmax = gmax
   S.gmin = gmin
-  return(SynchPower(S, theta, nuobs))
+  return(SynchPower(S, theta, phi, thetaobs, nuobs))
 
 
-def addSynchPower(data, nuobs):
-  PSyn = [PSynFromPandas(rho, p, vr, vth, gmax, gmin, theta, nuobs) 
+def addSynchPower(data, phi, thetaobs, nuobs):
+  PSyn = [PSynFromPandas(rho, p, vr, vth, gmax, gmin, theta, phi, thetaobs, nuobs) 
     for rho, p, vr, vth, gmax, gmin, theta 
     in zip(data["rho"], data["p"], data["vx"], data["vy"], data["gmax"], data["gmin"], 
            data["y"])]
-  return(PSyn)
+  return(np.array(PSyn))
 
