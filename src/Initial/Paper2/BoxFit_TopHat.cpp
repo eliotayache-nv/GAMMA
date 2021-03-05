@@ -42,7 +42,8 @@ static double rmin0 = RShock*(1.-200./lfacShock2); // 1.5e6*lNorm;
 static double rmax0 = RShock*(1.+1000./lfacShock2);
 
 
-static void calcBM(double r, double t, double *rho, double *u, double *p, double *gmax){
+static void calcBM(double r, double t, double *rho, double *u, double *p, 
+                   double *gmax, double *gmin){
   // returns normalised primitive variables for BM solution at position r (denormalised).
 
   // repeating from above (these are local)
@@ -80,6 +81,15 @@ static void calcBM(double r, double t, double *rho, double *u, double *p, double
   *gmax = 2.*19.*PI*Nme_*lfacf/(NsigmaT_*B0*B0*dt0) 
     * pow(chi, 25./24.)/(pow(chi, 19./12.)-1.); //gmax = +ifnty for chi=1
   *gmax = fmax(1.,*gmax);
+
+  double psyn = p_;
+  double ee0 = eps_e_ * eps0;
+  double ne0 = zeta_ * rho0 / Nmp_;
+  double lfac_av0 = ee0 / (ne0 * Nme_);
+  double gmin0 = (psyn-2.) / (psyn-1.) * lfac_av0;
+  *gmin = gmin0 / (pow(chi, 13./24.) + gmin0/ *gmax);
+  *gmin = fmax(1.,*gmin);
+
 
 }
 
@@ -246,6 +256,7 @@ int Grid::initialValues(){
         c->S.prim[VV2] = 0;
         c->S.prim[PPP] = p/pNorm;
         c->S.prim[TR1] = 2.;
+        c->S.prim[PSN] = p_;
       }
 
       double rho_local = c->S.prim[RHO];
@@ -316,18 +327,20 @@ void Grid::userBoundaries(int it, double t){
     for (int j = 0; j < nde_nax[F1]; ++j){
       for (int i = 0; i <= iLbnd[j]; ++i){
         Cell *c = &Ctot[j][i];
-        double rho, u, p, gmax;
+        double rho, u, p, gmax, gmin;
         double r = c->G.x[r_]*lNorm;
         double th = c->G.x[t_];
 
         if (th < th0){
-          calcBM(r, t, &rho, &u, &p, &gmax);
+          calcBM(r, t, &rho, &u, &p, &gmax, &gmin);
           c->S.prim[RHO] = rho;
           c->S.prim[UU1] = u;
           c->S.prim[UU2] = 0;
           c->S.prim[PPP] = p;
           c->S.prim[TR1] = 2.;
           c->S.prim[GMX] = pow(rho, 1./3.)/gmax;
+          c->S.prim[GMN] = pow(rho, 1./3.)/gmin;
+          c->S.prim[PSN] = p_;
         }
         else{
           c->S.prim[RHO]  = 1;
@@ -336,6 +349,7 @@ void Grid::userBoundaries(int it, double t){
           c->S.prim[PPP] = eta;
           c->S.prim[TR1] = 1.;
           c->S.prim[GMX] = pow(1, 1./3.);
+          c->S.prim[GMN] = pow(1, 1./3.);
         }
       }
     }
@@ -420,6 +434,7 @@ void FluidState::cons2prim_user(double *rho, double *p, double *uu){
 
 void Simu::dataDump(){
 
+  // if (it%1 == 0){ grid.printCols(it, t); }
   if (it%500 == 0){ grid.printCols(it, t); }
 
 }
@@ -432,6 +447,7 @@ void Simu::runInfo(){
 
 void Simu::evalEnd(){
 
+  // if (it > 10){ stop = true; }
   if (t > 3.33e8){ stop = true; } // 3.33e8 BOXFIT simu
 
 }
