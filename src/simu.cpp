@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 13:38:45
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-17 14:44:10
+* @Last Modified time: 2021-03-06 16:34:10
 */
 #include "simu.h"
 #include "mpisetup.h"
@@ -40,6 +40,7 @@ void Simu::initialise(){
 
 void Simu::run(){
   
+  grid.updateGhosts(it, t);
   grid.printCols(it, t);
 
   while (!stop){
