@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-02 22:08:12
+* @Last Modified time: 2021-03-08 19:16:47
 */
 
 #include "../simu.h"
@@ -162,7 +162,7 @@ void Grid::printCols(int it, double t){
     int sizes[worldsize];
     int jsize[worldsize];
     int ntrackd[ncell[F1]+2*ngst];
-    Cell    **Cdump = array_2d<Cell>(nax[F1], nax[MV]);
+    Cell    **Cdump = array_2d<Cell>(nax[F1], nax[MV]);   // nax = ncell+2ngst (includes ghosts)
     s_cell **SCdump = array_2d<s_cell>(nax[F1], nax[MV]);
     for (int j = 0; j < nde_nax[F1]; ++j){
       for (int i = 0; i < nde_nax[MV]; ++i){
@@ -170,6 +170,7 @@ void Grid::printCols(int it, double t){
       }
     }
 
+    // bluntly copying Ctot into lower part of Cdump
     sizes[0] = nde_nax[F1] * nde_nax[MV];
     jsize[0] = nde_nax[F1];
     std::copy_n(&Ctot[0][0], sizes[0], &Cdump[0][0]);
@@ -179,11 +180,11 @@ void Grid::printCols(int it, double t){
       int o[NUM_D]; // origin
       MPI_Recv(      &sizes[j],        1,  MPI_INT, j, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Recv(              o,    NUM_D,  MPI_INT, j, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      int i1 = o[F1];
+      int i1 = o[F1]+ngst;
       int i2 = o[MV];
       MPI_Recv(&SCdump[i1][i2], sizes[j], cell_mpi, j, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Recv(      &jsize[j],        1,  MPI_INT, j, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Recv(   &ntrackd[i1+ngst], jsize[j],  MPI_INT, j, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      MPI_Recv(   &ntrackd[i1], jsize[j],  MPI_INT, j, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
     std::stringstream ss;
@@ -261,19 +262,20 @@ void Grid::printCols(int it, double t){
     delete_array_2d<s_cell>(SCdump);
 
   }else{
-    int size  = nde_nax[F1] * nde_nax[MV];  // size includes MV ghost cells
+    int size  = (nde_nax[F1]-2*ngst) * nde_nax[MV];  // size includes MV ghost cells
     int jsize = nde_nax[F1]-2*ngst;
     MPI_Send( &size,     1,  MPI_INT, 0, 0, MPI_COMM_WORLD);
     MPI_Send(origin, NUM_D,  MPI_INT, 0, 1, MPI_COMM_WORLD);
-    s_cell **SC = array_2d<s_cell>(nde_nax[F1],nde_nax[MV]);
-    for (int j = 0; j < nde_nax[F1]; ++j){
+    s_cell **SC = array_2d<s_cell>((nde_nax[F1]-2*ngst),nde_nax[MV]);
+    for (int j = 0; j < nde_nax[F1]-2*ngst; ++j){
       for (int i = 0; i < nde_nax[MV]; ++i){
-        toStruct(Ctot[j][i], &SC[j][i]);
+        toStruct(Ctot[j+ngst][i], &SC[j][i]);
+        if (j==0 and i==10) printf("%le\n", Ctot[j+ngst][i].G.x[MV]);
       }
     }
-    MPI_Send(&SC[0][0],     size, cell_mpi, 0, 2, MPI_COMM_WORLD);
-    MPI_Send(&jsize,     1,  MPI_INT, 0, 3, MPI_COMM_WORLD);
-    MPI_Send(&ntrack[ngst], jsize, MPI_INT, 0, 4, MPI_COMM_WORLD);
+    MPI_Send(&SC[0][0],      size, cell_mpi, 0, 2, MPI_COMM_WORLD);
+    MPI_Send(&jsize,            1,  MPI_INT, 0, 3, MPI_COMM_WORLD);
+    MPI_Send(&ntrack[ngst], jsize,  MPI_INT, 0, 4, MPI_COMM_WORLD);
     delete_array_2d<s_cell>(SC);
   }
 
