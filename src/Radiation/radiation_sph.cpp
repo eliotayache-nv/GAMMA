@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-05 11:04:49
+* @Last Modified time: 2021-03-10 15:57:52
 */
 
 
@@ -251,7 +251,7 @@
     double *psyn = &S.prim[PSN];
 
     if (isShocked){
-      if (pspec>*psyn or isnan(*psyn)) *psyn = pspec;
+      if (pspec>*psyn or ::isnan(*psyn)) *psyn = pspec;
       *gmax = radiation_gammae2trac(GAMMA_MAX_INIT_, S) / (lfac*rho);
       *gmin = radiation_gammae2trac(gammaMinInit(S), S) / (lfac*rho);
     }
