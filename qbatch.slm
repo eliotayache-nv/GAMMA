@@ -5,8 +5,8 @@
 #PBS -e hydro.e
 
 #PBS -q arm
-#PBS -l select=6
-#PBS -l walltime=06:00:00
+#PBS -l select=8
+#PBS -l walltime=12:00:00
 
 # load module environment
 module swap PrgEnv-cray PrgEnv-gnu
@@ -21,4 +21,4 @@ cd $PBS_O_WORKDIR
 make
 
 # run mpi/openmp job
-aprun -n 6 -N 1 -cc numa_node ./bin/GAMMA -w 2>&1 > gamma2D_job.log
+aprun -n 8 -N 1 -cc numa_node ./bin/GAMMA -w 2>&1 > gamma2D_job.log
