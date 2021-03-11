@@ -435,19 +435,20 @@ void FluidState::cons2prim_user(double *rho, double *p, double *uu){
 void Simu::dataDump(){
 
   // if (it%1 == 0){ grid.printCols(it, t); }
-  if (it%500 == 0){ grid.printCols(it, t); }
+  if (it%100 == 0){ grid.printCols(it, t); }
 
 }
 
 void Simu::runInfo(){
 
+  // if ((worldrank == 0) and (it%1 == 0)){ printf("it: %ld time: %le\n", it, t);}
   if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
 
 }
 
 void Simu::evalEnd(){
 
-  // if (it > 10){ stop = true; }
+  // if (it > 300){ stop = true; }
   if (t > 3.33e8){ stop = true; } // 3.33e8 BOXFIT simu
 
 }

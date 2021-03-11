@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-02 17:08:43
+* @Last Modified time: 2021-03-11 15:37:51
 */
 
 #include "../environment.h"
@@ -780,7 +780,7 @@ void Grid::computeFluxes(){
     }
   }
   // flux in F1 direction (building the interfaces from neighbor ids)
-  // #pragma omp parallel for default(shared)
+  // #pragma omp parallel for 
   // for (int j = 0; j < nde_nax[F1]-1; ++j){
   //   double jpos = ( Ctot[j][iLbnd[j]+1].G.x[F1] + Ctot[j+1][iLbnd[j+1]+1].G.x[F1] )/2.;
 

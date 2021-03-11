@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-24 10:49:15
+* @Last Modified time: 2021-03-11 15:53:14
 */
 
 #include "../environment.h"
@@ -287,7 +287,7 @@ void Grid::updateGhosts(int it, double t){
       }
     }
   }
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = 0; j < nde_nax[F1]; ++j)
   {
     for (int i = 0; i <= iLbnd[j]; ++i){
@@ -414,18 +414,22 @@ void Grid::updateGhosts(int it, double t){
       }
     }
 
-    for (int q = 0; q < NUM_Q; ++q){
-      grad_avg[q] /= dAtot;
-      c0->grad_f1[q] = grad_avg[q]; // initialising for following minmod
-    }
-
-    // applying slope limiter
-    for (int n = 0; n < n_neighs; ++n){
+    #pragma omp critical
+    {
       for (int q = 0; q < NUM_Q; ++q){
-        double tmp = c0->grad_f1[q];
-        c0->grad_f1[q] = minmod(tmp, grads[n][q]);
+        grad_avg[q] /= dAtot;
+        c0->grad_f1[q] = grad_avg[q]; // initialising for following minmod
       }
+
+      // applying slope limiter
+      for (int n = 0; n < n_neighs; ++n){
+        for (int q = 0; q < NUM_Q; ++q){
+          double tmp = c0->grad_f1[q];
+          c0->grad_f1[q] = minmod(tmp, grads[n][q]);
+        }
+      } 
     }
+    
   }
 
 
@@ -607,7 +611,7 @@ void Grid::computeNeighbors(bool print){
 
 void Grid::regrid(){
 
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
     targetRegridVictims(j); // updating ismall and ibig
     for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){  // only active cells
@@ -833,7 +837,7 @@ void Grid::merge(int j, int i){
 
 void Grid::movDir_ComputeLambda(){
 
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   // this needs to be done on all j tracks because we use the gradients later on
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < ntrack[j]-1; ++i){
@@ -846,7 +850,7 @@ void Grid::movDir_ComputeLambda(){
 
 void Grid::updateKinematics(int it, double t){
 
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < ntrack[j]-1; ++i){
       double v = VI * Itot[j][i].lS;
@@ -861,7 +865,7 @@ void Grid::updateKinematics(int it, double t){
 
 void Grid::computeFluxes(){
 
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = 0; j < nde_nax[F1]; ++j){
 
     // flux in MV direction (looping over interfaces)
@@ -885,19 +889,29 @@ void Grid::computeFluxes(){
       }
     }
   }
+
   // flux in F1 direction (building the interfaces from neighbor ids)
-  #pragma omp parallel for default(shared)
+  // resetting fluxes
+  #pragma omp parallel for 
+  for (int j = 0; j < nde_nax[F1]; ++j){
+    for (int i = 0; i < ntrack[j]; ++i){
+      for (int s = 0; s < NUM_D; ++s){
+        for (int q = 0; q < NUM_Q; ++q){ Ctot[j][i].flux[s][F1][q] = 0.; }
+      }
+    }
+  }
+  // computing fluxes
+  #pragma omp parallel for 
   for (int j = 0; j < nde_nax[F1]-1; ++j){
-    // double jpos = ( Ctot[j][iLbnd[j]+1].G.x[F1] + Ctot[j+1][iLbnd[j+1]+1].G.x[F1] )/2.;
     double jpos = Ctot[j][iLbnd[j]+1].G.x[F1] + Ctot[j][iLbnd[j]+1].G.dx[F1]/2.;
 
-    // resetting fluxes
-    for (int i = 0; i < ntrack[j]; ++i){
-      for (int q = 0; q < NUM_Q; ++q){ Ctot[j][i].flux[1][F1][q] = 0.; }
-    }
-    for (int i = 0; i < ntrack[j+1]; ++i){
-      for (int q = 0; q < NUM_Q; ++q){ Ctot[j+1][i].flux[0][F1][q] = 0.; }
-    }
+    // // resetting fluxes
+    // for (int i = 0; i < ntrack[j]; ++i){
+    //   for (int q = 0; q < NUM_Q; ++q){ Ctot[j][i].flux[1][F1][q] = 0.; }
+    // }
+    // for (int i = 0; i < ntrack[j+1]; ++i){
+    //   for (int q = 0; q < NUM_Q; ++q){ Ctot[j+1][i].flux[0][F1][q] = 0.; }
+    // }
     for (int i = 0; i < ntrack[j]; ++i){
 
       Cell *c0 = &Ctot[j][i];
@@ -928,17 +942,21 @@ void Grid::computeFluxes(){
         Int.computeLambda();
         Int.computeFlux();
 
-        #if SHOCK_DETECTION_ == ENABLED_
-          // printf("%le %le %d %d\n", c0->S.prim[PPP], cn->S.prim[PPP], c0->nde_ind[1], cn->nde_ind[1]);
-          Int.measureShock(c0, cn);
-        #endif
+        #pragma omp critical // writing on adjacent tracks: needs to be atomic
+        {
+          #if SHOCK_DETECTION_ == ENABLED_
+            // printf("%le %le %d %d\n", c0->S.prim[PPP], cn->S.prim[PPP], c0->nde_ind[1], cn->nde_ind[1]);
+            Int.measureShock(c0, cn);
+          #endif
 
-        c0->update_dt(F1, Int.lL);
-        cn->update_dt(F1, Int.lR);
-        for (int q = 0; q < NUM_Q; ++q){
-          c0->flux[1][F1][q] += Int.flux[q];
-          cn->flux[0][F1][q] += Int.flux[q];
+          c0->update_dt(F1, Int.lL);
+          cn->update_dt(F1, Int.lR);
+          for (int q = 0; q < NUM_Q; ++q){
+            c0->flux[1][F1][q] += Int.flux[q];
+            cn->flux[0][F1][q] += Int.flux[q];
+          }
         }
+
       }
     }  
   }
@@ -967,14 +985,14 @@ double Grid::collect_dt(){
 
 void Grid::update(double dt){
 
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
     for (int i = 0; i < ntrack[j]-1; ++i){
       Itot[j][i].move(dt);
     }
   }
   // do not update border cells because can lead to non-physical states
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
     for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
       double xL = Itot[j][i-1].x[MV];
@@ -993,7 +1011,7 @@ void Grid::update(double dt){
 void Grid::copyState0(){
   // Copies the current state of the grid into S0 for higher order time-stepping
 
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < ntrack[j]; ++i){
       Cell *c = &Ctot[j][i];
@@ -1002,7 +1020,7 @@ void Grid::copyState0(){
     }
   }  
 
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < ntrack[j]-1; ++i){
       Interface *I = &Itot[j][i];
@@ -1017,7 +1035,7 @@ void Grid::copyState0(){
 void Grid::CellGeomFromInterfacePos(){
   // pos in F1 needs to already be updated
 
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 1; i < ntrack[j]-1; ++i){
       Cell *c = &Ctot[j][i];
@@ -1032,7 +1050,7 @@ void Grid::CellGeomFromInterfacePos(){
 
 void Grid::interfaceGeomFromCellPos(){
 
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = jLbnd+1; j <= jRbnd-1; ++j){
     double xj = Ctot[j][iLbnd[j]+1].G.x[F1];
     for (int i = 0; i < ntrack[j]-1; ++i){
@@ -1077,7 +1095,7 @@ void Grid::apply(void (Cell::*func)()){
 
   // usage: grid.apply(&Cell::func_name);
   
-  #pragma omp parallel for default(shared)  
+  #pragma omp parallel for   
   for (int j = 0; j < nde_nax[F1]; ++j){
     for (int i = 0; i < nde_nax[MV]; ++i){
       (Ctot[j][i].*func)();
@@ -1113,7 +1131,7 @@ void Grid::prim2cons(){
   int jL = 0; 
   int jR = nde_nax[F1];
 
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = jL; j < jR; ++j){
     int iL = 0;
     int iR = ntrack[j];
@@ -1131,7 +1149,7 @@ void Grid::state2flux(){
   int jL = 0; 
   int jR = nde_nax[F1];
 
-  #pragma omp parallel for default(shared)
+  #pragma omp parallel for 
   for (int j = jL; j < jR; ++j){
     int iL = 0;
     int iR = ntrack[j];

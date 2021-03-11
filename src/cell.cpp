@@ -101,6 +101,11 @@ void Cell::update_dt(int dim, Interface IL, Interface IR){
 
 void Cell::update(double dt, double xL, double xR){
 
+
+  if (isnan(flux[1][1][TR1])){
+    printf("%d %d\n", nde_ind[F1], nde_ind[MV]);
+  }
+
   for (int q = 0; q < NUM_Q; ++q){
     S.cons[q] *= G.dV;
   }
@@ -122,6 +127,11 @@ void Cell::update(double dt, double xL, double xR){
     S.cons[q] /= G.dV;
   }
   S.cons2prim(G.x[r_]);
+
+  if (isnan(S.prim[TR1])){
+    printf("%le\n", flux[1][1][TR1]);
+    exit(30);
+  }
 
 }
 

@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-08 19:16:47
+* @Last Modified time: 2021-03-11 15:08:09
 */
 
 #include "../simu.h"
@@ -270,7 +270,6 @@ void Grid::printCols(int it, double t){
     for (int j = 0; j < nde_nax[F1]-2*ngst; ++j){
       for (int i = 0; i < nde_nax[MV]; ++i){
         toStruct(Ctot[j+ngst][i], &SC[j][i]);
-        if (j==0 and i==10) printf("%le\n", Ctot[j+ngst][i].G.x[MV]);
       }
     }
     MPI_Send(&SC[0][0],      size, cell_mpi, 0, 2, MPI_COMM_WORLD);

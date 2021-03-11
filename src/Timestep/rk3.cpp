@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:57:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-22 22:14:58
+* @Last Modified time: 2021-03-11 15:37:43
 */
 
 #include "../environment.h"
@@ -110,7 +110,7 @@
     update(dt);
     // do not evolve border cells because they are going to be copied anyways
     // and it can lead to non-physical states
-    #pragma omp parallel for default(shared)
+    #pragma omp parallel for 
     for (int j = jLbnd+1; j <= jRbnd-1; ++j){
       for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
         Cell *c = &Ctot[j][i];
@@ -124,7 +124,7 @@
       }
     }
 
-    #pragma omp parallel for default(shared)
+    #pragma omp parallel for 
     for (int j = jLbnd+1; j <= jRbnd-1; ++j){
       for (int i = iLbnd[j]; i <= iRbnd[j]-1; ++i){
         Interface *I = &Itot[j][i];
@@ -137,7 +137,7 @@
 
     CellGeomFromInterfacePos();
 
-    #pragma omp parallel for default(shared)
+    #pragma omp parallel for 
     for (int j = jLbnd+1; j <= jRbnd-1; ++j){
       for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
         Cell *c = &Ctot[j][i];
@@ -153,7 +153,7 @@
     prepForUpdate(it, t);
     update(dt);
 
-    #pragma omp parallel for default(shared)
+    #pragma omp parallel for 
     for (int j = jLbnd+1; j <= jRbnd-1; ++j){
       for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
         Cell *c = &Ctot[j][i];
@@ -167,7 +167,7 @@
       }
     }
 
-    #pragma omp parallel for default(shared)
+    #pragma omp parallel for 
     for (int j = jLbnd+1; j <= jRbnd-1; ++j){
       for (int i = iLbnd[j]; i <= iRbnd[j]-1; ++i){
         Interface *I = &Itot[j][i];
@@ -180,7 +180,7 @@
 
     CellGeomFromInterfacePos();
 
-    #pragma omp parallel for default(shared)
+    #pragma omp parallel for 
     for (int j = jLbnd+1; j <= jRbnd-1; ++j){
       for (int i = iLbnd[j]+1; i <= iRbnd[j]-1; ++i){
         Cell *c = &Ctot[j][i];
