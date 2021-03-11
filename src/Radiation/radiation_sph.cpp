@@ -1,8 +1,8 @@
 /*
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
-* @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-10 15:57:52
+* @Last Modified by:   eliotayache
+* @Last Modified time: 2021-03-11 18:08:36
 */
 
 
@@ -41,7 +41,7 @@
     // ------------------------------------------
     // this equation involves numerically solving an integral over pressure
     int n_evals = 10; // number of points in the integral
-    double chi = 0.1; // param for strength of shocks to detect (0:weak, 1:strong)
+    double chi = 0.5; // param for strength of shocks to detect (0:weak, 1:strong)
 
     double p1 = S1.prim[PPP];
     double p2 = S2.prim[PPP];
@@ -131,10 +131,17 @@
     double vlim = vSR + chi*(v2S - vSR);
     double Sd = v12 - vlim;
 
-    // spectral index calculation
-    double betau = (vx2 - Vs)/(1 - vx2*Vs);
+    // spectral index calculation (interface shock setup)
+    // double betau = (vx2 - Vs)/(1 - vx2*Vs);
+    // double lfacu = 1./sqrt(1.-betau*betau);
+    // double fvelu = lfacu*betau;
+
+    // spectral index calculation (shock lfac setup: we assume vx2 = 0)
+    // in other words we're always running into a static environment
+    double betau = Vs;
     double lfacu = 1./sqrt(1.-betau*betau);
     double fvelu = lfacu*betau;
+
     *pspec = spectral_p(fvelu);
 
     return(Sd);
