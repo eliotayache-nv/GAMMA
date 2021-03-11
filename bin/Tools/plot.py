@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-04 15:25:16
+# @Last Modified time: 2021-03-11 11:34:01
 
 
 import numpy as np
@@ -194,6 +194,15 @@ def quadMesh(data, key,
   y = np.append(y,np.expand_dims(y[-1,:], axis=0), axis=0)
   dy = np.append(dy,np.expand_dims(dy[-1,:], axis=0), axis=0)
 
+  # duplicating first column for plotting
+  z = np.append(z, np.expand_dims(z[:,-1], axis=1), axis=1)
+  x = np.append(x, np.expand_dims(x[:,-1], axis=1), axis=1)
+  dx = np.append(dx, np.expand_dims(dx[:,-1], axis=1), axis=1)
+  y = np.append(y, np.expand_dims(y[:,-1], axis=1), axis=1)
+  dy = np.append(dy, np.expand_dims(dy[:,-1], axis=1), axis=1)
+
+  nact = np.array([np.count_nonzero(~np.isnan(xj)) for xj in x])
+
   z = np.ma.masked_array(z, np.isnan(z))
   x = np.ma.masked_array(x, np.isnan(x))
   y = np.ma.masked_array(y, np.isnan(y))
@@ -252,6 +261,7 @@ def quadMesh(data, key,
     xj = x - dx/2.
     yj = y - dy/2.
     dyj = dy
+    xj[j,nact[j]-1] += dx[j,nact[j]-1]
 
     if mov == 'y':
       tmp = np.copy(xj)
@@ -259,15 +269,8 @@ def quadMesh(data, key,
       yj = np.copy(tmp)
       dyj = dx
 
-    xj[j+1,:] = xj[j,:]   #these xj[] might not exist
-    yj[j+1,:] = yj[j,:]+dyj[j,:]   #these xj[] might not exist
-
-    # if (geometry=='polar'):
-    #   xx = xj * np.cos(yj)
-    #   yy = xj * np.sin(yj)
-    #   xj = xx
-    #   yj = yy
-
+    xj[j+1,:] = xj[j,:]   
+    yj[j+1,:] = yj[j,:]+dyj[j,:]   
 
     mask = np.zeros(z.shape)+1
     mask[j,:] = 0
