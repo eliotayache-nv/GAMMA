@@ -1,8 +1,8 @@
 /*
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
-* @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-11 15:53:14
+* @Last Modified by:   eliotayache
+* @Last Modified time: 2021-03-11 17:21:09
 */
 
 #include "../environment.h"
@@ -414,22 +414,19 @@ void Grid::updateGhosts(int it, double t){
       }
     }
 
-    #pragma omp critical
-    {
-      for (int q = 0; q < NUM_Q; ++q){
-        grad_avg[q] /= dAtot;
-        c0->grad_f1[q] = grad_avg[q]; // initialising for following minmod
-      }
-
-      // applying slope limiter
-      for (int n = 0; n < n_neighs; ++n){
-        for (int q = 0; q < NUM_Q; ++q){
-          double tmp = c0->grad_f1[q];
-          c0->grad_f1[q] = minmod(tmp, grads[n][q]);
-        }
-      } 
+    for (int q = 0; q < NUM_Q; ++q){
+      grad_avg[q] /= dAtot;
+      c0->grad_f1[q] = grad_avg[q]; // initialising for following minmod
     }
-    
+
+    // applying slope limiter
+    for (int n = 0; n < n_neighs; ++n){
+      for (int q = 0; q < NUM_Q; ++q){
+        double tmp = c0->grad_f1[q];
+        c0->grad_f1[q] = minmod(tmp, grads[n][q]);
+      }
+    } 
+
   }
 
 
@@ -901,17 +898,11 @@ void Grid::computeFluxes(){
     }
   }
   // computing fluxes
-  #pragma omp parallel for 
   for (int j = 0; j < nde_nax[F1]-1; ++j){
     double jpos = Ctot[j][iLbnd[j]+1].G.x[F1] + Ctot[j][iLbnd[j]+1].G.dx[F1]/2.;
 
-    // // resetting fluxes
-    // for (int i = 0; i < ntrack[j]; ++i){
-    //   for (int q = 0; q < NUM_Q; ++q){ Ctot[j][i].flux[1][F1][q] = 0.; }
-    // }
-    // for (int i = 0; i < ntrack[j+1]; ++i){
-    //   for (int q = 0; q < NUM_Q; ++q){ Ctot[j+1][i].flux[0][F1][q] = 0.; }
-    // }
+    // parralellising on MV here to avoid mismatch with neighbouring tracks
+    #pragma omp parallel for 
     for (int i = 0; i < ntrack[j]; ++i){
 
       Cell *c0 = &Ctot[j][i];
@@ -942,19 +933,16 @@ void Grid::computeFluxes(){
         Int.computeLambda();
         Int.computeFlux();
 
-        #pragma omp critical // writing on adjacent tracks: needs to be atomic
-        {
-          #if SHOCK_DETECTION_ == ENABLED_
-            // printf("%le %le %d %d\n", c0->S.prim[PPP], cn->S.prim[PPP], c0->nde_ind[1], cn->nde_ind[1]);
-            Int.measureShock(c0, cn);
-          #endif
+        #if SHOCK_DETECTION_ == ENABLED_
+          // printf("%le %le %d %d\n", c0->S.prim[PPP], cn->S.prim[PPP], c0->nde_ind[1], cn->nde_ind[1]);
+          Int.measureShock(c0, cn);
+        #endif
 
-          c0->update_dt(F1, Int.lL);
-          cn->update_dt(F1, Int.lR);
-          for (int q = 0; q < NUM_Q; ++q){
-            c0->flux[1][F1][q] += Int.flux[q];
-            cn->flux[0][F1][q] += Int.flux[q];
-          }
+        c0->update_dt(F1, Int.lL);
+        cn->update_dt(F1, Int.lR);
+        for (int q = 0; q < NUM_Q; ++q){
+          c0->flux[1][F1][q] += Int.flux[q];
+          cn->flux[0][F1][q] += Int.flux[q];
         }
 
       }
