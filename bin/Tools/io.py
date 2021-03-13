@@ -2,11 +2,12 @@
 # @Author: Eliot Ayache
 # @Date:   2021-01-30 17:59:32
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-12 20:30:34
+# @Last Modified time: 2021-03-13 14:30:41
 
 import pandas as pd
 import numpy as np
 import h5py
+import os
 
 def readData(key, it=None, sequence=False):
   if sequence:
@@ -36,8 +37,9 @@ def pandas2double(data):
   p = extract(data, "p")
   vx = extract(data, "vx")
   vy = extract(data, "vy")
+  trac = extract(data, "trac")
   x = extract(data, "x")
-  dset = np.column_stack((rho, p, vx, vy, x))  # cell values
+  dset = np.column_stack((rho, p, vx, vy, trac, x))  # cell values
 
   ntot = data.shape[0]
   Nr = pivot(data, "nact")[:,0] # number of cells in each track
@@ -64,6 +66,8 @@ def toH5(key, it, sequence):
   pandata = readData(key, it, sequence)
 
   filename = '../../results/%s/phys%010d.h5'  %(key,it)
+  if os.path.exists(filename):
+    os.remove(filename)
   f = h5py.File(filename, 'a')
 
   values, Index, Nr, T, p_kph, t_jph = pandas2double(pandata)
