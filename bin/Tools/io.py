@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2021-01-30 17:59:32
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-14 11:51:32
+# @Last Modified time: 2021-03-14 12:00:06
 
 import pandas as pd
 import numpy as np
@@ -35,7 +35,7 @@ def readData(key, it=None, sequence=False):
 
 def applyToAll(dir, func, *args, **kwargs):
   for filename in glob.glob("../../results/%s/*.out" %dir):
-    name = filename.split("results/")[1]
+    name = filename.split("/")[-1]
     print(name)
     it = int(extractDigits(name, leading_zeros=False))
     func(dir, it, *args, **kwargs)
