@@ -2,12 +2,25 @@
 # @Author: Eliot Ayache
 # @Date:   2021-01-30 17:59:32
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-13 14:30:41
+# @Last Modified time: 2021-03-14 11:51:32
 
 import pandas as pd
 import numpy as np
 import h5py
 import os
+import glob
+
+
+def extractDigits(s, leading_zeros=True):
+  if leading_zeros:
+    return(''.join(filter(str.isdigit, s)))
+  else:
+    res = ''.join(filter(str.isdigit, s)).lstrip('0')
+    if res != '':
+      return res
+    else:
+      return '0'
+
 
 def readData(key, it=None, sequence=False):
   if sequence:
@@ -20,13 +33,22 @@ def readData(key, it=None, sequence=False):
   return(data)
 
 
+def applyToAll(dir, func, *args, **kwargs):
+  for filename in glob.glob("../../results/%s/*.out" %dir):
+    name = filename.split("results/")[1]
+    print(name)
+    it = int(extractDigits(name, leading_zeros=False))
+    func(dir, it, *args, **kwargs)
 
 
 def extract(data, key):
   return(data[key].to_numpy())
 
+
+
 def pivot(data, key):
   return(data.pivot(index="j", columns="i", values=key).to_numpy())
+
 
 
 def pandas2double(data):
@@ -62,7 +84,8 @@ def pandas2double(data):
 
 
 
-def toH5(key, it, sequence):
+def toH5(key, it):
+  sequence = True
   pandata = readData(key, it, sequence)
 
   filename = '../../results/%s/phys%010d.h5'  %(key,it)
