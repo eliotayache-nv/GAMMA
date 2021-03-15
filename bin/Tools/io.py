@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2021-01-30 17:59:32
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-14 12:00:06
+# @Last Modified time: 2021-03-15 01:13:05
 
 import pandas as pd
 import numpy as np
@@ -10,6 +10,8 @@ import h5py
 import os
 import glob
 
+mp_ = 1.6726219e-24
+c_  = 2.99792458e10
 
 def extractDigits(s, leading_zeros=True):
   if leading_zeros:
@@ -34,11 +36,15 @@ def readData(key, it=None, sequence=False):
 
 
 def applyToAll(dir, func, *args, **kwargs):
-  for filename in glob.glob("../../results/%s/*.out" %dir):
+  filelist = sorted(glob.glob("../../results/%s/*.out" %dir))
+  l=[]
+  for filename,index in zip(filelist,range(len(filelist))):
     name = filename.split("/")[-1]
-    print(name)
+    print("%d, %s" %(index,name))
     it = int(extractDigits(name, leading_zeros=False))
-    func(dir, it, *args, **kwargs)
+    l.append(func(dir, it, index, *args, **kwargs))
+  l = np.array(l)
+  return(filelist, l) 
 
 
 def extract(data, key):
@@ -55,13 +61,17 @@ def pandas2double(data):
 
   T = data["t"][0] # time
 
-  rho = extract(data, "rho")
-  p = extract(data, "p")
+  rho = extract(data, "rho")*mp_
+  p = extract(data, "p")*mp_*c_**2
   vx = extract(data, "vx")
   vy = extract(data, "vy")
   trac = extract(data, "trac")
-  x = extract(data, "x")
-  dset = np.column_stack((rho, p, vx, vy, trac, x))  # cell values
+  x = extract(data, "x")*c_
+  v2 = (vx**2+vy**2)
+  lfac = 1./np.sqrt(1 - v2)
+  ux = vx*lfac
+  uy = vy*lfac
+  dset = np.column_stack((rho, p, ux, uy, trac, x))  # cell values
 
   ntot = data.shape[0]
   Nr = pivot(data, "nact")[:,0] # number of cells in each track
@@ -82,13 +92,15 @@ def pandas2double(data):
 
 
 
+def toH5(key, it, index):
 
+  if index > 9999:
+    print("ERROR! index too high!")
+    return -1
 
-def toH5(key, it):
-  sequence = True
-  pandata = readData(key, it, sequence)
+  pandata = readData(key, it, sequence=True)
 
-  filename = '../../results/%s/phys%010d.h5'  %(key,it)
+  filename = '../../results/%s/%04d.h5'  %(key,index)
   if os.path.exists(filename):
     os.remove(filename)
   f = h5py.File(filename, 'a')
@@ -106,6 +118,45 @@ def toH5(key, it):
   dset = f.create_dataset("Grid/T", data=T)
   dset = f.create_dataset("Grid/p_kph", data=p_kph)
   dset = f.create_dataset("Grid/t_jph", data=t_jph)
+
+  f.close()
+
+  return T
+
+
+
+def prepForBlast(dir, geometry=None):
+  if geometry is None or (geometry != "cylindrical" and geometry != "spherical"):
+    print("ERROR! Please specify geometry (cylindrical/spherical).")
+    print("Exiting and returning -1.")
+    return(-1)
+  header_filename = '../../results/%s/header.h5'  %(dir)
+  if os.path.exists(header_filename):
+    os.remove(header_filename)
+  f = h5py.File(header_filename, 'a')
+
+  utf8_type = h5py.string_dtype('utf-8', 12)
+  dset_geom = f.create_dataset("geometry", 
+                               data=np.array(geometry.encode("utf-8"), 
+                                             dtype=utf8_type))
+    # fixed-length string
+
+  filelist, times = applyToAll(dir, toH5)
+  no_snapshots = len(filelist)
+  dset_no_snapshots = f.create_dataset("no_snapshots", data=no_snapshots)
+  dset_t = f.create_dataset("t", data=times)
+  f.close()
+
+
+
+
+
+
+
+
+
+
+
 
 
 
