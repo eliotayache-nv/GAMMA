@@ -97,8 +97,8 @@ static void calcBM(double r, double t, double *rho, double *u, double *p,
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 300;              // number of cells in r direction
-  par->ncell[y_] = 100;               // number of cells in theta direction
+  par->ncell[x_] = 500;              // number of cells in r direction
+  par->ncell[y_] = 500;               // number of cells in theta direction
   par->nmax      = 5000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
@@ -108,10 +108,12 @@ void loadParams(s_par *par){
 int Grid::initialGeometry(){                              
 
   // slighlty moving the grid to resolve the shock more precisely
-  // double rmin = rmin0 + (rmax0-rmin0)/(2.*ncell[r_]);
-  // double rmax = rmax0 + (rmax0-rmin0)/(2.*ncell[r_]);
-  double rmin = rmin0;
-  double rmax = rmax0;
+  double dr0 = (rmax0-rmin0)/ncell[x_];
+  double shift = dr0 * (1 - (int) ((RShock - rmin0)/dr0)) * 0.99;
+  double rmin = rmin0 + shift;
+  double rmax = rmax0 + shift;
+  // double rmin = rmin0;
+  // double rmax = rmax0;
 
   // grid defined in length units of light-seconds
   rmin /= lNorm;
@@ -197,7 +199,7 @@ int Grid::initialValues(){
       else{
 
         // computing an average over each cell
-        int nbins = 1000;
+        int nbins = 1;
         double ddx = dr_denorm / nbins;
         double xl = r_denorm - dr_denorm/2.;
         double xr = xl+ddx;
@@ -437,7 +439,7 @@ void FluidState::cons2prim_user(double *rho, double *p, double *uu){
 void Simu::dataDump(){
 
   // if (it%1 == 0){ grid.printCols(it, t); }
-  if (it%100 == 0){ grid.printCols(it, t); }
+  if (it%20 == 0){ grid.printCols(it, t); }
 
 }
 
