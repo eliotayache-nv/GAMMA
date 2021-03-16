@@ -20,7 +20,7 @@ static double pNorm = rhoNorm*vNorm*vNorm;    // pressure normalised to rho_CMB/
 // BM parameters
 static double Etot = 1e53;     // erg
 static double n_ext = 1.e0;      // external medium number density
-static double tstart = 4.36e6;    // s,starting time (determines initial position of BW)
+static double tstart = 4.36e6;    // s,starting time (determines initial position of BW) (4.36 for lfacf=100)
 static double Rscale = 1.e17;   // cm
 static double k = 0.;           // ext medium density profile
 
@@ -152,6 +152,8 @@ int Grid::initialGeometry(){
 }
 
 int Grid::initialValues(){
+
+  printf("lfacf = %le\n", lfacf);
 
   // Careful, geometrical quantities are already normalised when using this function.
   
