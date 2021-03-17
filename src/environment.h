@@ -52,7 +52,7 @@ enum{skip_,merge_,split_};
 #define VI     1.            // interface velocity (units of CD velocity)
 #define GAMMA_ (5./3.)
 #define EOS_   SYNGE_EOS_
-#define CFL_   0.2
+#define CFL_   0.5
 
 #define DUMPSTEP_ 100
 

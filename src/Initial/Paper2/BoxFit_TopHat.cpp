@@ -97,8 +97,8 @@ static void calcBM(double r, double t, double *rho, double *u, double *p,
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 500;              // number of cells in r direction
-  par->ncell[y_] = 500;               // number of cells in theta direction
+  par->ncell[x_] = 2500;              // number of cells in r direction
+  par->ncell[y_] = 300;               // number of cells in theta direction
   par->nmax      = 5000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
@@ -289,9 +289,22 @@ void Grid::userKinematics(int it, double t){
   // Checking if shock is too far behind.
   if (worldrank == 0){
     int ja = jLbnd+1;
-    int ia = max(iRbnd[ja]-20,0);
+    int iout = iRbnd[ja]-1;
+    int iin = iLbnd[ja]+1;
+    double rout = Ctot[ja][iout].G.x[r_];
+    double rin = Ctot[ja][iin].G.x[r_];
+    double rlim = rin + 0.9 * (rout-rin);
+    int ia = iin;
+    double rcand = rin;
     Cell c = Ctot[ja][ia];
-    if (c.S.prim[PPP] < 1.1*eta){ vb = 0; }
+    double pcand = c.S.prim[PPP];
+    while (rcand < rlim){
+      ia++;
+      c = Ctot[ja][ia];
+      rcand = c.G.x[r_];
+      pcand = c.S.prim[PPP];
+    }
+    if (pcand < 1.1*eta and t > 5.e6){ vb = 0; }
   }
 
   // applying updated bounary velocity to ll processes
@@ -397,7 +410,7 @@ int Grid::checkCellForRegrid(int j, int i){
 
   double target_ar = 1.;
   double split_AR   = 3.;                   // set upper bound as ratio of target_AR
-  double merge_AR   = 0.2;                  // set upper bound as ratio of target_AR
+  double merge_AR   = 0.01;                  // set upper bound as ratio of target_AR
 
   if (ar > split_AR * target_ar) { // if cell is too long for its width
     return(split_);                       // split
@@ -439,7 +452,7 @@ void FluidState::cons2prim_user(double *rho, double *p, double *uu){
 void Simu::dataDump(){
 
   // if (it%1 == 0){ grid.printCols(it, t); }
-  if (it%20 == 0){ grid.printCols(it, t); }
+  if (it%500 == 0){ grid.printCols(it, t); }
 
 }
 
