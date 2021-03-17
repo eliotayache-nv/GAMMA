@@ -108,12 +108,12 @@ void loadParams(s_par *par){
 int Grid::initialGeometry(){                              
 
   // slighlty moving the grid to resolve the shock more precisely
-  double dr0 = (rmax0-rmin0)/ncell[x_];
-  double shift = dr0 * (1 - (int) ((RShock - rmin0)/dr0)) * 0.99;
-  double rmin = rmin0 + shift;
-  double rmax = rmax0 + shift;
-  // double rmin = rmin0;
-  // double rmax = rmax0;
+  // double dr0 = (rmax0-rmin0)/ncell[x_];
+  // double shift = dr0 * (1 - (int) ((RShock - rmin0)/dr0)) * 0.99;
+  // double rmin = rmin0 + shift;
+  // double rmax = rmax0 + shift;
+  double rmin = rmin0;
+  double rmax = rmax0;
 
   // grid defined in length units of light-seconds
   rmin /= lNorm;
@@ -199,7 +199,7 @@ int Grid::initialValues(){
       else{
 
         // computing an average over each cell
-        int nbins = 1;
+        int nbins = 10;
         double ddx = dr_denorm / nbins;
         double xl = r_denorm - dr_denorm/2.;
         double xr = xl+ddx;
@@ -210,7 +210,7 @@ int Grid::initialValues(){
 
         for (int ix = 0; ix < nbins; ++ix){
           double x = (xr+xl)/2.;
-          double ddV = 4./3.*PI*(xr*xr*xr-xl*xl*xl);
+          double ddV = 4.*PI*x*x*ddx;
           double chi = (1. + 2.*(4.-k)*lfacShock2) * (1. - x/(c_*tstart));
           double dp = pf*pow(chi, -(17.-4.*k)/(12.-3.*k));
           double dlfac = sqrt(lfacf*lfacf/chi + 1);  // (+1) to ensure lfac>1
@@ -453,6 +453,15 @@ void Simu::dataDump(){
 
   // if (it%1 == 0){ grid.printCols(it, t); }
   if (it%500 == 0){ grid.printCols(it, t); }
+
+  // datadump in log time:
+  int ndumps_per_decade = 100;
+  static double t_last_dump = tstart;
+  double logdiff = log10(t)-log10(t_last_dump);
+  if (logdiff > 1./ndumps_per_decade){
+    t_last_dump = t; 
+    grid.printCols(it, t); 
+  }
 
 }
 
