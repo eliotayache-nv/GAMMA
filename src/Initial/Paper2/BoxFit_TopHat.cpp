@@ -199,7 +199,7 @@ int Grid::initialValues(){
       else{
 
         // computing an average over each cell
-        int nbins = 10;
+        int nbins = 1;
         double ddx = dr_denorm / nbins;
         double xl = r_denorm - dr_denorm/2.;
         double xr = xl+ddx;
@@ -242,7 +242,7 @@ int Grid::initialValues(){
 
           rho += drho*ddV / dV;
           v += dv*ddV / dV;
-          lfac += dlfac*ddV/dV;
+          lfac += dlfac*ddV / dV;
           p += dp*ddV / dV;
           gmax += dgmax*ddV / dV;
           gmin += dgmin*ddV / dV;
@@ -261,7 +261,10 @@ int Grid::initialValues(){
         c->S.prim[PPP] = p/pNorm;
         c->S.prim[TR1] = 2.;
         c->S.prim[PSN] = p_;
+
+        // if (j == 3) printf("%le %le %le %le\n", rho, v, lfac, p);
       }
+
 
       double rho_local = c->S.prim[RHO];
       c->S.prim[GMX] = pow(rho_local, 1./3.)/gmax;
@@ -272,6 +275,7 @@ int Grid::initialValues(){
       // c->S.cons2prim(c->G.x[r_]);
     }
   } 
+  // exit(11);
   return 0;
 
 }
