@@ -105,9 +105,9 @@ static void calcBM(double r, double t, double *rho, double *u, double *p,
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 2500;              // number of cells in r direction
+  par->ncell[x_] = 5000;              // number of cells in r direction
   par->ncell[y_] = 300;               // number of cells in theta direction
-  par->nmax      = 5000;              // max number of cells in MV direction
+  par->nmax      = 6000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -159,6 +159,7 @@ int Grid::initialGeometry(){
       c->computeAllGeom();
 
       r_prec = r;
+      dr_prec = dr;
     }
   }
 
@@ -212,7 +213,7 @@ int Grid::initialValues(){
       else{
 
         // computing an average over each cell
-        int nbins = 1;
+        int nbins = 100;
         double ddx = dr_denorm / nbins;
         double xl = r_denorm - dr_denorm/2.;
         double xr = xl+ddx;
