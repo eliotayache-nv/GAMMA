@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-11 11:34:01
+# @Last Modified time: 2021-03-18 17:03:21
 
 
 import numpy as np
@@ -64,7 +64,7 @@ def getArray(data, key):
 
 
 
-def plotMulti(data, keys, log=[], labels={}, **kwargs):
+def plotMulti(data, keys, jtrack=None, log=[], labels={}, **kwargs):
 
   Nk = len(keys)
   f, axes = plt.subplots(Nk, 1, sharex=True, figsize=(6,2*Nk))
@@ -95,6 +95,7 @@ def plot1D(data, key,
   line=True,
   r2=False,
   x_norm=None,
+  jtrack=None,
   label=None, **kwargs):
 
   if key=="lfac":
@@ -102,9 +103,14 @@ def plot1D(data, key,
   else:
     var = key
 
-  z = data[var].to_numpy()
-  x  = np.copy(data["x"].to_numpy())
-  tracvals = data["trac"].to_numpy()
+  if jtrack is not(None):
+    z = pivot(data, var)[jtrack,:]
+    x = pivot(data, "x")[jtrack,:]
+    tracvals = pivot(data, "trac")[jtrack,:]
+  else:
+    z = data[var].to_numpy()
+    x  = np.copy(data["x"].to_numpy())
+    tracvals = data["trac"].to_numpy()
 
   if x_norm is not(None):
     x /= x_norm
@@ -394,6 +400,65 @@ def BMwave(data):
   axes[0].legend()
   plt.tight_layout()
   return(f, axes)
+
+
+# ----------------------------------------------------------------------------------------
+# Specific functions
+def AnalyseBoxFit(data, jtrack=0):
+
+  E0 = 1.e53
+  n0 = 1.e0
+  t = data["t"][0]
+  BW = BM(E0, n0, t)
+  RShock = BW.RShock/lNorm
+
+  f, axes = plotMulti(data, ["rho","p","lfac"], 
+    jtrack=jtrack,
+    tracer=False, 
+    line=False, 
+    labels={"rho":"$\\rho/\\rho_0$", "p":"$p/p_0$","lfac":"$\\gamma$"}, x_norm=RShock)
+
+  plotBM1D(data, "rho", x_norm=RShock, ax=axes[0], color="r", label="exact", zorder=10)
+  plotBM1D(data, "p", x_norm=RShock, ax=axes[1], color="r", zorder=10)
+  plotBM1D(data, "lfac", x_norm=RShock, ax=axes[2], color="r", zorder=10)
+
+  plt.xlim(0.997, 1.001)
+  axes[0].set_yscale("log")
+  axes[1].set_yscale("log")
+  axes[2].set_yscale("log")
+  plt.xlabel("$r/r_\\mathrm{shock}$")
+  axes[0].legend()
+  plt.tight_layout()
+  return(f, axes)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
