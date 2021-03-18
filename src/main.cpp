@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-02-19 11:52:49
+* @Last Modified time: 2021-03-18 11:43:57
 */
 
 #include "main.h"
@@ -17,13 +17,21 @@ static void chbindir(const char binPath[]);
 
 int main(int argc, char *argv[]){
 
-  printf("Hello! Welcome to GAMMA2D!\n");
+  if (worldrank == 0) {
+    printf("\n");
+    printf("Hello! Welcome to GAMMA2D!\n");
+    printf("  ___   __   _  _  _  _   __   ____  ____ \n");
+    printf(" / __) / _\\ ( \\/ )( \\/ ) / _\\ (___ \\(    \\ \n");
+    printf("( (_ \\/    \\/ \\/ \\/ \\/ \\/    \\ / __/ ) D ( \n");
+    printf(" \\___/\\_/\\_/\\_)(_/\\_)(_/\\_/\\_/(____)(____/\n");
+    printf("\n");
+  }
 
   int status;
   Simu simu;
   Flags flags;
 
-  printf("%d\n", omp_get_num_procs());
+  printf("Node %d: OMP processes on node = %d\n", worldrank, omp_get_num_procs());
 
   chbindir(argv[0]);
   flags.load(argc, argv);

@@ -3,6 +3,9 @@
 #include "../../constants.h"
 #include "../../simu.h"
 
+
+
+
 // set shell and CBM parameters
 static double n0      = 1.;           // cm-3:    CBM number density
 static double rho_ext = n0*mp_;       // g.cm-3:  comoving CBM mass density
@@ -40,6 +43,13 @@ static double Df = 2.*lfacShock2*rhoa;
 // grid size from shock position
 static double rmin0 = RShock*(1.-200./lfacShock2); // 1.5e6*lNorm;
 static double rmax0 = RShock*(1.+1000./lfacShock2);
+
+// ARM parameters
+static double target_ar = 1.;
+static double split_AR   = 3.;                   // set upper bound as ratio of target_AR
+static double merge_AR   = 0.01;                  // set upper bound as ratio of target_AR
+
+
 
 
 static void calcBM(double r, double t, double *rho, double *u, double *p, 
@@ -103,6 +113,36 @@ void loadParams(s_par *par){
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
+
+  if (worldrank == 0){
+    printf("\n");
+    printf("- BOXFIT SETUP -\n");
+    printf("----------------\n");
+    printf("\n");
+    printf("Initial parameters:\n");
+    printf("\n");
+    printf("BM params:\n");
+    printf("  Etot    = %.1le (erg)\n", Etot);
+    printf("  n_ext   = %.1le (cm-3)\n", n_ext);
+    printf("  tstart  = %.3le (s)\n", tstart);
+    printf("\n");
+    printf("  lfacS   = %.0lf\n", sqrt(lfacShock2));
+    printf("  RShock  = %.4le\n", RShock);
+    printf("\n");
+    printf("Jet params:\n");
+    printf("  theta_0 = %.2lg (rad, half opening angle)\n", th0);
+    printf("  eta     = %.1le\n", eta);
+    printf("\n");
+    printf("Grid params:\n");
+    printf("  nr     = %d \n  ntheta = %d\n", par->ncell[x_], par->ncell[y_]);
+    printf("  radial size: %.4le (cm) -- %.4le (cm)\n", rmin0, rmax0);
+    printf("\n");
+    printf("AMR: aspect ratio %lg -> %lg <- %lg\n", merge_AR, target_ar, split_AR);
+    printf("\n");
+    printf("----------------\n");
+    printf("\n");
+  }
+
 }
 
 int Grid::initialGeometry(){                              
@@ -411,10 +451,6 @@ int Grid::checkCellForRegrid(int j, int i){
   //   return(merge_);                       // merge
   // }
   // return(skip_);
-
-  double target_ar = 1.;
-  double split_AR   = 3.;                   // set upper bound as ratio of target_AR
-  double merge_AR   = 0.01;                  // set upper bound as ratio of target_AR
 
   if (ar > split_AR * target_ar) { // if cell is too long for its width
     return(split_);                       // split
