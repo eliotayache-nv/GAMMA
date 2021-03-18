@@ -41,15 +41,13 @@ static double Df = 2.*lfacShock2*rhoa;
   // Blandford&McKee(1976) eq. 8-10
 
 // grid size from shock position
-static double rmin0 = RShock*(1.-200./lfacShock2); // 1.5e6*lNorm;
-static double rmax0 = RShock*(1.+1000./lfacShock2);
+static double rmin0 = RShock*(1.-50./lfacShock2); // 1.5e6*lNorm;
+static double rmax0 = RShock*(1.+100./lfacShock2);
 
 // ARM parameters
-static double target_ar = 1.;
-static double split_AR   = 3.;                   // set upper bound as ratio of target_AR
-static double merge_AR   = 0.01;                  // set upper bound as ratio of target_AR
-
-
+static double target_ar = 1.;     // target aspect ratio for lfac=1
+static double split_AR   = 3.;    // set upper bound as ratio of target_AR
+static double merge_AR   = 0.1;  // set upper bound as ratio of target_AR
 
 
 static void calcBM(double r, double t, double *rho, double *u, double *p, 
@@ -114,35 +112,6 @@ void loadParams(s_par *par){
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
 
-  if (worldrank == 0){
-    printf("\n");
-    printf("- BOXFIT SETUP -\n");
-    printf("----------------\n");
-    printf("\n");
-    printf("Initial parameters:\n");
-    printf("\n");
-    printf("BM params:\n");
-    printf("  Etot    = %.1le (erg)\n", Etot);
-    printf("  n_ext   = %.1le (cm-3)\n", n_ext);
-    printf("  tstart  = %.3le (s)\n", tstart);
-    printf("\n");
-    printf("  lfacS   = %.0lf\n", sqrt(lfacShock2));
-    printf("  RShock  = %.4le\n", RShock);
-    printf("\n");
-    printf("Jet params:\n");
-    printf("  theta_0 = %.2lg (rad, half opening angle)\n", th0);
-    printf("  eta     = %.1le\n", eta);
-    printf("\n");
-    printf("Grid params:\n");
-    printf("  nr     = %d \n  ntheta = %d\n", par->ncell[x_], par->ncell[y_]);
-    printf("  radial size: %.4le (cm) -- %.4le (cm)\n", rmin0, rmax0);
-    printf("\n");
-    printf("AMR: aspect ratio %lg -> %lg <- %lg\n", merge_AR, target_ar, split_AR);
-    printf("\n");
-    printf("----------------\n");
-    printf("\n");
-  }
-
 }
 
 int Grid::initialGeometry(){                              
@@ -190,12 +159,11 @@ int Grid::initialGeometry(){
       c->computeAllGeom();
     }
   }
+
   return 0;
 }
 
 int Grid::initialValues(){
-
-  printf("lfacf = %le\n", lfacf);
 
   // Careful, geometrical quantities are already normalised when using this function.
   
@@ -216,6 +184,7 @@ int Grid::initialValues(){
   }
 
   // initialise grid
+  double minar=1.e16, maxar=0; // aspect ratios
   for (int j = 0; j < ncell[F1]; ++j){        // loop through cells along theta
     for (int i = 0; i < ncell[MV]; ++i){      // loop through cells along r
       Cell *c = &Cinit[j][i];
@@ -223,10 +192,12 @@ int Grid::initialValues(){
       double r = c->G.x[x_];                  // ls:  radial coordinate
       double th = c->G.x[t_];                  // ls:  radial coordinate
       double dr = c->G.dx[x_];                  // ls:  radial coordinate
+      double dth = c->G.dx[t_];
       double r_denorm = r*lNorm;
       double dr_denorm = dr*lNorm;
       double gmax = 1.;
       double gmin = 1.;
+      double lfac_ar = 1.;
 
       if ( r_denorm > RShock or th > th0){   // if in the shell tail
         double rho = n_ext*mp_*pow(r_denorm/Rscale, -k);
@@ -294,6 +265,7 @@ int Grid::initialValues(){
         gmax = fmax(1.,gmax);
         gmin = fmax(1.,gmin);
         lfac = fmax(1.,lfac);
+        lfac_ar = lfac;
 
         c->S.prim[RHO] = rho/rhoNorm;
         c->S.prim[VV1] = v/vNorm;
@@ -302,9 +274,13 @@ int Grid::initialValues(){
         c->S.prim[TR1] = 2.;
         c->S.prim[PSN] = p_;
 
-        // if (j == 3) printf("%le %le %le %le\n", rho, v, lfac, p);
       }
 
+      if (th < th0){  // checking ar only inside the jet
+        double ar = dr/(r*dth) * lfac_ar;
+        minar = fmin(minar, ar);
+        maxar = fmax(maxar, ar);
+      }
 
       double rho_local = c->S.prim[RHO];
       c->S.prim[GMX] = pow(rho_local, 1./3.)/gmax;
@@ -315,7 +291,43 @@ int Grid::initialValues(){
       // c->S.cons2prim(c->G.x[r_]);
     }
   } 
-  // exit(11);
+
+  if (worldrank == 0){
+    printf("\n");
+    printf("- BOXFIT SETUP -\n");
+    printf("----------------\n");
+    printf("\n");
+    printf("Initial parameters:\n");
+    printf("\n");
+    printf("BM params:\n");
+    printf("  Etot    = %.1le (erg)\n", Etot);
+    printf("  n_ext   = %.1le (cm-3)\n", n_ext);
+    printf("  tstart  = %.3le (s)\n", tstart);
+    printf("\n");
+    printf("  lfacS   = %.0lf\n", sqrt(lfacShock2));
+    printf("  RShock  = %.4le\n", RShock);
+    printf("\n");
+    printf("Jet params:\n");
+    printf("  theta_0 = %.2lg (rad, half opening angle)\n", th0);
+    printf("  eta     = %.1le\n", eta);
+    printf("\n");
+    printf("Grid params:\n");
+    printf("  nr     = %d \n  ntheta = %d\n", ncell[x_], ncell[y_]);
+    printf("  radial size: %.4le (cm) -- %.4le (cm)\n", rmin0, rmax0);
+    int nzones_in_BW = RShock/lfacShock2 / ((rmax0 - rmin0)/ncell[r_]);
+    printf("  blast-wave resolution: %d zones\n", nzones_in_BW);
+    printf("\n");
+    printf("AMR:\n");
+    printf("  aspect ratio %lg -> %lg <- %lg\n", merge_AR*target_ar, 
+                                                 target_ar, 
+                                                 split_AR*target_ar);
+    printf("  initial regridVal: %le (min) -- %le (max) \n", minar, maxar);
+    printf("\n");
+    printf("----------------\n");
+    printf("\n");
+  }
+
+
   return 0;
 
 }
@@ -426,36 +438,19 @@ int Grid::checkCellForRegrid(int j, int i){
   Cell c = Ctot[j][i];
 
   // double trac = c.S.prim[TR1];           // get tracer value
-  double r   = c.G.x[r_];                   // get cell radial coordinate
+  // double r   = c.G.x[r_];                   // get cell radial coordinate
   double dr  = c.G.dx[r_];                  // get cell radial spacing
   double dth = c.G.dx[t_];                  // get cell angular spacing
   // double ar_local  = dr / (r*dth);          // calculate cell aspect ratio
   // printf("%le\n", ar);
   double rOut = Ctot[j][iRbnd[j]-1].G.x[x_];
-  double ar  = dr / (rOut*dth);                // calculate cell aspect ratio
-
-  // printf("%le\n", ar);
-
-  // double rmin = Ctot[j][iLbnd[j]+1].G.x[r_];
-  // double rmax = Ctot[j][iRbnd[j]-1].G.x[r_];
-  // double delta_r = rmax - rmin;
-  // double target_dr = delta_r / nact[j];
-
-  // double split_DR   = 3.;                   // set upper bound as ratio of target_AR
-  // double merge_DR   = 0.3;                  // set upper bound as ratio of target_AR
-
-  // if (dr > split_DR * target_dr) {          // if cell is too long for its width
-  //   return(split_);                       // split
-  // }
-  // if (dr < merge_DR * target_dr) {          // if cell is too short for its width
-  //   return(merge_);                       // merge
-  // }
-  // return(skip_);
-
-  if (ar > split_AR * target_ar) { // if cell is too long for its width
+  double ar  = dr / (rOut*dth);             // calculate cell aspect ratio
+                               
+  double lfac = c.S.lfac();
+  if (ar > split_AR * target_ar / lfac) { // if cell is too long for its width
     return(split_);                       // split
   }
-  if (ar < merge_AR * target_ar) { // if cell is too short for its width
+  if (ar < merge_AR * target_ar / lfac) { // if cell is too short for its width
     return(merge_);                       // merge
   }
   return(skip_);
@@ -468,9 +463,12 @@ void Cell::user_regridVal(double *res){
   // adapts the search to special target resolution requirements
   // depending on the tracer value
   
-  // *res = G.dx[r_];
-
-  UNUSED(*res);
+  double r = G.x[r_];
+  double dr = G.dx[r_];
+  double dth = G.dx[t_];
+  double lfac = S.lfac();
+  *res = dr / (r*dth) * lfac;
+    // *lfac to give higher score to very small very fast cells
 
 }
 
