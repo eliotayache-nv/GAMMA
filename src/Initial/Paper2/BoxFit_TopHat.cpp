@@ -42,7 +42,7 @@ static double Df = 2.*lfacShock2*rhoa;
 
 // grid size from shock position
 static double rmin0 = RShock*(1.-50./lfacShock2); // 1.5e6*lNorm;
-static double rmax0 = RShock*(1.+100./lfacShock2);
+static double rmax0 = RShock*(1.+50./lfacShock2);
 
 // ARM parameters
 static double target_ar = 1.;     // target aspect ratio for lfac=1
@@ -127,23 +127,23 @@ int Grid::initialGeometry(){
   // grid defined in length units of light-seconds
   rmin /= lNorm;
   rmax /= lNorm;
-  double dr = (rmax-rmin)/ncell[x_];
 
   // double logrmin  = log(rmin);
   // double logrmax  = log(rmax);
   // double dlogr    = (logrmax-logrmin);
-  
+
   for (int j = 0; j < ncell[y_]; ++j){
+
+    double dr_default = (rmax-rmin)/ncell[x_];
+    double r_prec = rmin;
+    double dr_prec = dr_default;
+
     for (int i = 0; i < ncell[x_]; ++i){
       Cell *c = &Cinit[j][i];
-      
-      // double rlog   = (double) dlogr*(i+0.5)/ncell[x_] + logrmin;
-      // double rlogL  = (double) dlogr*(i  )/ncell[x_] + logrmin;
-      // double rlogR  = (double) dlogr*(i+1)/ncell[x_] + logrmin;
-      // double r_ls   = exp(rlog);
-      // double dr_ls  = exp(rlogR) - exp(rlogL);
-      
-      double r      = rmin + (i+0.5)*dr;
+            
+      double dr     = dr_default;
+      if (r_prec > RShock/lNorm) { dr *= 10; } // increasing size of external cells
+      double r      = r_prec + 0.5*dr_prec + 0.5*dr;
       double jrL    = (double)(j)/ncell[y_];
       double jrR    = (double)(j+1)/ncell[y_];
       double thL    = (double) th_min + (th_simu - th_min)*(0.3*jrL + 0.7*pow(jrL,3));
@@ -157,6 +157,8 @@ int Grid::initialGeometry(){
       c->G.dx[y_]   = dth;
 
       c->computeAllGeom();
+
+      r_prec = r;
     }
   }
 
