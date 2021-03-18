@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-18 17:03:21
+# @Last Modified time: 2021-03-18 18:07:52
 
 
 import numpy as np
@@ -18,7 +18,7 @@ import glob
 import os
 import string
 
-from inout import *
+from gamma_io import *
 from isentropic import *
 from BM import *
 from synchrotron import *
@@ -78,7 +78,7 @@ def plotMulti(data, keys, jtrack=None, log=[], labels={}, **kwargs):
     if key in labels:
       label = labels[key]
 
-    plot1D(data, key, ax, log=logkey, label=label, **kwargs)
+    plot1D(data, key, ax, jtrack=jtrack, log=logkey, label=label, **kwargs)
 
   plt.tight_layout()
 
@@ -411,22 +411,23 @@ def AnalyseBoxFit(data, jtrack=0):
   t = data["t"][0]
   BW = BM(E0, n0, t)
   RShock = BW.RShock/lNorm
+  x_norm = None
 
   f, axes = plotMulti(data, ["rho","p","lfac"], 
     jtrack=jtrack,
     tracer=False, 
     line=False, 
-    labels={"rho":"$\\rho/\\rho_0$", "p":"$p/p_0$","lfac":"$\\gamma$"}, x_norm=RShock)
+    labels={"rho":"$\\rho/\\rho_0$", "p":"$p/p_0$","lfac":"$\\gamma$"}, x_norm=x_norm)
 
-  plotBM1D(data, "rho", x_norm=RShock, ax=axes[0], color="r", label="exact", zorder=10)
-  plotBM1D(data, "p", x_norm=RShock, ax=axes[1], color="r", zorder=10)
-  plotBM1D(data, "lfac", x_norm=RShock, ax=axes[2], color="r", zorder=10)
+  plotBM1D(data, "rho", jtrack=jtrack, x_norm=x_norm, ax=axes[0], color="r", label="exact", zorder=10)
+  plotBM1D(data, "p", jtrack=jtrack, x_norm=x_norm, ax=axes[1], color="r", zorder=10)
+  plotBM1D(data, "lfac", jtrack=jtrack, x_norm=x_norm, ax=axes[2], color="r", zorder=10)
 
-  plt.xlim(0.997, 1.001)
+  plt.xlim(0.90*RShock, 1.05*RShock)
   axes[0].set_yscale("log")
   axes[1].set_yscale("log")
   axes[2].set_yscale("log")
-  plt.xlabel("$r/r_\\mathrm{shock}$")
+  plt.xlabel("$r [cm]$")
   axes[0].legend()
   plt.tight_layout()
   return(f, axes)

@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2019-04-09 11:22:46
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-02-03 15:33:16
+# @Last Modified time: 2021-03-18 17:53:39
 
 # ---------------------------------------------------------------------------------------
 
@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 
-from inout import *
+from gamma_io import *
 
 # ---------------------------------------------------------------------------------------
 
@@ -144,10 +144,15 @@ class BM(object):
     return(S)
 
 
-def plotBM1D(data, key, x_norm=None, ax = None, **kwargs):
+def plotBM1D(data, key, jtrack=None, x_norm=None, ax = None, **kwargs):
 
   time = data["t"][0]
-  x = np.copy(data["x"]*lNorm)
+
+  if jtrack is not(None):
+    x = pivot(data, "x")[jtrack,:]
+    x = x[~np.isnan(x)]*lNorm
+  else:
+    x = np.copy(data["x"]*lNorm)
   y = np.zeros(x.shape[0])
 
   BW = BM(E0, n0, time)
@@ -165,7 +170,7 @@ def plotBM1D(data, key, x_norm=None, ax = None, **kwargs):
   if ax is None:
     ax = plt.gca()
 
-  x_plot = np.copy(x/lNorm)
+  x_plot = np.copy(x)/lNorm
   if x_norm is not(None):
     x_plot /= x_norm
 
