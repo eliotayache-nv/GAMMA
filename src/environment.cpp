@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:34:42
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-17 10:44:10
+* @Last Modified time: 2021-03-18 11:46:36
 */
 
 #include "environment.h"
@@ -23,10 +23,12 @@ void checkEnvironment()
 
 void radiation_InitialChecks(){
 
-  printf("Local Synchrotron calculation ENABLED\n");
-  if (SHOCK_DETECTION_ != ENABLED_){
-    printf("Shock detection needs to be ENABLED!\n");
-    exit(30);
+  if (worldrank == 0){
+    printf("Local Synchrotron calculation ENABLED\n");
+    if (SHOCK_DETECTION_ != ENABLED_){
+      printf("Shock detection needs to be ENABLED!\n");
+      exit(30);
+    }
   }
   
 }
