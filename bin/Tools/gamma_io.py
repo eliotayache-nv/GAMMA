@@ -13,6 +13,19 @@ import glob
 mp_ = 1.6726219e-24
 c_  = 2.99792458e10
 
+
+def computeL1(x, xth, dl):
+  """
+  Computes the L1 error on the specified quantity and returns it.
+  Arguments:
+  - x   : numerical solution
+  - xth : exact solution 
+  Returns:
+  - L1  : The L1 error of the numerical solution
+  """
+  return np.sum(np.abs(x-xth) * dl) / np.sum(dl)
+
+
 def extractDigits(s, leading_zeros=True):
   if leading_zeros:
     return(''.join(filter(str.isdigit, s)))

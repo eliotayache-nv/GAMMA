@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   1020-05-05 10:06:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-18 14:23:20
+* @Last Modified time: 2021-03-18 16:17:24
 */
 
 #include "main.h"
@@ -38,7 +38,8 @@ int main(int argc, char *argv[]){
     printf(" \\___/\\_/\\_/\\_)(_/\\_)(_/\\_/\\_/(____)(____/\n");
     printf("\n");
   }
-  printf("Node %d: OMP processes on node = %d\n", worldrank, omp_get_num_procs());
+  MPI_Barrier(MPI_COMM_WORLD);
+  printf("Node %d: %d OMP procs \n", worldrank, omp_get_num_procs());
   
   if (flags.resume){
     DIR* dir = opendir("../results/Last");
