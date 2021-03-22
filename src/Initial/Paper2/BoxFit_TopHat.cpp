@@ -105,9 +105,9 @@ static void calcBM(double r, double t, double *rho, double *u, double *p,
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 5000;              // number of cells in r direction
+  par->ncell[x_] = 9900;              // number of cells in r direction
   par->ncell[y_] = 300;               // number of cells in theta direction
-  par->nmax      = 6000;              // max number of cells in MV direction
+  par->nmax      = 10000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -213,7 +213,7 @@ int Grid::initialValues(){
       else{
 
         // computing an average over each cell
-        int nbins = 100;
+        int nbins = 1;
         double ddx = dr_denorm / nbins;
         double xl = r_denorm - dr_denorm/2.;
         double xr = xl+ddx;
@@ -496,7 +496,7 @@ void Simu::dataDump(){
   if (it%500 == 0){ grid.printCols(it, t); }
 
   // datadump in log time:
-  int ndumps_per_decade = 100;
+  int ndumps_per_decade = 1000;
   static double t_last_dump = tstart;
   double logdiff = log10(t)-log10(t_last_dump);
   if (logdiff > 1./ndumps_per_decade){
