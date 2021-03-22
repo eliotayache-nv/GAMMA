@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2021-01-30 17:59:32
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-15 01:13:05
+# @Last Modified time: 2021-03-18 22:48:56
 
 import pandas as pd
 import numpy as np
@@ -71,7 +71,12 @@ def pandas2double(data):
   lfac = 1./np.sqrt(1 - v2)
   ux = vx*lfac
   uy = vy*lfac
-  dset = np.column_stack((rho, p, ux, uy, trac, x))  # cell values
+
+  gmin = extract(data, "gmin")
+  gmax = extract(data, "gmax")
+  psyn = extract(data, "psyn")
+
+  dset = np.column_stack((rho, p, ux, uy, trac, x, gmin, gmax, psyn))  # cell values
 
   ntot = data.shape[0]
   Nr = pivot(data, "nact")[:,0] # number of cells in each track
@@ -89,7 +94,6 @@ def pandas2double(data):
   p_kph = np.array([0,2*np.pi]) # phi interface posisions
 
   return(dset, Index, Nr, T, p_kph, t_jph)
-
 
 
 def toH5(key, it, index):
