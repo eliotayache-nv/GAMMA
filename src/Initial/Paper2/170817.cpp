@@ -5,14 +5,18 @@
 
 
 
+// Structured jet params (Ryan, VE+ 2019)
+static double log10_E0 = 52.96;
+static double theta_c = 0.066;
+static double theta_w = 0.47;
+static double log10_n0 = -2.70;
 
 // set shell and CBM parameters
-static double n0      = 1.;           // cm-3:    CBM number density
+static double n0      = pow(10, log10_n0);           // cm-3:    CBM number density
 static double rho_ext = n0*mp_;       // g.cm-3:  comoving CBM mass density
 static double eta     = 1.e-5;        //          eta = p/(rho*c^2)
 static double th_simu = PI/2.;          // rad:     simulation angle
 static double th_min  = 0.;//99.*PI/3200.; // rad:     minimum angle if avioding jet axis
-static double th0 = 0.1;
 
 // normalisation constants:
 static double rhoNorm = rho_ext;                 // density normalised to CBM density
@@ -21,28 +25,21 @@ static double vNorm = c_;                     // velocity normalised to c
 static double pNorm = rhoNorm*vNorm*vNorm;    // pressure normalised to rho_CMB/c^2
 
 // BM parameters
-static double Etot = 1e53;     // erg
-static double n_ext = 1.e0;      // external medium number density
-static double tstart = 4.36e6;    // s,starting time (determines initial position of BW) (4.36 for lfacf=100)
+static double E0 = pow(10, log10_E0);     // erg
+static double n_ext = n0;      // external medium number density
+static double tstart = 4.36e7;    // s,starting time (determines initial position of BW) (4.36 for lfacf=100)
 static double Rscale = 1.e17;   // cm
 static double k = 0.;           // ext medium density profile
 
 // intermediate quantities (Shock description)
-static double lfacShock2 = Etot * (17.- 4.*k)/(8.*PI*n_ext*mp_*pow(tstart,3)*pow(c_,5));
+static double lfacShock20 = E0 * (17.- 4.*k)/(8.*PI*n_ext*mp_*pow(tstart,3)*pow(c_,5));
   // Blandford&McKee(1976) eq. 69
-static double RShock = c_*tstart*(1.-1./(1.+2.*(4.-k)*lfacShock2));
+static double RShock0 = c_*tstart*(1.-1./(1.+2.*(4.-k)*lfacShock20));
   // Blandford&McKee(1976) eq. 27
-static double rhoa = n_ext*mp_*pow(RShock/Rscale, -k);
-static double pa = rhoa*eta*c_*c_;
-// static double ha = c_*c_ + pa*GAMMA_/(GAMMA_-1.)/rhoa;
-// static double pf = 2./3.*lfacShock2*ha*rhoa;
-static double lfacf = sqrt(fmax(1.,.5*lfacShock2));
-static double Df = 2.*lfacShock2*rhoa;
-  // Blandford&McKee(1976) eq. 8-10
 
 // grid size from shock position
-static double rmin0 = RShock*(1.-50./lfacShock2); // 1.5e6*lNorm;
-static double rmax0 = RShock*(1.+50./lfacShock2);
+static double rmin0 = RShock0*(1.-50./lfacShock20); // 1.5e6*lNorm;
+static double rmax0 = RShock0*(1.+50./lfacShock20);
 
 // ARM parameters
 static double target_ar = 1.;     // target aspect ratio for lfac=1
@@ -50,22 +47,19 @@ static double split_AR   = 3.;    // set upper bound as ratio of target_AR
 static double merge_AR   = 0.1;  // set upper bound as ratio of target_AR
 
 
-static void calcBM(double r, double t, double *rho, double *u, double *p, 
+static void calcBM(double E0, double n0,
+                   double r, double t, double *rho, double *u, double *p, 
                    double *gmax, double *gmin){
   // returns normalised primitive variables for BM solution at position r (denormalised).
 
   // repeating from above (these are local)
-  double lfacShock2 = Etot * (17.- 4.*k)/(8.*PI*n_ext*mp_*pow(t,3)*pow(c_,5));
+  double lfacShock2 = E0 * (17.- 4.*k)/(8.*PI*n0*mp_*pow(t,3)*pow(c_,5));
     // Blandford&McKee(1976) eq. 69
   double RShock = c_*t*(1.-1./(1.+2.*(4.-k)*lfacShock2));
     // Blandford&McKee(1976) eq. 27
-  double rhoa = n_ext*mp_*pow(RShock/Rscale, -k);
+  double rhoa = n0*mp_*pow(RShock/Rscale, -k);
   double pa = rhoa*eta*c_*c_;
-  FluidState Sa;
-  Sa.prim[RHO] = rhoa;
-  Sa.prim[PPP] = pa;
-  double gma = Sa.gamma();  // Synge EOS
-  double ha = c_*c_ + pa*gma/(gma-1.)/rhoa;
+  double ha = c_*c_ + pa*GAMMA_/(GAMMA_-1.)/rhoa;
   double pf = 2./3.*lfacShock2*ha*rhoa;
   double lfacf = sqrt(fmax(1.,.5*lfacShock2));
   double Df = 2.*lfacShock2*rhoa;
@@ -109,9 +103,9 @@ static void calcBM(double r, double t, double *rho, double *u, double *p,
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 9900;              // number of cells in r direction
+  par->ncell[x_] = 300;              // number of cells in r direction
   par->ncell[y_] = 300;               // number of cells in theta direction
-  par->nmax      = 10000;              // max number of cells in MV direction
+  par->nmax      = 5000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -146,7 +140,7 @@ int Grid::initialGeometry(){
       Cell *c = &Cinit[j][i];
             
       double dr     = dr_default;
-      if (r_prec > RShock/lNorm) { dr *= 10; } // increasing size of external cells
+      if (r_prec > RShock0/lNorm) { dr *= 10; } // increasing size of external cells
       double r      = r_prec + 0.5*dr_prec + 0.5*dr;
       double jrL    = (double)(j)/ncell[y_];
       double jrR    = (double)(j+1)/ncell[y_];
@@ -189,115 +183,62 @@ int Grid::initialValues(){
   if (LOCAL_SYNCHROTRON_ != ENABLED_){
     printf("WARNING - Set LOCAL_SYNCHROTRON_ to ENABLED_\n");
   }
+  if (eps_e_ != 0.038018){
+    printf("Error! wrong initial value for eps_e_\n");
+    exit(24);
+  }
+  if (eps_B_ != 0.000109){
+    printf("Error! wrong initial value for eps_B_\n");
+    exit(24);
+  }
+  if (zeta_ != 1.){
+    printf("Error! wrong initial value for zeta_\n");
+    exit(24);
+  }
+
 
   // initialise grid
-  double minar=1.e16, maxar=0; // aspect ratios
   for (int j = 0; j < ncell[F1]; ++j){        // loop through cells along theta
     for (int i = 0; i < ncell[MV]; ++i){      // loop through cells along r
       Cell *c = &Cinit[j][i];
 
       double r = c->G.x[x_];                  // ls:  radial coordinate
       double th = c->G.x[t_];                  // ls:  radial coordinate
-      double dr = c->G.dx[x_];                  // ls:  radial coordinate
-      double dth = c->G.dx[t_];
       double r_denorm = r*lNorm;
-      double dr_denorm = dr*lNorm;
-      double gmax = 1.;
-      double gmin = 1.;
-      double lfac_ar = 1.;
 
-      if ( r_denorm > RShock or th > th0){   // if in the shell tail
-        double rho = n_ext*mp_*pow(r_denorm/Rscale, -k);
+      double theta2 = th*th;
+      double theta_c2 = theta_c*theta_c;
+      double E_track = E0*exp(-theta2/(2*theta_c2));
+
+      double lfacShock2 = E_track * (17.- 4.*k)/(8.*PI*n_ext*mp_*pow(tstart,3)*pow(c_,5));
+        // Blandford&McKee(1976) eq. 69
+      double RShock = c_*tstart*(1.-1./(1.+2.*(4.-k)*lfacShock2)); // denormalised
+        // Blandford&McKee(1976) eq. 27
+
+      double rho, u, p, gmax, gmin;
+
+      if ( r_denorm > RShock or th > theta_w){   // if in the shell tail
+        rho = n_ext*mp_*pow(r_denorm/Rscale, -k);
         c->S.prim[RHO]  = rho / rhoNorm;
         c->S.prim[UU1] = 0;
         c->S.prim[UU2] = 0;
         c->S.prim[PPP] = eta*rho*c_*c_/pNorm;
         c->S.prim[TR1] = 1.;
+        c->S.prim[GMX] = pow(rho, 1./3.);
+        c->S.prim[GMN] = pow(rho, 1./3.);
+        c->S.prim[PSN] = p_;
       }
       else{
-
-        // computing an average over each cell
-        int nbins = 1;
-        double ddx = dr_denorm / nbins;
-        double xl = r_denorm - dr_denorm/2.;
-        double xr = xl+ddx;
-        double dV = 4./3.*PI*(pow(r_denorm+dr_denorm/2.,3) - pow(r_denorm-dr_denorm/2., 3));
-        double rho=0,v=0,p=0,lfac=0;
-        gmax = 0;
-        gmin = 0;
-
-        for (int ix = 0; ix < nbins; ++ix){
-          double x = (xr+xl)/2.;
-          double ddV = 4.*PI*x*x*ddx;
-          double chi = (1. + 2.*(4.-k)*lfacShock2) * (1. - x/(c_*tstart));
-          FluidState Sa;
-          Sa.prim[RHO] = rhoa;
-          Sa.prim[PPP] = pa;
-          double gma = Sa.gamma();  // Synge EOS
-          double ha = c_*c_ + pa*gma/(gma-1.)/rhoa;
-          double pf = 2./3.*lfacShock2*ha*rhoa;
-          double dp = pf*pow(chi, -(17.-4.*k)/(12.-3.*k));
-          double dlfac = sqrt(lfacf*lfacf/chi + 1);  // (+1) to ensure lfac>1
-          double dD = Df*pow(chi, -(7.-2.*k)/(4.-k));
-            // Blandford&McKee(1976) eq. 28-30 / 65-67
-          double drho = dD/dlfac;
-          double dv = c_*sqrt(1.-1./(dlfac*dlfac));
-
-          double dt0 = tstart / pow(chi, 0.25);
-          double p0 = pf / pNorm;             // normalised because using EOS afterwards
-          double rho0 = Df / lfacf / rhoNorm;          
-          FluidState S0;
-          S0.prim[RHO] = rho0;
-          S0.prim[PPP] = p0;
-          double gma0 = S0.gamma();
-          double h0 = 1.+p0*gma0/(gma0-1.)/rho0;
-          double eps0 = rho0*(h0-1.)/gma0;
-          double eB0 = eps_B_ * eps0;
-          double B0 = sqrt(8*PI*eB0);
-          double dgmax = 2.*19.*PI*Nme_*lfacf/(NsigmaT_*B0*B0*dt0) 
-            * pow(chi, 25./24.)/(pow(chi, 19./12.)-1.); //gmax = +ifnty for chi=1
-
-          double psyn = p_;
-          double ee0 = eps_e_ * eps0;
-          double ne0 = zeta_ * rho0 / Nmp_;
-          double lfac_av0 = ee0 / (ne0 * Nme_);
-          double gmin0 = (psyn-2.) / (psyn-1.) * lfac_av0;
-          double dgmin = gmin0 / (pow(chi, 13./24.) + gmin0/dgmax);
-
-          rho += drho*ddV / dV;
-          v += dv*ddV / dV;
-          lfac += dlfac*ddV / dV;
-          p += dp*ddV / dV;
-          gmax += dgmax*ddV / dV;
-          gmin += dgmin*ddV / dV;
-
-          xl = xr;
-          xr += ddx;
-        }
-
-        gmax = fmax(1.,gmax);
-        gmin = fmax(1.,gmin);
-        lfac = fmax(1.,lfac);
-        lfac_ar = lfac;
-
-        c->S.prim[RHO] = rho/rhoNorm;
-        c->S.prim[VV1] = v/vNorm;
-        c->S.prim[VV2] = 0;
-        c->S.prim[PPP] = p/pNorm;
+        calcBM(E_track, n0, r_denorm, tstart, &rho, &u, &p, &gmax, &gmin);
+        c->S.prim[RHO] = rho;
+        c->S.prim[UU1] = u;
+        c->S.prim[UU2] = 0;
+        c->S.prim[PPP] = p;
         c->S.prim[TR1] = 2.;
+        c->S.prim[GMX] = pow(rho, 1./3.)/gmax;
+        c->S.prim[GMN] = pow(rho, 1./3.)/gmin;
         c->S.prim[PSN] = p_;
-
       }
-
-      if (th < th0){  // checking ar only inside the jet
-        double ar = dr/(r*dth) * lfac_ar;
-        minar = fmin(minar, ar);
-        maxar = fmax(maxar, ar);
-      }
-
-      double rho_local = c->S.prim[RHO];
-      c->S.prim[GMX] = pow(rho_local, 1./3.)/gmax;
-      c->S.prim[GMN] = pow(rho_local, 1./3.)/gmin;
 
       // don't use cons2prim because doesn't have UU yet, but VV
       // c->S.prim2cons(c->G.x[r_]);
@@ -307,34 +248,34 @@ int Grid::initialValues(){
 
   if (worldrank == 0){
     printf("\n");
-    printf("- BOXFIT SETUP -\n");
+    printf("- 170817 SETUP -\n");
     printf("----------------\n");
     printf("\n");
     printf("Initial parameters:\n");
     printf("\n");
     printf("BM params:\n");
-    printf("  Etot    = %.1le (erg)\n", Etot);
-    printf("  n_ext   = %.1le (cm-3)\n", n_ext);
+    printf("  E0      = %.1le (erg)\n", E0);
+    printf("  n0      = %.1le (cm-3)\n", n0);
     printf("  tstart  = %.3le (s)\n", tstart);
     printf("\n");
-    printf("  lfacS   = %.0lf\n", sqrt(lfacShock2));
-    printf("  RShock  = %.4le\n", RShock);
+    printf("  lfacS0  = %.0lf\n", sqrt(lfacShock20));
+    printf("  RShock0 = %.4le\n", RShock0);
     printf("\n");
     printf("Jet params:\n");
-    printf("  theta_0 = %.2lg (rad, half opening angle)\n", th0);
+    printf("  theta_c = %.2le (rad)\n", theta_c);
+    printf("  theta_w = %.2le (rad)\n", theta_w);
     printf("  eta     = %.1le\n", eta);
     printf("\n");
     printf("Grid params:\n");
     printf("  nr     = %d \n  ntheta = %d\n", ncell[x_], ncell[y_]);
     printf("  radial size: %.4le (cm) -- %.4le (cm)\n", rmin0, rmax0);
-    int nzones_in_BW = RShock/lfacShock2 / ((rmax0 - rmin0)/ncell[r_]);
+    int nzones_in_BW = RShock0/lfacShock20 / ((rmax0 - rmin0)/ncell[r_]);
     printf("  blast-wave resolution: %d zones\n", nzones_in_BW);
     printf("\n");
     printf("AMR:\n");
     printf("  aspect ratio %lg -> %lg <- %lg\n", merge_AR*target_ar, 
                                                  target_ar, 
                                                  split_AR*target_ar);
-    printf("  initial regridVal: %le (min) -- %le (max) \n", minar, maxar);
     printf("\n");
     printf("----------------\n");
     printf("\n");
@@ -417,8 +358,12 @@ void Grid::userBoundaries(int it, double t){
         double r = c->G.x[r_]*lNorm;
         double th = c->G.x[t_];
 
-        if (th < th0){
-          calcBM(r, t, &rho, &u, &p, &gmax, &gmin);
+        double theta2 = th*th;
+        double theta_c2 = theta_c*theta_c;
+        double E_track = E0*exp(-theta2/(2*theta_c2));
+
+        if (th < theta_w){
+          calcBM(E_track, n0, r, t, &rho, &u, &p, &gmax, &gmin);
           c->S.prim[RHO] = rho;
           c->S.prim[UU1] = u;
           c->S.prim[UU2] = 0;
@@ -526,7 +471,7 @@ void Simu::runInfo(){
 void Simu::evalEnd(){
 
   // if (it > 300){ stop = true; }
-  if (t > 3.33e8){ stop = true; } // 3.33e8 BOXFIT simu
+  if (t > 3.33e9){ stop = true; } // 3.33e8 BOXFIT simu
 
 }
 
