@@ -27,7 +27,7 @@ static double pNorm = rhoNorm*vNorm*vNorm;    // pressure normalised to rho_CMB/
 // BM parameters
 static double E0 = pow(10, log10_E0);     // erg
 static double n_ext = n0;      // external medium number density
-static double tstart = 4.36e7;    // s,starting time (determines initial position of BW) (4.36 for lfacf=100)
+static double tstart = 3.3e7;    // s,starting time (determines initial position of BW) (4.36 for lfacf=100)
 static double Rscale = 1.e17;   // cm
 static double k = 0.;           // ext medium density profile
 
@@ -38,7 +38,7 @@ static double RShock0 = c_*tstart*(1.-1./(1.+2.*(4.-k)*lfacShock20));
   // Blandford&McKee(1976) eq. 27
 
 // grid size from shock position
-static double rmin0 = RShock0*(1.-50./lfacShock20); // 1.5e6*lNorm;
+static double rmin0 = RShock0*(1.-200./lfacShock20); // 1.5e6*lNorm;
 static double rmax0 = RShock0*(1.+50./lfacShock20);
 
 // ARM parameters
@@ -59,7 +59,11 @@ static void calcBM(double E0, double n0,
     // Blandford&McKee(1976) eq. 27
   double rhoa = n0*mp_*pow(RShock/Rscale, -k);
   double pa = rhoa*eta*c_*c_;
-  double ha = c_*c_ + pa*GAMMA_/(GAMMA_-1.)/rhoa;
+  FluidState Sa;
+  Sa.prim[RHO] = rhoa;
+  Sa.prim[PPP] = pa;
+  double gma = Sa.gamma();  // Synge EOS
+  double ha = c_*c_ + pa*gma/(gma-1.)/rhoa;
   double pf = 2./3.*lfacShock2*ha*rhoa;
   double lfacf = sqrt(fmax(1.,.5*lfacShock2));
   double Df = 2.*lfacShock2*rhoa;
@@ -103,9 +107,9 @@ static void calcBM(double E0, double n0,
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 300;              // number of cells in r direction
+  par->ncell[x_] = 9900;              // number of cells in r direction
   par->ncell[y_] = 300;               // number of cells in theta direction
-  par->nmax      = 5000;              // max number of cells in MV direction
+  par->nmax      = 10000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -230,9 +234,10 @@ int Grid::initialValues(){
       }
       else{
         calcBM(E_track, n0, r_denorm, tstart, &rho, &u, &p, &gmax, &gmin);
+        double v = u / sqrt(1.+u*u);
         c->S.prim[RHO] = rho;
-        c->S.prim[UU1] = u;
-        c->S.prim[UU2] = 0;
+        c->S.prim[VV1] = v;
+        c->S.prim[VV2] = 0;
         c->S.prim[PPP] = p;
         c->S.prim[TR1] = 2.;
         c->S.prim[GMX] = pow(rho, 1./3.)/gmax;
