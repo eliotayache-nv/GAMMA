@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-24 18:59:30
+# @Last Modified time: 2021-03-24 19:42:52
 
 
 import numpy as np
@@ -334,11 +334,11 @@ def quadMesh(data, key,
     ax.set_rticks([xmin, xmax])
 
   if colorbar:
-    cb = f.colorbar(im, ax=ax, orientation='vertical')
-    cb.set_label(key, fontsize=18)
+    cb = f.colorbar(im, orientation='vertical', pad=0.1)
+    cb.set_label(key, fontsize=14)
     if key2:
-      cb2 = f.colorbar(im2, ax=ax, orientation='vertical')
-      cb2.set_label(key2, fontsize=18)
+      cb2 = f.colorbar(im2, orientation='vertical')
+      cb2.set_label(key2, fontsize=14)
 
   if tlayout:
     f.tight_layout()
@@ -378,13 +378,13 @@ def curvelinear(fig, rect=111):
   tr = PolarAxes.PolarTransform()
 
   extreme_finder = angle_helper.ExtremeFinderCycle(10, 5,
-                                                   lon_cycle = 360,
+                                                   lon_cycle = 2*np.pi/2.,
                                                    lat_cycle = None,
-                                                   lon_minmax = None,
-                                                   lat_minmax = (-90, np.inf),
+                                                   lon_minmax = (0,np.pi/2.),
+                                                   lat_minmax = (-np.pi/2., np.inf),
                                                    )
 
-  grid_locator1 = angle_helper.LocatorDMS(10) #changes theta gridline count
+  grid_locator1 = angle_helper.LocatorDMS(8) #changes theta gridline count
   tick_formatter1 = angle_helper.FormatterDMS()
 
   grid_helper = GridHelperCurveLinear(tr,
@@ -408,7 +408,7 @@ def curvelinear(fig, rect=111):
 
   fig.add_subplot(ax1)
 
-  grid_helper = ax1.get_grid_helper()
+  # grid_helper = ax1.get_grid_helper()
 
   # You may or may not need these - they set the view window explicitly rather than using the
   # default as determined by matplotlib with extreme finder.
@@ -519,13 +519,13 @@ def BoxFitImages(data):
   ax1.scatter(None, None)
 
   ax3, ax4, tr = curvelinear(f, 212)
-  rmin, rmax = quadMesh(data, "p", log=True, fig=f, axis=ax4)
+  rmin, rmax = quadMesh(data, "p", log=True, fig=f, axis=ax4, cmap="cividis")
   ax3.set_xlim(rmin, rmax)
   ax3.set_ylim(0, 0.2 * rmax)
   ax3.set_ylim(ax3.get_ylim()[::-1])
   ax3.scatter(None, None)
 
-  plt.subplots_adjust(wspace=0, hspace=0)
+  plt.subplots_adjust(hspace=0)
   return ax1, ax2, ax3, ax4
 
 
