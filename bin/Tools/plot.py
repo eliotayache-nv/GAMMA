@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-24 19:42:52
+# @Last Modified time: 2021-03-24 20:16:38
 
 
 import numpy as np
@@ -377,14 +377,14 @@ def curvelinear(fig, rect=111):
   # see demo_curvelinear_grid.py for details
   tr = PolarAxes.PolarTransform()
 
-  extreme_finder = angle_helper.ExtremeFinderCycle(10, 5,
+  extreme_finder = angle_helper.ExtremeFinderCycle(50, 40,
                                                    lon_cycle = 2*np.pi/2.,
                                                    lat_cycle = None,
                                                    lon_minmax = (0,np.pi/2.),
                                                    lat_minmax = (-np.pi/2., np.inf),
                                                    )
 
-  grid_locator1 = angle_helper.LocatorDMS(8) #changes theta gridline count
+  grid_locator1 = angle_helper.LocatorDMS(18) #changes theta gridline count
   tick_formatter1 = angle_helper.FormatterDMS()
 
   grid_helper = GridHelperCurveLinear(tr,
@@ -515,17 +515,21 @@ def BoxFitImages(data):
   ax1, ax2, tr = curvelinear(f, 211)
   rmin, rmax = quadMesh(data, "rho", log=True, fig=f, axis=ax2)
   ax1.set_xlim(rmin, rmax)
-  ax1.set_ylim(0, 0.2 * rmax)
+  ymax = max(0.2*rmax, 0.5 * (rmax-rmin))
+  ax1.set_ylim(0, ymax)
   ax1.scatter(None, None)
 
   ax3, ax4, tr = curvelinear(f, 212)
   rmin, rmax = quadMesh(data, "p", log=True, fig=f, axis=ax4, cmap="cividis")
   ax3.set_xlim(rmin, rmax)
-  ax3.set_ylim(0, 0.2 * rmax)
+  ax3.set_ylim(0, ymax)
   ax3.set_ylim(ax3.get_ylim()[::-1])
+  secax_x3 = ax3.secondary_xaxis(-0)
+  secax_x3.set_xlabel("Radius")
+
   ax3.scatter(None, None)
 
-  plt.subplots_adjust(hspace=0)
+  plt.subplots_adjust(hspace=0, bottom=0.15)
   return ax1, ax2, ax3, ax4
 
 
