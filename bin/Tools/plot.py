@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-18 18:07:52
+# @Last Modified time: 2021-03-24 18:56:57
 
 
 import numpy as np
@@ -168,6 +168,8 @@ def quadMesh(data, key,
   colorbar=True,
   slick=False,
   phi=0.,
+  fig=None,
+  axis=None, 
   thetaobs=0.,
   nuobs=1.e17,
   expand=False):
@@ -209,11 +211,11 @@ def quadMesh(data, key,
 
   nact = np.array([np.count_nonzero(~np.isnan(xj)) for xj in x])
 
-  z = np.ma.masked_array(z, np.isnan(z))
-  x = np.ma.masked_array(x, np.isnan(x))
-  y = np.ma.masked_array(y, np.isnan(y))
-  dx = np.ma.masked_array(dx, np.isnan(dx))
-  dy = np.ma.masked_array(dy, np.isnan(dy))
+  # z = np.ma.masked_array(z, np.isnan(z))
+  # x = np.ma.masked_array(x, np.isnan(x))
+  # y = np.ma.masked_array(y, np.isnan(y))
+  # dx = np.ma.masked_array(dx, np.isnan(dx))
+  # dy = np.ma.masked_array(dy, np.isnan(dy))
 
   if key2:
     z2 = data.pivot(index='j', columns='i', values=key2).to_numpy()
@@ -228,18 +230,18 @@ def quadMesh(data, key,
   if r2:
     z*=x**2
 
-  xmin = np.min(x)
-  xmax = np.max(x)
-  ymin = np.min(y)
-  ymax = np.max(y)
+  xmin = np.nanmin(x)
+  xmax = np.nanmax(x)
+  ymin = np.nanmin(y)
+  ymax = np.nanmax(y)
 
-  vmax = np.max(z[4:,:])
-  vmin = np.min(z)
+  vmax = np.nanmax(z[4:,:])
+  vmin = np.nanmin(z)
   if log == True:
-    vmin = np.min(z[z>0])
+    vmin = np.nanmin(z[z>0])
   if key2:
-    vmin2 = np.min(z2)
-    vmax2 = np.max(z2[4:,:])
+    vmin2 = np.nanmin(z2)
+    vmax2 = np.nanmax(z2[4:,:])
   if v1min:
     vmin = v1min
   if v2min:
@@ -250,10 +252,14 @@ def quadMesh(data, key,
   else:
     projection=None
 
-  f = plt.figure()
-  ax = plt.axes(projection=projection)
+  if axis is None:
+    f = plt.figure()
+    ax = plt.axes(projection=projection)
+  else:
+    f = fig
+    ax = axis
 
-  if geometry == "polar":
+  if geometry == "polar" and axis is None:
     ax.set_thetamax(ymax*180./np.pi)
     if key2:
       ax.set_thetamin(-ymax*180./np.pi)
@@ -278,12 +284,9 @@ def quadMesh(data, key,
     xj[j+1,:] = xj[j,:]   
     yj[j+1,:] = yj[j,:]+dyj[j,:]   
 
-    mask = np.zeros(z.shape)+1
-    mask[j,:] = 0
-    mask[np.isnan(z)]=1
-    zj = np.ma.masked_array(z, mask>0)
-    if key2:
-      zj2 = np.ma.masked_array(z2, mask>0)
+    xj = xj[j:j+2,:]
+    yj = yj[j:j+2,:]
+    zj = z[j:j+2,:]
 
     if log==True:
       im = ax.pcolor(yj, xj, zj, 
@@ -340,6 +343,8 @@ def quadMesh(data, key,
   if tlayout:
     f.tight_layout()
 
+  return xmin, xmax
+
 
 def loopFigs(dir, key, oneDimensional = False, **kwargs):
   if not os.path.exists("../../results/%s/figs" %dir):
@@ -353,6 +358,77 @@ def loopFigs(dir, key, oneDimensional = False, **kwargs):
       quadMesh(data, key, **kwargs)
     plt.savefig("../../results/%s/figs/%s.png" %(dir,filename.rstrip(".out").split(dir)[1]))
     plt.close()
+
+
+
+import  mpl_toolkits.axisartist.angle_helper as angle_helper
+import matplotlib.cm as cmap
+from matplotlib.projections import PolarAxes
+from matplotlib.transforms import Affine2D
+from mpl_toolkits.axisartist import SubplotHost
+from mpl_toolkits.axisartist import GridHelperCurveLinear
+from mpl_toolkits.axisartist import ParasiteAxesAuxTrans
+
+def curvelinear(fig, rect=111):
+  """
+  polar projection, but in a rectangular box.
+  """
+
+  # see demo_curvelinear_grid.py for details
+  tr = PolarAxes.PolarTransform()
+
+  extreme_finder = angle_helper.ExtremeFinderCycle(10, 5,
+                                                   lon_cycle = 360,
+                                                   lat_cycle = None,
+                                                   lon_minmax = None,
+                                                   lat_minmax = (-90, np.inf),
+                                                   )
+
+  grid_locator1 = angle_helper.LocatorDMS(10) #changes theta gridline count
+  tick_formatter1 = angle_helper.FormatterDMS()
+
+  grid_helper = GridHelperCurveLinear(tr,
+                                      extreme_finder=extreme_finder,
+                                      grid_locator1=grid_locator1,
+                                      tick_formatter1=tick_formatter1
+                                      )
+
+
+  ax1 = SubplotHost(fig, rect, grid_helper=grid_helper)
+
+  # make ticklabels of right and top axis visible.
+  ax1.axis["right"].major_ticklabels.set_visible(True)
+  ax1.axis["top"].major_ticklabels.set_visible(False)
+  ax1.axis["left"].major_ticklabels.set_visible(False)
+  ax1.axis["bottom"].major_ticklabels.set_visible(False) #Turn off? 
+  # let right and bottom axis show ticklabels for 1st coordinate (angle)
+  ax1.axis["right"].get_helper().nth_coord_ticks=0
+  ax1.axis["top"].get_helper().nth_coord_ticks=1
+
+
+  fig.add_subplot(ax1)
+
+  grid_helper = ax1.get_grid_helper()
+
+  # You may or may not need these - they set the view window explicitly rather than using the
+  # default as determined by matplotlib with extreme finder.
+  ax1.set_aspect(1.)
+  # ax1.set_xlim(0,25) # moves the origin left-right in ax1
+  # ax1.set_ylim(0,10) # moves the origin up-down
+
+  # ax1.set_ylabel('Angle', loc="right")
+  # ax1.set_xlabel('Radius', loc="top")
+  # ax1.grid(True)
+  #ax1.grid(linestyle='--', which='x') # either keyword applies to both
+  #ax1.grid(linestyle=':', which='y')  # sets of gridlines
+
+  # A parasite axes with given transform
+  ax2 = ParasiteAxesAuxTrans(ax1, tr, "equal")
+  # note that ax2.transData == tr + ax1.transData
+  # Anything you draw in ax2 will match the ticks and grids of ax1.
+  ax1.parasites.append(ax2)
+
+  return ax1,ax2,tr
 
 
 
@@ -430,11 +506,28 @@ def AnalyseBoxFit(data, jtrack=0):
   plt.xlabel("$r [cm]$")
   axes[0].legend()
   plt.tight_layout()
-  return(f, axes)
+  
+
+  f, axes = plt.subplots(2, 1, figsize=(6,4))
 
 
+def BoxFitImages(data):
+  f = plt.figure()
+  ax1, ax2, tr = curvelinear(f, 211)
+  rmin, rmax = quadMesh(data, "rho", log=True, fig=f, axis=ax2)
+  ax1.set_xlim(rmin, rmax)
+  ax1.set_ylim(0, 0.2 * rmax)
+  ax1.scatter(None, None)
 
+  ax3, ax4, tr = curvelinear(f, 212)
+  rmin, rmax = quadMesh(data, "p", log=True, fig=f, axis=ax4)
+  ax3.set_xlim(rmin, rmax)
+  ax3.set_ylim(0, 0.2 * rmax)
+  ax3.set_ylim(ax3.get_ylim()[::-1])
+  ax3.scatter(None, None)
 
+  plt.subplots_adjust(wspace=0, hspace=0)
+  return ax1, ax2, ax3, ax4
 
 
 
