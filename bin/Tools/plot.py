@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-24 18:56:57
+# @Last Modified time: 2021-03-24 18:57:35
 
 
 import numpy as np
@@ -507,8 +507,7 @@ def AnalyseBoxFit(data, jtrack=0):
   axes[0].legend()
   plt.tight_layout()
   
-
-  f, axes = plt.subplots(2, 1, figsize=(6,4))
+  return(BoxFitImages())
 
 
 def BoxFitImages(data):
