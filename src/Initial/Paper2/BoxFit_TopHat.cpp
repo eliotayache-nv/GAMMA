@@ -458,6 +458,25 @@ int Grid::checkCellForRegrid(int j, int i){
   // printf("%le\n", ar);
   double rOut = Ctot[j][iRbnd[j]-1].G.x[x_];
   double ar  = dr / (rOut*dth);             // calculate cell aspect ratio
+
+  // We will enforce stronger refinement closer to the shock front in the radial direction
+  // Looking for the shock in the j track.
+  double iS = iLbnd[j];
+  for (int ii = iRbnd[j]; ii < iLbnd[j]; --ii){
+    Cell ci = Ctot[j][ii];
+    double p = ci.S.prim[PPP];
+    iS = ii;
+    if (p > 1.5*eta){ // The shock is showing on the left of cell ii
+      // let's return the shock index in the track
+      break;
+    }
+  }
+
+  // Let's now check if we are close to the shock position
+  double dist = i-iS;
+  if (0 < dist and dist < 30){ ar *= 10; } // 30 is chosen since it looks like we have
+                                           // three cells over which the shock diffuses
+                                           // in the CSM ahead of the BW
                                
   double lfac = c.S.lfac();
   if (ar > split_AR * target_ar / lfac) { // if cell is too long for its width
@@ -469,7 +488,6 @@ int Grid::checkCellForRegrid(int j, int i){
   return(skip_);
   
 }
-
 
 void Cell::user_regridVal(double *res){
   // user function to find regrid victims
