@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-24 20:16:38
+# @Last Modified time: 2021-03-26 10:16:12
 
 
 import numpy as np
@@ -162,9 +162,10 @@ def quadMesh(data, key,
   quiver=False, 
   color=None, 
   edges='None',
+  invert=False,
   r2=False,
   cmap='magma',
-  tlayout=True,
+  tlayout=False,
   colorbar=True,
   slick=False,
   phi=0.,
@@ -259,7 +260,7 @@ def quadMesh(data, key,
     f = fig
     ax = axis
 
-  if geometry == "polar" and axis is None:
+  if geometry == "polar" or axis is not None:
     ax.set_thetamax(ymax*180./np.pi)
     if key2:
       ax.set_thetamin(-ymax*180./np.pi)
@@ -287,6 +288,9 @@ def quadMesh(data, key,
     xj = xj[j:j+2,:]
     yj = yj[j:j+2,:]
     zj = z[j:j+2,:]
+
+    # if invert==True:
+    #   xj
 
     if log==True:
       im = ax.pcolor(yj, xj, zj, 
@@ -334,7 +338,7 @@ def quadMesh(data, key,
     ax.set_rticks([xmin, xmax])
 
   if colorbar:
-    cb = f.colorbar(im, orientation='vertical', pad=0.1)
+    cb = f.colorbar(im, ax=ax, orientation='vertical', shrink=.6, pad=0.1)
     cb.set_label(key, fontsize=14)
     if key2:
       cb2 = f.colorbar(im2, orientation='vertical')
@@ -343,7 +347,7 @@ def quadMesh(data, key,
   if tlayout:
     f.tight_layout()
 
-  return xmin, xmax
+  return xmin, xmax, im
 
 
 def loopFigs(dir, key, oneDimensional = False, **kwargs):
@@ -361,13 +365,14 @@ def loopFigs(dir, key, oneDimensional = False, **kwargs):
 
 
 
-import  mpl_toolkits.axisartist.angle_helper as angle_helper
-import matplotlib.cm as cmap
-from matplotlib.projections import PolarAxes
-from matplotlib.transforms import Affine2D
-from mpl_toolkits.axisartist import SubplotHost
-from mpl_toolkits.axisartist import GridHelperCurveLinear
-from mpl_toolkits.axisartist import ParasiteAxesAuxTrans
+# import  mpl_toolkits.axisartist.angle_helper as angle_helper
+# import matplotlib.cm as cmap
+# from matplotlib.projections import PolarAxes
+# from matplotlib.transforms import Affine2D
+# from mpl_toolkits.axisartist import SubplotHost
+# from mpl_toolkits.axisartist import GridHelperCurveLinear
+# from mpl_toolkits.axisartist import ParasiteAxesAuxTrans
+# import mpl_toolkits.axisartist.floating_axes as floating_axes
 
 def curvelinear(fig, rect=111):
   """
@@ -377,33 +382,34 @@ def curvelinear(fig, rect=111):
   # see demo_curvelinear_grid.py for details
   tr = PolarAxes.PolarTransform()
 
-  extreme_finder = angle_helper.ExtremeFinderCycle(50, 40,
-                                                   lon_cycle = 2*np.pi/2.,
-                                                   lat_cycle = None,
-                                                   lon_minmax = (0,np.pi/2.),
-                                                   lat_minmax = (-np.pi/2., np.inf),
-                                                   )
+  # extreme_finder = angle_helper.ExtremeFinderCycle(50, 40,
+  #                                                  lon_cycle = 360,
+  #                                                  lat_cycle = None,
+  #                                                  lon_minmax = (0,90),
+  #                                                  lat_minmax = (0, np.inf),
+  #                                                  )
 
-  grid_locator1 = angle_helper.LocatorDMS(18) #changes theta gridline count
-  tick_formatter1 = angle_helper.FormatterDMS()
+  # # grid_locator1 = angle_helper.LocatorD(10) #changes theta gridline count
+  # # tick_formatter1 = angle_helper.FormatterDMS()
 
-  grid_helper = GridHelperCurveLinear(tr,
-                                      extreme_finder=extreme_finder,
-                                      grid_locator1=grid_locator1,
-                                      tick_formatter1=tick_formatter1
-                                      )
+  # grid_helper = GridHelperCurveLinear(tr,
+  #                                     extreme_finder=extreme_finder
+  #                                     # grid_locator1=grid_locator1,
+  #                                     # tick_formatter1=tick_formatter1
+  #                                     )
 
 
-  ax1 = SubplotHost(fig, rect, grid_helper=grid_helper)
+  ax1 = SubplotHost(fig, rect)
+  # ax1 = SubplotHost(fig, rect, grid_helper=grid_helper)
 
   # make ticklabels of right and top axis visible.
-  ax1.axis["right"].major_ticklabels.set_visible(True)
-  ax1.axis["top"].major_ticklabels.set_visible(False)
-  ax1.axis["left"].major_ticklabels.set_visible(False)
-  ax1.axis["bottom"].major_ticklabels.set_visible(False) #Turn off? 
+  # ax1.axis["right"].major_ticklabels.set_visible(False)
+  # ax1.axis["top"].major_ticklabels.set_visible(False)
+  # ax1.axis["left"].major_ticklabels.set_visible(False)
+  # ax1.axis["bottom"].major_ticklabels.set_visible(False) #Turn off? 
   # let right and bottom axis show ticklabels for 1st coordinate (angle)
-  ax1.axis["right"].get_helper().nth_coord_ticks=0
-  ax1.axis["top"].get_helper().nth_coord_ticks=1
+  # ax1.axis["right"].get_helper().nth_coord_ticks=0
+  # ax1.axis["top"].get_helper().nth_coord_ticks=1
 
 
   fig.add_subplot(ax1)
@@ -511,27 +517,94 @@ def AnalyseBoxFit(data, jtrack=0):
 
 
 def BoxFitImages(data):
-  f = plt.figure()
-  ax1, ax2, tr = curvelinear(f, 211)
-  rmin, rmax = quadMesh(data, "rho", log=True, fig=f, axis=ax2)
-  ax1.set_xlim(rmin, rmax)
-  ymax = max(0.2*rmax, 0.5 * (rmax-rmin))
-  ax1.set_ylim(0, ymax)
-  ax1.scatter(None, None)
+  # rmin, rmax = quadMesh(data, "rho", log=True, geometry="polar")
+  # f = plt.figure()
+  # ax1, ax2, tr = curvelinear(f, 211)
+  # rmin, rmax = quadMesh(data, "rho", log=True, fig=f, axis=ax2)
+  # ax1.set_xlim(rmin, rmax)
+  # ymax = max(0.2*rmax, 0.5 * (rmax-rmin))
+  # ax1.set_ylim(0, ymax)
+  # ax1.scatter(None, None)
 
-  ax3, ax4, tr = curvelinear(f, 212)
-  rmin, rmax = quadMesh(data, "p", log=True, fig=f, axis=ax4, cmap="cividis")
-  ax3.set_xlim(rmin, rmax)
-  ax3.set_ylim(0, ymax)
-  ax3.set_ylim(ax3.get_ylim()[::-1])
-  secax_x3 = ax3.secondary_xaxis(-0)
-  secax_x3.set_xlabel("Radius")
+  # ax3, ax4, tr = curvelinear(f, 212)
+  # rmin, rmax = quadMesh(data, "p", log=True, fig=f, axis=ax4, cmap="cividis")
+  # ax3.set_xlim(rmin, rmax)
+  # ax3.set_ylim(0, ymax)
+  # ax3.set_ylim(ax3.get_ylim()[::-1])
+  # secax_x3 = ax3.secondary_xaxis(-0)
+  # secax_x3.set_xlabel("Radius")
+  # # secax_y3 = ax3.secondary_yaxis(1, functions=tr)
+  # # secax_y3.set_ylabel("angle")
 
-  ax3.scatter(None, None)
+  # plt.subplots_adjust(hspace=0, bottom=0.15)
+  # polax = f.add_axes(ax1.get_position(), projection="polar", frameon = False)
+  # thetamax = np.arcsin(ymax/(rmax-rmin))
+  # polax.set_thetalim(0, thetamax)
+  # polax.set_rorigin(0)
+  # polax.set_rmin(rmin)
+  # polax.set_rmax(rmax)
 
-  plt.subplots_adjust(hspace=0, bottom=0.15)
-  return ax1, ax2, ax3, ax4
+  # ax3.scatter(None, None)
 
+  # sides = ["left", "top", "bottom", "right"]
+  # [ax1.axis[side].set_visible(False) for side in sides]
+  # [ax3.axis[side].set_visible(False) for side in sides]
+
+  # return ax1, ax2, ax3, ax4, polax
+
+  import matplotlib.ticker as ticker
+  frmtr = ticker.FormatStrFormatter('%4.1e')
+
+  thetamax = 0.5
+  rmin, rmax, im = quadMesh(data, "rho", log=True, geometry='polar')
+  rp = (rmax - rmin*np.cos(thetamax))
+  h = rmax*np.sin(thetamax)
+  fig, [ax1, ax2] = plt.subplots(2, 1, 
+                                 subplot_kw=dict(polar=True), 
+                                 figsize=(rp / rmin*3 * 1.3, 2*h / rmin*3))
+  rmin, rmax, im1 = quadMesh(data, "rho", log=True, fig=fig, axis=ax1, colorbar=False)
+  cb = fig.colorbar(im1, ax=ax1, orientation='vertical', shrink=.7, pad=0.1)
+  cb.set_label("density", fontsize=14)
+  cax1 = cb.ax
+  ax1.set_thetalim(0, thetamax)
+  ax1.set_rorigin(0)
+  ax1.set_rmin(rmin)
+  ax1.set_rmax(rmax)
+  ax1.tick_params(labelleft=False, labelright=True, labeltop=False, labelbottom=True)
+  ax1.yaxis.set_major_formatter(frmtr)
+
+  rmin, rmax, im2 = quadMesh(data, "p", log=True, fig=fig, axis=ax2, cmap="cividis", colorbar=False)
+  cb = fig.colorbar(im2, ax=ax2, orientation='vertical', shrink=.7, pad=0.1, cmap="cividis")
+  cb.set_label("pressure", fontsize=14)
+  cax2 = cb.ax
+  ax2.set_theta_direction(-1)
+  ax2.set_thetalim(0, thetamax)
+  ax2.set_rorigin(0)
+  ax2.set_rmin(rmin)
+  ax2.set_rmax(rmax)
+  ax2.tick_params(labelleft=False, labelright=True, labeltop=False, labelbottom=True)
+  ax2.yaxis.set_major_formatter(frmtr)
+
+  ax2.set_xticks(ax1.get_xticks()[1:])
+  plt.subplots_adjust(hspace=0, bottom=0.)
+
+  s = 2./rp
+  d = 0.9*(2-h*s)/2.
+
+  pos1 = ax1.get_position()
+  pos2 = ax2.get_position()
+  cpos1 = cax1.get_position()
+  cpos2 = cax2.get_position()
+  ratio1 = (pos1.height)/2.
+  ratio2 = (pos2.height)/2.
+  ax1.set_position([pos1.x0, pos1.y0-d*ratio1, pos1.width, pos1.height])
+  ax2.set_position([pos2.x0, pos2.y0+d*ratio2, pos2.width, pos2.height])
+  cax1.set_position([cpos1.x0, cpos1.y0-d*ratio1, cpos1.width, cpos1.height])
+  cax2.set_position([cpos2.x0, cpos2.y0+d*ratio2, cpos2.width, cpos2.height])
+    # /4 because ratio of 0.5/2
+
+  return ax1, ax2
+  
 
 
 
