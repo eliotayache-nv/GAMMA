@@ -461,8 +461,8 @@ int Grid::checkCellForRegrid(int j, int i){
 
   // We will enforce stronger refinement closer to the shock front in the radial direction
   // Looking for the shock in the j track.
-  double iS = iLbnd[j];
-  for (int ii = iRbnd[j]; ii < iLbnd[j]; --ii){
+  double iS = iLbnd[j]+1;
+  for (int ii = iRbnd[j]-1; ii > iLbnd[j]; --ii){
     Cell ci = Ctot[j][ii];
     double p = ci.S.prim[PPP];
     iS = ii;
