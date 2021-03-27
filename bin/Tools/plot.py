@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
-# @Last Modified by:   eliotayache
-# @Last Modified time: 2021-03-26 23:28:21
+# @Last Modified by:   Eliot Ayache
+# @Last Modified time: 2021-03-27 22:11:58
 
 
 import numpy as np
@@ -435,6 +435,7 @@ def AnalyseBoxFit(data, jtrack=0, full=False):
   plotBM1D(data, "rho", jtrack=jtrack, x_norm=x_norm, ax=axes[0], color="r", label="BM", zorder=10)
   plotBM1D(data, "p", jtrack=jtrack, x_norm=x_norm, ax=axes[1], color="r", zorder=10)
   plotBM1D(data, "lfac", jtrack=jtrack, x_norm=x_norm, ax=axes[2], color="r", zorder=10)
+  plotBM1D(data, "gmax", jtrack=jtrack, x_norm=x_norm, ax=axes[3], color="r", zorder=10)
 
   plt.xlim(0.90*RShock, 1.05*RShock)
   axes[0].set_yscale("log")
