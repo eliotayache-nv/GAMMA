@@ -23,9 +23,9 @@
 
 // emissivity parameters:
 #define p_          2.22    // slope of electron population (Kirk2000)
-#define eps_e_      0.038018   // 0.1     // constribution to electron acceleration
-#define eps_B_      0.000109   // 0.1     // contribution to magnetic field
-#define zeta_       1. // 0.1    // fraction of accelerated electrons
+#define eps_e_      0.1//0.038018   // 0.1     // constribution to electron acceleration
+#define eps_B_      0.1//0.000109   // 0.1     // contribution to magnetic field
+#define zeta_       0.1//1. // 0.1    // fraction of accelerated electrons
 
 // Normalized constants:
 extern double Nmp_, Nme_, Nqe_, NsigmaT_, Nalpha_;
