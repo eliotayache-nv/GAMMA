@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
-# @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-26 23:23:16
+# @Last Modified by:   eliotayache
+# @Last Modified time: 2021-03-26 23:28:21
 
 
 import numpy as np
@@ -397,7 +397,7 @@ def BMwave(data):
     labels={"rho":"$\\rho/\\rho_0$", "p":"$p/p_0$","lfac":"$\\gamma$"}, 
     x_norm=RShock)
 
-  plotBM1D(data, "rho", x_norm=RShock, ax=axes[0], color="r", label="BM", zorder=10)
+  plotBM1D(data, "rho", x_norm=RShock, ax=axes[0], color="r", label="exact", zorder=10)
   plotBM1D(data, "p", x_norm=RShock, ax=axes[1], color="r", zorder=10)
   plotBM1D(data, "lfac", x_norm=RShock, ax=axes[2], color="r", zorder=10)
 
@@ -405,7 +405,6 @@ def BMwave(data):
   axes[0].set_yscale("log")
   axes[1].set_yscale("log")
   axes[2].set_yscale("log")
-  axes[3].set_yscale("log")
   plt.xlabel("$r/r_\\mathrm{shock}$")
   axes[0].legend()
   plt.tight_layout()
@@ -433,7 +432,7 @@ def AnalyseBoxFit(data, jtrack=0, full=False):
             "gmax":"$\\gamma_\\{max}"}, 
     x_norm=x_norm)
 
-  plotBM1D(data, "rho", jtrack=jtrack, x_norm=x_norm, ax=axes[0], color="r", label="exact", zorder=10)
+  plotBM1D(data, "rho", jtrack=jtrack, x_norm=x_norm, ax=axes[0], color="r", label="BM", zorder=10)
   plotBM1D(data, "p", jtrack=jtrack, x_norm=x_norm, ax=axes[1], color="r", zorder=10)
   plotBM1D(data, "lfac", jtrack=jtrack, x_norm=x_norm, ax=axes[2], color="r", zorder=10)
 
@@ -441,6 +440,7 @@ def AnalyseBoxFit(data, jtrack=0, full=False):
   axes[0].set_yscale("log")
   axes[1].set_yscale("log")
   axes[2].set_yscale("log")
+  axes[3].set_yscale("log")
   plt.xlabel("$r [cm]$")
   axes[0].legend()
   plt.tight_layout()
