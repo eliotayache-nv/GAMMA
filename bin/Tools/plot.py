@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-29 22:40:11
+# @Last Modified time: 2021-03-29 22:59:29
 
 
 import numpy as np
@@ -422,6 +422,8 @@ def AnalyseBoxFit(data, jtrack=0, full=False):
 def BoxFitImages(data, save=False):
 
   thetamax = 0.5
+  thetamax *= 180./np.pi
+
   f = plt.figure()
   ax2 = plt.axes(projection='polar', frameon=False)
   ax = plt.axes(projection='polar')
@@ -432,7 +434,6 @@ def BoxFitImages(data, save=False):
                                        invert=True, cmap='cividis', colorbar=False)
   ax.axvline(0, color='k', lw=0.7)
 
-  rmin = (rmax+rmin)/2. 
   ax.set_rmin(rmin)
   ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
   rmid = (rmax+rmin)/2. 
@@ -464,7 +465,6 @@ def BoxFitImages(data, save=False):
     f.savefig('boxfit.png', bbox_inches='tight')
 
 
-  thetamax = 0.5
   f = plt.figure()
   ax2 = plt.axes(projection='polar', frameon=False)
   ax = plt.axes(projection='polar')
@@ -475,7 +475,6 @@ def BoxFitImages(data, save=False):
                                        invert=True, cmap='cividis', colorbar=False)
   ax.axvline(0, color='k', lw=0.7)
 
-  rmin = (rmax+rmin)/2. 
   ax.set_rmin(rmin)
   ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
   rmid = (rmax+rmin)/2. 
