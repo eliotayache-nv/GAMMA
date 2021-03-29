@@ -474,18 +474,16 @@ int Grid::checkCellForRegrid(int j, int i){
 
   // Let's now check if we are close to the shock position
   double dist = i-iS;
-  if (-10 < dist and dist < 30){ ar *= 10; } // 30 is chosen since it looks like we have
-                                             // three cells over which the shock diffuses
-                                             // in the CSM ahead of the BW
-                                             // -10 because we want the whole shock to be
+  if (0 < dist and dist < 10){ ar *= 20; }  
+                                             // -3 because we want the whole shock to be
                                              // resolved. this is hard-wired for now but
                                              // could be changed
                                
   double lfac = c.S.lfac();
-  if (ar > split_AR * target_ar / lfac) { // if cell is too long for its width
+  if (ar > split_AR * target_ar / pow(lfac, 5./3.)) { // if cell is too long for its width
     return(split_);                       // split
   }
-  if (ar < merge_AR * target_ar / lfac) { // if cell is too short for its width
+  if (ar < merge_AR * target_ar / pow(lfac, 5./3.)) { // if cell is too short for its width
     return(merge_);                       // merge
   }
   return(skip_);
@@ -501,7 +499,7 @@ void Cell::user_regridVal(double *res){
   double dr = G.dx[r_];
   double dth = G.dx[t_];
   double lfac = S.lfac();
-  *res = dr / (r*dth) * lfac;
+  *res = dr / (r*dth) * pow(lfac, 5./3.);
     // *lfac to give higher score to very small very fast cells
 
 }

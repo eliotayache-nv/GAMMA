@@ -1,8 +1,8 @@
 /*
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
-* @Last Modified by:   eliotayache
-* @Last Modified time: 2021-03-11 18:08:36
+* @Last Modified by:   Eliot Ayache
+* @Last Modified time: 2021-03-29 00:30:30
 */
 
 
@@ -157,6 +157,7 @@
     if (pspec > cL->pspec) cL->pspec = pspec;
 
     // Reverse shocks
+    if (dim==MV){ return; } // turning of radial reverse shocks in boxfit setup (toggle)
     Sd = compute_Sd(SR, SL, dim, &pspec, true);
     cR->Sd = fmax(cR->Sd, Sd);
     if (pspec > cR->pspec) cR->pspec = pspec;
