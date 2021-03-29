@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-28 21:34:06
+# @Last Modified time: 2021-03-29 22:40:11
 
 
 import numpy as np
@@ -28,7 +28,7 @@ plt.rc('font', family='serif', size=12)
 plt.rc('xtick', labelsize=12) 
 plt.rc('ytick', labelsize=12) 
 plt.rc('legend', fontsize=12) 
-plt.rcParams['savefig.dpi'] = 300
+plt.rcParams['savefig.dpi'] = 200
 
 def plot(key, it, contour=False):
   f = plt.figure()
@@ -154,10 +154,7 @@ def quadMesh(data, key,
   z_override = None,
   mov="x",
   log=False, 
-  key2=None,
-  log2=False,
   v1min=None,
-  v2min=None,
   geometry="cartesian", 
   quiver=False, 
   color=None, 
@@ -175,9 +172,9 @@ def quadMesh(data, key,
   nuobs=1.e17,
   expand=False):
 
-  if key2 and geometry!="polar":
-    print("Use polar geometry with key2")
-    return
+  # if key2 and geometry!="polar":
+  #   print("Use polar geometry with key2")
+  #   return
 
   if z_override is not None:
     z = z_override
@@ -212,17 +209,6 @@ def quadMesh(data, key,
 
   nact = np.array([np.count_nonzero(~np.isnan(xj)) for xj in x])
 
-  # z = np.ma.masked_array(z, np.isnan(z))
-  # x = np.ma.masked_array(x, np.isnan(x))
-  # y = np.ma.masked_array(y, np.isnan(y))
-  # dx = np.ma.masked_array(dx, np.isnan(dx))
-  # dy = np.ma.masked_array(dy, np.isnan(dy))
-
-  if key2:
-    z2 = data.pivot(index='j', columns='i', values=key2).to_numpy()
-    z2 = np.append(z2,np.expand_dims(z2[-1,:], axis=0), axis=0)
-    z2 = np.ma.masked_array(z2, np.isnan(z2))
-
   if (quiver):
     vx = data.pivot(index='j', columns='i', values='vx').to_numpy()
     vx = np.append(vx,np.expand_dims(vx[-1,:], axis=0), axis=0)
@@ -240,13 +226,8 @@ def quadMesh(data, key,
   vmin = np.nanmin(z)
   if log == True:
     vmin = np.nanmin(z[z>0])
-  if key2:
-    vmin2 = np.nanmin(z2)
-    vmax2 = np.nanmax(z2[4:,:])
   if v1min:
     vmin = v1min
-  if v2min:
-    vmin2 = v2min
 
   if geometry == "polar":
     projection="polar"
@@ -262,10 +243,9 @@ def quadMesh(data, key,
 
   if geometry == "polar" or axis is not None:
     ax.set_thetamax(ymax*180./np.pi)
-    if key2:
+    ax.set_thetamin(ymin*180./np.pi)
+    if invert==True:
       ax.set_thetamin(-ymax*180./np.pi)
-    else:
-      ax.set_thetamin(ymin*180./np.pi)
 
   if slick:
     ax.axis("off")
@@ -289,8 +269,8 @@ def quadMesh(data, key,
     yj = yj[j:j+2,:]
     zj = z[j:j+2,:]
 
-    # if invert==True:
-    #   xj
+    if invert==True:
+      yj *= -1
 
     if log==True:
       im = ax.pcolor(yj, xj, zj, 
@@ -305,21 +285,6 @@ def quadMesh(data, key,
         cmap=cmap,
         facecolor=color)
 
-    if key2:  
-      if log2==True:
-        im2 = ax.pcolor(-yj, xj, zj2, 
-          norm=LogNorm(vmin=vmin2, vmax=vmax2), 
-          edgecolors=edges,
-          cmap=cmap,
-          facecolor=color)
-      else:
-        im2 = ax.pcolor(-yj, xj, zj2, 
-          vmin=vmin2, vmax=vmax2, 
-          edgecolors=edges, 
-          cmap=cmap,
-          facecolor=color)
-
-
   # if (quiver):
     # if (geometry=='polar'):
     #   xx = x * np.cos(y)
@@ -330,8 +295,7 @@ def quadMesh(data, key,
 
   if geometry != "polar":
     ax.set_aspect('equal')
-  if geometry == "polar":
-    # ax.set_aspect('equal')
+  if geometry == "polar" or axis is not None:
     ax.set_rorigin(0)
     ax.set_rmin(xmin)
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
@@ -340,14 +304,12 @@ def quadMesh(data, key,
   if colorbar:
     cb = f.colorbar(im, ax=ax, orientation='vertical', shrink=.6, pad=0.1)
     cb.set_label(key, fontsize=14)
-    if key2:
-      cb2 = f.colorbar(im2, orientation='vertical')
-      cb2.set_label(key2, fontsize=14)
 
   if tlayout:
     f.tight_layout()
 
-  return xmin, xmax, im
+  thetamax = ymax*180./np.pi
+  return xmin, xmax, thetamax, im
 
 
 def loopFigs(dir, key, oneDimensional = False, **kwargs):
@@ -453,113 +415,146 @@ def AnalyseBoxFit(data, jtrack=0, full=False):
     return(BoxFitImages(data))
 
 
-def BoxFitImages(data):
 
-  import matplotlib.ticker as ticker
-  frmtr = ticker.FormatStrFormatter('%4.1e')
+
+
+
+def BoxFitImages(data, save=False):
 
   thetamax = 0.5
-  rmin, rmax, im = quadMesh(data, "rho", log=True, geometry='polar')
-  rp = (rmax - rmin*np.cos(thetamax))
-  h = rmax*np.sin(thetamax)
-  fig, [ax1, ax2] = plt.subplots(2, 1, 
-                                 subplot_kw=dict(polar=True), 
-                                 figsize=(rp / rmin*3 * 1.3, 2*h / rmin*3))
-  rmin, rmax, im1 = quadMesh(data, "rho", log=True, fig=fig, axis=ax1, colorbar=False)
-  cb = fig.colorbar(im1, ax=ax1, orientation='vertical', shrink=.7, pad=0.1)
-  cb.set_label("density", fontsize=14)
-  cax1 = cb.ax
-  ax1.set_thetalim(0, thetamax)
-  ax1.set_rorigin(0)
-  ax1.set_rmin(rmin)
-  ax1.set_rmax(rmax)
-  ax1.tick_params(labelleft=False, labelright=True, labeltop=False, labelbottom=True)
-  ax1.yaxis.set_major_formatter(frmtr)
+  f = plt.figure()
+  ax2 = plt.axes(projection='polar', frameon=False)
+  ax = plt.axes(projection='polar')
+  rmin, rmax, thetamax, im1 = quadMesh(data, "rho", log=True,
+                                       fig=f, axis=ax, colorbar=False)
+  rmin, rmax, thetamax, im2 = quadMesh(data, "p", log=True,
+                                       fig=f, axis=ax, 
+                                       invert=True, cmap='cividis', colorbar=False)
+  ax.axvline(0, color='k', lw=0.7)
 
-  rmin, rmax, im2 = quadMesh(data, "p", log=True, fig=fig, axis=ax2, cmap="cividis", colorbar=False)
-  cb = fig.colorbar(im2, ax=ax2, orientation='vertical', shrink=.7, pad=0.1, cmap="cividis")
-  cb.set_label("pressure", fontsize=14)
-  cax2 = cb.ax
-  ax2.set_theta_direction(-1)
-  ax2.set_thetalim(0, thetamax)
+  rmin = (rmax+rmin)/2. 
+  ax.set_rmin(rmin)
+  ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+  rmid = (rmax+rmin)/2. 
+  ax.set_rticks([rmin, rmid, rmax])
+  ax.set_thetalim(-thetamax, thetamax)
+
   ax2.set_rorigin(0)
   ax2.set_rmin(rmin)
   ax2.set_rmax(rmax)
-  ax2.tick_params(labelleft=False, labelright=True, labeltop=False, labelbottom=True)
-  ax2.yaxis.set_major_formatter(frmtr)
+  ax2.set_thetalim(-thetamax, thetamax)
 
-  ax2.set_xticks(ax1.get_xticks()[1:])
-  plt.subplots_adjust(hspace=0, bottom=0.)
+  cb = f.colorbar(im1, ax=ax, orientation='vertical', pad=0.1)
+  cb.set_label("density", fontsize=12)
+  cax = cb.ax
+  pos = cax.get_position()
+  cax.set_position([pos.x0, 0.52, pos.width, 0.23])
 
-  s = 2./rp
-  d = 0.9*(2-h*s)/2.
+  cb = f.colorbar(im2, ax=ax2, orientation='vertical', pad=0.1)
+  cb.set_label("pressure", fontsize=12)
+  cax = cb.ax
+  pos = cax.get_position()
+  cax.set_position([pos.x0, 0.25, pos.width, 0.23])
 
-  pos1 = ax1.get_position()
-  pos2 = ax2.get_position()
-  cpos1 = cax1.get_position()
-  cpos2 = cax2.get_position()
-  ratio1 = (pos1.height)/2.
-  ratio2 = (pos2.height)/2.
-  ax1.set_position([pos1.x0, pos1.y0-d*ratio1, pos1.width, pos1.height])
-  ax2.set_position([pos2.x0, pos2.y0+d*ratio2, pos2.width, pos2.height])
-  cax1.set_position([cpos1.x0, cpos1.y0-d*ratio1, cpos1.width, cpos1.height])
-  cax2.set_position([cpos2.x0, cpos2.y0+d*ratio2, cpos2.width, cpos2.height])
-    # /4 because ratio of 0.5/2
+  ax.set_xlabel('radius (cm)')
+  time = data['t'][0]
+  plt.title('time = %.2e s' %time, x=0.2, y=0.8, fontsize=12)
+
+  if save==True:
+    f.savefig('boxfit.png', bbox_inches='tight')
+
 
   thetamax = 0.5
-  rmin, rmax, im = quadMesh(data, "gmax", log=True, geometry='polar')
-  rp = (rmax - rmin*np.cos(thetamax))
-  h = rmax*np.sin(thetamax)
-  fig, [ax1, ax2] = plt.subplots(2, 1, 
-                                 subplot_kw=dict(polar=True), 
-                                 figsize=(rp / rmin*3 * 1.3, 2*h / rmin*3))
-  rmin, rmax, im1 = quadMesh(data, "gmax", log=True, fig=fig, axis=ax1, colorbar=False)
-  cb = fig.colorbar(im1, ax=ax1, orientation='vertical', shrink=.7, pad=0.1)
-  cb.set_label("$\\gamma_\\mathrm{max}$", fontsize=14)
-  cax1 = cb.ax
-  ax1.set_thetalim(0, thetamax)
-  ax1.set_rorigin(0)
-  ax1.set_rmin(rmin)
-  ax1.set_rmax(rmax)
-  ax1.tick_params(labelleft=False, labelright=True, labeltop=False, labelbottom=True)
-  ax1.yaxis.set_major_formatter(frmtr)
+  f = plt.figure()
+  ax2 = plt.axes(projection='polar', frameon=False)
+  ax = plt.axes(projection='polar')
+  rmin, rmax, thetamax, im1 = quadMesh(data, "gmax", log=True,
+                                       fig=f, axis=ax, colorbar=False)
+  rmin, rmax, thetamax, im2 = quadMesh(data, "psyn", v1min=2., 
+                                       fig=f, axis=ax, 
+                                       invert=True, cmap='cividis', colorbar=False)
+  ax.axvline(0, color='k', lw=0.7)
 
-  rmin, rmax, im2 = quadMesh(data, "psyn", v1min=2, fig=fig, axis=ax2, cmap="cividis", colorbar=False)
-  cb = fig.colorbar(im2, ax=ax2, orientation='vertical', shrink=.7, pad=0.1, cmap="cividis")
-  cb.set_label("spectral index p", fontsize=14)
-  cax2 = cb.ax
-  ax2.set_theta_direction(-1)
-  ax2.set_thetalim(0, thetamax)
+  rmin = (rmax+rmin)/2. 
+  ax.set_rmin(rmin)
+  ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+  rmid = (rmax+rmin)/2. 
+  ax.set_rticks([rmin, rmid, rmax])
+  ax.set_thetalim(-thetamax, thetamax)
+
   ax2.set_rorigin(0)
   ax2.set_rmin(rmin)
   ax2.set_rmax(rmax)
-  ax2.tick_params(labelleft=False, labelright=True, labeltop=False, labelbottom=True)
-  ax2.yaxis.set_major_formatter(frmtr)
+  ax2.set_thetalim(-thetamax, thetamax)
 
-  ax2.set_xticks(ax1.get_xticks()[1:])
-  plt.subplots_adjust(hspace=0, bottom=0.)
+  cb = f.colorbar(im1, ax=ax, orientation='vertical', pad=0.1)
+  cb.set_label("$\\gamma_\\mathrm{max}$", fontsize=12)
+  cax = cb.ax
+  pos = cax.get_position()
+  cax.set_position([pos.x0, 0.52, pos.width, 0.23])
 
-  s = 2./rp
-  d = 0.9*(2-h*s)/2.
+  cb = f.colorbar(im2, ax=ax2, orientation='vertical', pad=0.1)
+  cb.set_label("spectral index $p$", fontsize=12)
+  cax = cb.ax
+  pos = cax.get_position()
+  cax.set_position([pos.x0, 0.25, pos.width, 0.23])
 
-  pos1 = ax1.get_position()
-  pos2 = ax2.get_position()
-  cpos1 = cax1.get_position()
-  cpos2 = cax2.get_position()
-  ratio1 = (pos1.height)/2.
-  ratio2 = (pos2.height)/2.
-  ax1.set_position([pos1.x0, pos1.y0-d*ratio1, pos1.width, pos1.height])
-  ax2.set_position([pos2.x0, pos2.y0+d*ratio2, pos2.width, pos2.height])
-  cax1.set_position([cpos1.x0, cpos1.y0-d*ratio1, cpos1.width, cpos1.height])
-  cax2.set_position([cpos2.x0, cpos2.y0+d*ratio2, cpos2.width, cpos2.height])
-    # /4 because ratio of 0.5/2
-  
+  ax.set_xlabel('radius (cm)')
+  plt.title('time = %.2e s' %time, x=0.2, y=0.8, fontsize=12)
+
+  if save==True:
+    f.savefig('test.png', bbox_inches='tight')
 
 
 
 
 
 
+
+
+# ----------------------------------------------------------------------------------------
+# Specific functions
+def AnalyseRT(data, save=False):
+
+  f = plt.figure()
+  ax2 = plt.axes(projection='polar', frameon=False)
+  ax = plt.axes(projection='polar')
+  rmin, rmax, thetamax, im1 = quadMesh(data, "rho", 
+                                       log=True, fig=f, axis=ax, colorbar=False)
+  rmin, rmax, thetamax, im2 = quadMesh(data, "trac", 
+                                       fig=f, axis=ax, 
+                                       invert=True, cmap='cividis', colorbar=False)
+  ax.axvline(0, color='k', lw=0.7)
+
+  rmin = (rmax+rmin)/2. 
+  ax.set_rmin(rmin)
+  ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+  rmid = (rmax+rmin)/2. 
+  ax.set_rticks([rmin, rmid, rmax])
+
+  ax2.set_rorigin(0)
+  ax2.set_rmin(rmin)
+  ax2.set_rmax(rmax)
+  ax2.set_thetalim(-thetamax, thetamax)
+
+  cb = f.colorbar(im1, ax=ax, orientation='vertical', pad=0.1)
+  cb.set_label("density", fontsize=12)
+  cax = cb.ax
+  pos = cax.get_position()
+  cax.set_position([pos.x0, 0.52, pos.width, 0.23])
+
+  cb = f.colorbar(im2, ax=ax2, orientation='vertical', pad=0.1)
+  cb.set_label("tracer", fontsize=12)
+  cax = cb.ax
+  pos = cax.get_position()
+  cax.set_position([pos.x0, 0.25, pos.width, 0.23])
+
+  ax.set_xlabel('radius (cm)')
+  time = data['t'][0]
+  plt.title('time = %.2e s' %time, x=0.2, y=0.8, fontsize=12)
+
+  if save==True:
+    f.savefig('test.png', bbox_inches='tight')
 
 
 
