@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-27 22:11:58
+# @Last Modified time: 2021-03-28 21:34:06
 
 
 import numpy as np
@@ -422,26 +422,29 @@ def AnalyseBoxFit(data, jtrack=0, full=False):
   RShock = BW.RShock/lNorm
   x_norm = None
 
-  f, axes = plotMulti(data, ["rho","p","lfac",'gmax'], 
+  f, axes = plotMulti(data, ["rho","p","lfac",'gmax','gmin'], 
     jtrack=jtrack,
     tracer=False, 
     line=False, 
     labels={"rho":"$\\rho/\\rho_0$", 
             "p":"$p/p_0$",
             "lfac":"$\\gamma$",
-            "gmax":"$\\gamma_\\{max}"}, 
+            "gmax":"$\\gamma_\\mathrm{max}$",
+            "gmin":"$\\gamma_\\mathrm{min}$"}, 
     x_norm=x_norm)
 
   plotBM1D(data, "rho", jtrack=jtrack, x_norm=x_norm, ax=axes[0], color="r", label="BM", zorder=10)
   plotBM1D(data, "p", jtrack=jtrack, x_norm=x_norm, ax=axes[1], color="r", zorder=10)
   plotBM1D(data, "lfac", jtrack=jtrack, x_norm=x_norm, ax=axes[2], color="r", zorder=10)
   plotBM1D(data, "gmax", jtrack=jtrack, x_norm=x_norm, ax=axes[3], color="r", zorder=10)
+  plotBM1D(data, "gmin", jtrack=jtrack, x_norm=x_norm, ax=axes[4], color="r", zorder=10)
 
   plt.xlim(0.90*RShock, 1.05*RShock)
   axes[0].set_yscale("log")
   axes[1].set_yscale("log")
   axes[2].set_yscale("log")
   axes[3].set_yscale("log")
+  axes[4].set_yscale("log")
   plt.xlabel("$r [cm]$")
   axes[0].legend()
   plt.tight_layout()

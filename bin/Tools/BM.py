@@ -2,7 +2,7 @@
 # @Author: Eliot Ayache
 # @Date:   2019-04-09 11:22:46
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-18 17:53:39
+# @Last Modified time: 2021-03-28 23:00:55
 
 # ---------------------------------------------------------------------------------------
 
@@ -26,7 +26,7 @@ n0 = 1.e0
 rho0 = n0*mp_
 
 # Emissivity parameters
-p = 2.3
+p_ = 2.22
 eps_B_ = 0.1
 eps_e_ = 0.1
 zeta_ = 0.1
@@ -38,6 +38,7 @@ rhoNorm = rho0
 pNorm = rhoNorm * vNorm * vNorm
 
 Nme_ = me_/(rhoNorm * lNorm**3)
+Nmp_ = mp_/(rhoNorm * lNorm**3)
 NsigmaT_ = sigmaT_ / lNorm**2
 
 
@@ -59,6 +60,7 @@ class State(object):
     self.h    = 0
 
     self.gmax = 0
+    self.gmin = 0
 
   def gamma(self):
     rho = self.rho
@@ -141,6 +143,13 @@ class BM(object):
       S.gmax = 2.*19.*np.pi*Nme_*self.Sf.lfac / (NsigmaT_*B0**2*t0) \
         * chi**(25./24.) / (chi**(19./12.)-1.) # gmax = +ifnty for chi=1
 
+      psyn = p_
+      ee0 = eps_e_ * eps0
+      ne0 = zeta_ * rho0 / Nmp_
+      lfac_av0 = ee0 / (ne0 * Nme_)
+      gmin0 = (psyn-2.) / (psyn-1.) * lfac_av0
+      S.gmin = gmin0 / (chi**(13./24.) + gmin0/ S.gmax)
+
     return(S)
 
 
@@ -166,6 +175,8 @@ def plotBM1D(data, key, jtrack=None, x_norm=None, ax = None, **kwargs):
       y[i] = BW.local(x[i]).p/pNorm
     if key == "gmax":
       y[i] = BW.local(x[i]).gmax
+    if key == "gmin":
+      y[i] = BW.local(x[i]).gmin
 
   if ax is None:
     ax = plt.gca()
