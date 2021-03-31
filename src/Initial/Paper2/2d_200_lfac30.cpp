@@ -13,7 +13,7 @@ static double n0      = 1.;                   // cm-3:    CBM proton number dens
 // simulation settings
 static double th_simu = PI/32.;        // rad:     simulation angle
 static double t_ini   = 0.;                   // s:     start time of dynamic simulation
-static double rmin    = 0.01;                  // light-seconds, box inner boundary at t_ini
+static double rmin    = 0.1;                  // light-seconds, box inner boundary at t_ini
 static double rmax    = 150.;                 // light-seconds, box outer boundary at t_ini
 
 static double R03     = R0*R0*R0;
@@ -58,6 +58,8 @@ void loadParams(s_par *par){
   par->ncell[y_] = 200;                 // number of cells in theta direction
   par->nmax      = 4000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells
+
+  normalizeConstants(rhoNorm, vNorm, lNorm);
 
 }
 
@@ -142,13 +144,13 @@ void Grid::userKinematics(int it, double t){
   // setting lower and higher i boundary interface velocities
 
   // set by boundary velocity:
-  double vIn;
-  if (t < tMove){
-    vIn = 0.;
-  }
-  else{
-    vIn = 0.55;
-  }
+  double vIn = 0.;
+  // if (t < tMove){
+  //   vIn = 0.;
+  // }
+  // else{
+  //   vIn = 0.55;
+  // }
 
   // double vIn = 0.;
   double vOut = 1.05;
@@ -191,9 +193,8 @@ void Grid::userBoundaries(int it, double t){
   // }
   
   // // reflective BCs on inner side (along jet axis)
-
-  // if (worldrank==0){
-  //   for (int j = 0; j < ngst; ++j){
+  if (worldrank==0){
+    for (int j = 0; j < ngst; ++j){
 
   //     int target_j = 2*ngst-1-j;
   //     ntrack[j] = ntrack[target_j];
@@ -215,11 +216,11 @@ void Grid::userBoundaries(int it, double t){
   //       }
   //     }
 
-  //     for (int i = 0; i < ntrack[j]; ++i){
-  //       Ctot[j][i].S.prim[UU2] *= -1;  
-  //     }
-  //   }
-  // }
+      for (int i = 0; i < ntrack[j]; ++i){
+        Ctot[j][i].S.prim[UU2] *= -1;  
+      }
+    }
+  }
 
   // reflective BCs on outer side (outside of jet cone)
 
@@ -248,6 +249,13 @@ void Grid::userBoundaries(int it, double t){
       for (int i = 0; i < ntrack[j]; ++i){
         Ctot[j][i].S.prim[UU2] *= -1;  
       }
+    }
+  }
+
+  // reflective inner boundary
+  for (int j = 0; j < nde_nax[F1]; ++j){
+    for (int i = 0; i < ngst; ++i){
+      Ctot[j][i].S.prim[UU1] *= -1;
     }
   }
 
@@ -335,7 +343,8 @@ void Simu::dataDump(){
 
 void Simu::runInfo(){
 
-  if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
+  // if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
+  if ((worldrank == 0) and (it%1 == 0)){ printf("it: %ld time: %le\n", it, t);}
 
 }
 

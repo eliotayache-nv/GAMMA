@@ -61,9 +61,9 @@ enum{skip_,merge_,split_};
 
 #define SPATIAL_RECONSTRUCTION_ PIECEWISE_LINEAR_
 #define CIRC_REGRID_            DISABLED_
-#define SHOCK_DETECTION_        ENABLED_
+#define SHOCK_DETECTION_        DISABLED_
 #define DETECT_SHOCK_THRESHOLD_ 0.01
-#define LOCAL_SYNCHROTRON_      ENABLED_
+#define LOCAL_SYNCHROTRON_      DISABLED_
 #define GAMMA_MAX_INIT_         (1.e7)
 
 // ---------------------------------------------------------------------------------------
