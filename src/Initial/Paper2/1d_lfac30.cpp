@@ -11,9 +11,9 @@ static double R0      = 100.;                  // ls:      initial shell width
 static double n0      = 1.;                   // cm-3:    CBM proton number density
 
 // simulation settings
-static double th_simu = PI/32.;        // rad:     simulation angle
+static double th_simu = PI/32./200;        // rad:     simulation angle
 static double t_ini   = 0.;                   // s:     start time of dynamic simulation
-static double rmin    = 1.;                  // light-seconds, box inner boundary at t_ini
+static double rmin    = 0.01;                  // light-seconds, box inner boundary at t_ini
 static double rmax    = 150.;                 // light-seconds, box outer boundary at t_ini
 
 static double R03     = R0*R0*R0;
@@ -55,7 +55,6 @@ void loadParams(s_par *par){
 
   par->tini      = t_ini;             // initial time
   par->ncell[x_] = 600;               // number of cells in r direction
-  par->ncell[y_] = 200;                 // number of cells in theta direction
   par->nmax      = 4000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells
 
@@ -71,26 +70,19 @@ int Grid::initialGeometry(){                              // loop across grid, c
   double logrmax  = log(rmax);
   double dlogr    = (logrmax - logrmin);
   
-  for (int j = 0; j < ncell[y_]; ++j){
-    for (int i = 0; i < ncell[x_]; ++i){
-      Cell *c = &Cinit[j][i];
-      
-      double rlog   = (double) dlogr*(i+0.5)/ncell[x_] + logrmin;
-      double rlogL  = (double) dlogr*(i  )/ncell[x_] + logrmin;
-      double rlogR  = (double) dlogr*(i+1)/ncell[x_] + logrmin;
-      double r_ls   = exp(rlog);
-      double dr_ls  = exp(rlogR) - exp(rlogL);
-      
-      double th     = (double) th_simu*(j+0.5)/ncell[y_];
-      double dth    = th_simu/ncell[y_];
-
-      c->G.x[x_]    = r_ls;
-      c->G.dx[x_]   = dr_ls;
-      c->G.x[y_]    = th;
-      c->G.dx[y_]   = dth;
-
-      c->computeAllGeom();
-    }
+  for (int i = 0; i < ncell[x_]; ++i){
+    Cell *c = &Cinit[i];
+    
+    double rlog   = (double) dlogr*(i+0.5)/ncell[x_] + logrmin;
+    double rlogL  = (double) dlogr*(i  )/ncell[x_] + logrmin;
+    double rlogR  = (double) dlogr*(i+1)/ncell[x_] + logrmin;
+    double r_ls   = exp(rlog);
+    double dr_ls  = exp(rlogR) - exp(rlogL);
+    
+    c->G.x[x_]    = r_ls;
+    c->G.dx[x_]   = dr_ls;
+    
+    c->computeAllGeom();
   }
   return 0;
 }
@@ -105,33 +97,31 @@ int Grid::initialValues(){
   }
 
   // initialise grid
-  for (int j = 0; j < ncell[F1]; ++j){        // loop through cells along theta
-    for (int i = 0; i < ncell[MV]; ++i){      // loop through cells along r
-      Cell *c = &Cinit[j][i];
+  for (int i = 0; i < ncell[MV]; ++i){      // loop through cells along r
+    Cell *c = &Cinit[i];
 
-      double r = c->G.x[x_];                  // ls:  radial coordinate
-      // double th = c->G.x[y_];                 // rad: theta angular coordinate
+    double r = c->G.x[x_];                  // ls:  radial coordinate
+    // double th = c->G.x[y_];                 // rad: theta angular coordinate
 
-      if (r <= R0){
-        c->S.cons[DEN] = D_f/rhoNorm;
-        c->S.cons[TAU] = tau_f/ENorm;
-        c->S.cons[SS1] = 0.;
-        c->S.cons[SS2] = 0.;
-        c->S.cons[TR1] = 1.;
-        c->S.cons2prim(r);
-        // printf("rho = %e, p = %e\n",c->S.prim[RHO],c->S.prim[PPP]);
-        // printf("rho = %e, p = %e\n",(c->S.prim[RHO])*rhoNorm,(c->S.prim[PPP])*pNorm);
-        // double gam = (c->S.cons[TAU]+c->S.cons[DEN])/c->S.cons[DEN];
-        // printf("Lorentz Factor = %e\n",gam);
-      }
-      else{
-        c->S.prim[RHO] = rho0/rhoNorm;
-        c->S.prim[PPP] = p0/pNorm;
-        c->S.prim[VV1] = 0.;
-        c->S.prim[VV2] = 0.;
-        c->S.prim[TR1] = 2.;
-        // printf("rho = %e, p = %e\n",c->S.prim[RHO],c->S.prim[PPP]);
-      }
+    if (r <= R0){
+      c->S.cons[DEN] = D_f/rhoNorm;
+      c->S.cons[TAU] = tau_f/ENorm;
+      c->S.cons[SS1] = 0.;
+      c->S.cons[SS2] = 0.;
+      c->S.cons[TR1] = 1.;
+      c->S.cons2prim(r);
+      // printf("rho = %e, p = %e\n",c->S.prim[RHO],c->S.prim[PPP]);
+      // printf("rho = %e, p = %e\n",(c->S.prim[RHO])*rhoNorm,(c->S.prim[PPP])*pNorm);
+      // double gam = (c->S.cons[TAU]+c->S.cons[DEN])/c->S.cons[DEN];
+      // printf("Lorentz Factor = %e\n",gam);
+    }
+    else{
+      c->S.prim[RHO] = rho0/rhoNorm;
+      c->S.prim[PPP] = p0/pNorm;
+      c->S.prim[VV1] = 0.;
+      c->S.prim[VV2] = 0.;
+      c->S.prim[TR1] = 2.;
+      // printf("rho = %e, p = %e\n",c->S.prim[RHO],c->S.prim[PPP]);
     }
   }
 
@@ -155,14 +145,13 @@ void Grid::userKinematics(int it, double t){
   // double vIn = 0.;
   double vOut = 1.05;
 
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int n = 0; n < ngst; ++n){
-      int    iL = n;
-      int    iR = ntrack[j]-2-n;
-      Itot[j][iL].v = vIn;
-      Itot[j][iR].v = vOut;
-    }
+  for (int n = 0; n < ngst; ++n){
+    int    iL = n;
+    int    iR = ntrack-2-n;
+    Itot[iL].v = vIn;
+    Itot[iR].v = vOut;
   }
+
 }
 
 void Cell::userSourceTerms(double dt){
@@ -173,90 +162,9 @@ void Cell::userSourceTerms(double dt){
 
 void Grid::userBoundaries(int it, double t){
 
-  // outflow BC at inner boundary
-
-  // fixed value BC at outer boundary
-  // for (int j = 0; j < nde_nax[F1]; ++j){
-  //   for (int i = 0; i < ngst; ++i){
-
-  //     double dens = (rho0/rhoNorm);
-
-  //     int nt = ntrack[j];
-  //     // Ctot[j][nt-1-i] : outer boundary ghost cells
-  //     // set outer boundary to fixed values of external medium
-  //     Ctot[j][nt-1-i].S.prim[RHO] = dens;         // outer boundary
-  //     Ctot[j][nt-1-i].S.prim[PPP] = p0/pNorm;             // outer boundary
-  //     Ctot[j][nt-1-i].S.prim[VV1] = 0.;                   // outer boundary
-  //     Ctot[j][nt-1-i].S.prim[VV2] = 0.;                   // outer boundary
-  //     Ctot[j][nt-1-i].S.prim[TR1] = 2.;                   // outer boundary
-  //   }
-  // }
-  
-  // // reflective BCs on inner side (along jet axis)
-  if (worldrank==0){
-    for (int j = 0; j < ngst; ++j){
-
-  //     int target_j = 2*ngst-1-j;
-  //     ntrack[j] = ntrack[target_j];
-  //     nact[j] = nact[target_j];
-  //     iRbnd[j] = iRbnd[target_j];
-  //     iLbnd[j] = iLbnd[target_j];
-  //     std::copy_n(&Ctot[target_j][0], ntrack[target_j],   &Ctot[j][0]);
-  //     std::copy_n(&Itot[target_j][0], ntrack[target_j]-1, &Itot[j][0]);
-
-  //     // updating ghost positions, ids and indexes
-  //     for (int i = 0; i < ntrack[j]; ++i){
-  //       int ind[] = {j,i};
-  //       assignId(ind);
-  //       Ctot[j][i].G.x[F1] -= (jLbnd-j+1)*C[0][0].G.dx[F1];
-  //       Ctot[j][i].computeAllGeom();
-  //       if (i != ntrack[j]-1){ 
-  //         Itot[j][i].x[F1] -= (jLbnd-j+1)*C[0][0].G.dx[F1]; 
-  //         Itot[j][i].computedA();
-  //       }
-  //     }
-
-      for (int i = 0; i < ntrack[j]; ++i){
-        Ctot[j][i].S.prim[UU2] *= -1;  
-      }
-    }
-  }
-
-  // reflective BCs on outer side (outside of jet cone)
-
-  if (worldrank==worldsize-1){
-    for (int j = jRbnd; j < nde_nax[F1]; ++j){
-
-      // int target_j = nde_nax[F1] - ngst -1 - (j - jRbnd);
-      // ntrack[j] = ntrack[target_j];
-      // nact[j] = nact[target_j];
-      // iRbnd[j] = iRbnd[target_j];
-      // iLbnd[j] = iLbnd[target_j];
-      // std::copy_n(&Ctot[target_j][0], ntrack[target_j],   &Ctot[j][0]);
-      // std::copy_n(&Itot[target_j][0], ntrack[target_j]-1, &Itot[j][0]);
-
-      // // updating ghost positions, ids and indexes
-      // for (int i = 0; i < ntrack[j]; ++i){
-      //   int ind[] = {j,i};
-      //   assignId(ind);
-      //   Ctot[j][i].G.x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dx[F1];
-      //   Ctot[j][i].computeAllGeom();
-      //   if (i != ntrack[j]-1){ 
-      //     Itot[j][i].x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dx[F1];
-      //     Itot[j][i].computedA();
-      //   }
-      // }
-      for (int i = 0; i < ntrack[j]; ++i){
-        Ctot[j][i].S.prim[UU2] *= -1;  
-      }
-    }
-  }
-
   // reflective inner boundary
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int i = 0; i < ngst; ++i){
-      Ctot[j][i].S.prim[UU1] *= -1;
-    }
+  for (int i = 0; i < ngst; ++i){
+    Ctot[i].S.prim[UU1] *= -1;
   }
 
   UNUSED(it);
@@ -267,13 +175,13 @@ void Grid::userBoundaries(int it, double t){
 
 int Grid::checkCellForRegrid(int j, int i){
 
-  Cell c = Ctot[j][i];                      // get current cell (track j, cell i)
+  Cell c = Ctot[i];                      // get current cell (track j, cell i)
   // double trac = c.S.prim[TR1];           // get tracer value
   double r   = c.G.x[r_];                   // get cell radial coordinate
   double dr  = c.G.dx[r_];                  // get cell radial spacing
-  double dth = c.G.dx[t_];                  // get cell angular spacing
+  double dth = th_simu;                  // get cell angular spacing
   
-  Cell cOut = Ctot[j][iRbnd[j]];            // get outermost cell in track j
+  Cell cOut = Ctot[iRbnd];            // get outermost cell in track j
   double Rout = cOut.G.x[r_];               // get radial coordinate of outermost cell
 
   // determine which radius to use for AR calculations
@@ -343,8 +251,8 @@ void Simu::dataDump(){
 
 void Simu::runInfo(){
 
-  // if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
-  if ((worldrank == 0) and (it%1 == 0)){ printf("it: %ld time: %le\n", it, t);}
+  if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
+  // if ((worldrank == 0) and (it%1 == 0)){ printf("it: %ld time: %le\n", it, t);}
 
 }
 
