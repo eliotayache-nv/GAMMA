@@ -11,9 +11,9 @@ static double R0      = 100.;                  // ls:      initial shell width
 static double n0      = 1.;                   // cm-3:    CBM proton number density
 
 // simulation settings
-static double th_simu = PI/32./200;        // rad:     simulation angle
+static double th_simu = PI/32./600;        // rad:     simulation angle
 static double t_ini   = 0.;                   // s:     start time of dynamic simulation
-static double rmin    = 0.01;                  // light-seconds, box inner boundary at t_ini
+static double rmin    = 10.;                  // light-seconds, box inner boundary at t_ini
 static double rmax    = 150.;                 // light-seconds, box outer boundary at t_ini
 
 static double R03     = R0*R0*R0;
@@ -48,14 +48,14 @@ static double R1          = 1.e4;             // ls:  radius to use for target_A
 static double R2          = 2.e6;
 static double split_AR    = 5.;               //      set upper bound on AR as ratio of target_AR
 static double merge_AR    = 0.2;              //      set upper bound on AR as ratio of target_AR
-static double tMove       = 3.e6;             // s:   time at which inner boundary starts to move
+static double tMove       = 5.e3;             // s:   time at which inner boundary starts to move
 
 
 void loadParams(s_par *par){
 
   par->tini      = t_ini;             // initial time
-  par->ncell[x_] = 600;               // number of cells in r direction
-  par->nmax      = 4000;              // max number of cells in MV direction
+  par->ncell[x_] = 1800;               // number of cells in r direction
+  par->nmax      = 12000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -101,6 +101,7 @@ int Grid::initialValues(){
     Cell *c = &Cinit[i];
 
     double r = c->G.x[x_];                  // ls:  radial coordinate
+    double cen = c->G.cen[x_];                  // ls:  radial coordinate
     // double th = c->G.x[y_];                 // rad: theta angular coordinate
 
     if (r <= R0){
@@ -109,7 +110,7 @@ int Grid::initialValues(){
       c->S.cons[SS1] = 0.;
       c->S.cons[SS2] = 0.;
       c->S.cons[TR1] = 1.;
-      c->S.cons2prim(r);
+      c->S.cons2prim(cen);
       // printf("rho = %e, p = %e\n",c->S.prim[RHO],c->S.prim[PPP]);
       // printf("rho = %e, p = %e\n",(c->S.prim[RHO])*rhoNorm,(c->S.prim[PPP])*pNorm);
       // double gam = (c->S.cons[TAU]+c->S.cons[DEN])/c->S.cons[DEN];
@@ -184,8 +185,8 @@ void Grid::userBoundaries(int it, double t){
 
   // reflective inner boundary
   if (t < tMove) {
-    for (int i = 0; i < ngst; ++i){
-      Ctot[i].S.prim[UU1] -= 1;
+    for (int i = 0; i <= ngst; ++i){
+      Ctot[i].S.prim[UU1] = 0;
     }
   }
 

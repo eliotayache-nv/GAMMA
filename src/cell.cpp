@@ -122,7 +122,7 @@ void Cell::update(double dt, double xL, double xR){
   for (int q = 0; q < NUM_Q; ++q){
     S.cons[q] /= G.dV;
   }
-  S.cons2prim(G.x[r_]);
+  S.cons2prim(G.cen[r_]);
 
 }
 

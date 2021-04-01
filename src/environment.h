@@ -43,7 +43,7 @@ enum{skip_,merge_,split_};
 
 // ---------------------------------------------------------------------------------------
 // ENVIRONMENT OPTIONS
-#define NUM_C  3             // conserved (changes with number of dimensions)
+#define NUM_C  4             // conserved (changes with number of dimensions)
 #define NUM_TR 2             // user-specified tracers
 #define NUM_D  1             // number of dimensions
 #define MV     x_            // moving dimension
