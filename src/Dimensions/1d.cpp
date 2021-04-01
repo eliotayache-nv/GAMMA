@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-04-01 20:22:09
+* @Last Modified time: 2021-04-01 23:07:59
 */
 
 #include "../environment.h"
@@ -647,8 +647,8 @@ void Grid::split(int j, int i){
 
   #endif
 
-  c->S.cons2prim(c->G.cen[r_]);
-  cR->S.cons2prim(cR->G.cen[r_]);
+  // c->S.cons2prim(c->G.cen[r_]);
+  // cR->S.cons2prim(cR->G.cen[r_]);
 
   c->S.prim2cons(c->G.cen[r_]);
   c->S.state2flux(c->G.cen[r_]);
