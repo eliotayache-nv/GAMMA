@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-29 22:59:29
+# @Last Modified time: 2021-03-29 23:58:54
 
 
 import numpy as np
@@ -298,7 +298,7 @@ def quadMesh(data, key,
   if geometry == "polar" or axis is not None:
     ax.set_rorigin(0)
     ax.set_rmin(xmin)
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
+    # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
     ax.set_rticks([xmin, xmax])
 
   if colorbar:
@@ -412,7 +412,7 @@ def AnalyseBoxFit(data, jtrack=0, full=False):
   plt.tight_layout()
   
   if full==True:
-    return(BoxFitImages(data))
+    BoxFitImages(data)
 
 
 
@@ -427,23 +427,24 @@ def BoxFitImages(data, save=False):
   f = plt.figure()
   ax2 = plt.axes(projection='polar', frameon=False)
   ax = plt.axes(projection='polar')
-  rmin, rmax, thetamax, im1 = quadMesh(data, "rho", log=True,
+  rmin, rmax, thetamaxim, im1 = quadMesh(data, "rho", log=True,
                                        fig=f, axis=ax, colorbar=False)
-  rmin, rmax, thetamax, im2 = quadMesh(data, "p", log=True,
+  rmin, rmax, thetamaxim, im2 = quadMesh(data, "p", log=True,
                                        fig=f, axis=ax, 
                                        invert=True, cmap='cividis', colorbar=False)
   ax.axvline(0, color='k', lw=0.7)
 
   ax.set_rmin(rmin)
-  ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
   rmid = (rmax+rmin)/2. 
   ax.set_rticks([rmin, rmid, rmax])
-  ax.set_thetalim(-thetamax, thetamax)
+  ax.set_thetamin(-thetamax)
+  ax.set_thetamax(thetamax)
 
   ax2.set_rorigin(0)
   ax2.set_rmin(rmin)
   ax2.set_rmax(rmax)
-  ax2.set_thetalim(-thetamax, thetamax)
+  ax2.set_thetamin(-thetamax)
+  ax2.set_thetamax(thetamax)
 
   cb = f.colorbar(im1, ax=ax, orientation='vertical', pad=0.1)
   cb.set_label("density", fontsize=12)
@@ -457,9 +458,8 @@ def BoxFitImages(data, save=False):
   pos = cax.get_position()
   cax.set_position([pos.x0, 0.25, pos.width, 0.23])
 
-  ax.set_xlabel('radius (cm)')
   time = data['t'][0]
-  plt.title('time = %.2e s' %time, x=0.2, y=0.8, fontsize=12)
+  plt.title('time = %.2e s\n radius in cm' %time, fontsize=12)
 
   if save==True:
     f.savefig('boxfit.png', bbox_inches='tight')
@@ -468,23 +468,24 @@ def BoxFitImages(data, save=False):
   f = plt.figure()
   ax2 = plt.axes(projection='polar', frameon=False)
   ax = plt.axes(projection='polar')
-  rmin, rmax, thetamax, im1 = quadMesh(data, "gmax", log=True,
+  rmin, rmax, thetamaxim, im1 = quadMesh(data, "gmax", log=True,
                                        fig=f, axis=ax, colorbar=False)
-  rmin, rmax, thetamax, im2 = quadMesh(data, "psyn", v1min=2., 
+  rmin, rmax, thetamaxim, im2 = quadMesh(data, "psyn", v1min=2., 
                                        fig=f, axis=ax, 
                                        invert=True, cmap='cividis', colorbar=False)
   ax.axvline(0, color='k', lw=0.7)
 
   ax.set_rmin(rmin)
-  ax.yaxis.set_major_formatter(FormatStrFormatter('%.2e'))
   rmid = (rmax+rmin)/2. 
   ax.set_rticks([rmin, rmid, rmax])
-  ax.set_thetalim(-thetamax, thetamax)
+  ax.set_thetamin(-thetamax)
+  ax.set_thetamax(thetamax)
 
   ax2.set_rorigin(0)
   ax2.set_rmin(rmin)
   ax2.set_rmax(rmax)
-  ax2.set_thetalim(-thetamax, thetamax)
+  ax2.set_thetamin(-thetamax)
+  ax2.set_thetamax(thetamax)
 
   cb = f.colorbar(im1, ax=ax, orientation='vertical', pad=0.1)
   cb.set_label("$\\gamma_\\mathrm{max}$", fontsize=12)
@@ -498,8 +499,7 @@ def BoxFitImages(data, save=False):
   pos = cax.get_position()
   cax.set_position([pos.x0, 0.25, pos.width, 0.23])
 
-  ax.set_xlabel('radius (cm)')
-  plt.title('time = %.2e s' %time, x=0.2, y=0.8, fontsize=12)
+  plt.title('time = %.2e s\n radius in cm' %time, loc='center', fontsize=12)
 
   if save==True:
     f.savefig('test.png', bbox_inches='tight')
