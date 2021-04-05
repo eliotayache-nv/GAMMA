@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-11 15:37:51
+* @Last Modified time: 2021-04-01 23:07:59
 */
 
 #include "../environment.h"
@@ -216,54 +216,6 @@ void Grid::assignId(int ind[NUM_D]){
 
 void Grid::updateGhosts(int it, double t){
 
-  // if (worldsize>1) { mpi_exchangeGhostTracks(); }
-
-  // // outer boundaries (OUTFLOW)
-  // if (worldrank==0){
-  //   for (int j = 0; j <= jLbnd; ++j){
-  //     ntrack[j] = ntrack[jLbnd+1];
-  //     nact[j] = nact[jLbnd+1];
-  //     iRbnd[j] = iRbnd[jLbnd+1];
-  //     iLbnd[j] = iLbnd[jLbnd+1];
-  //     std::copy_n(&Ctot[jLbnd+1][0], ntrack[jLbnd+1],   &Ctot[j][0]);
-  //     std::copy_n(&Itot[jLbnd+1][0], ntrack[jLbnd+1]-1, &Itot[j][0]);
-
-  //     // updating ghost positions, ids and indexes
-  //     for (int i = 0; i < ntrack[j]; ++i){
-  //       int ind[] = {j,i};
-  //       assignId(ind);
-  //       Ctot[j][i].G.x[F1] -= (jLbnd-j+1)*C[0][0].G.dx[F1];
-  //       Ctot[j][i].computeAllGeom();
-  //       if (i != ntrack[j]-1){ 
-  //         Itot[j][i].x[F1] -= (jLbnd-j+1)*C[0][0].G.dx[F1]; 
-  //         Itot[j][i].computedA();
-  //       }
-  //     }
-  //   }
-  // }
-  // if (worldrank==worldsize-1){
-  //   for (int j = jRbnd; j < nde_nax[F1]; ++j){
-  //     ntrack[j] = ntrack[jRbnd-1];
-  //     nact[j] = nact[jRbnd-1];
-  //     iRbnd[j] = iRbnd[jRbnd-1];
-  //     iLbnd[j] = iLbnd[jRbnd-1];
-  //     std::copy_n(&Ctot[jRbnd-1][0], ntrack[jRbnd-1]  , &Ctot[j][0]);
-  //     std::copy_n(&Itot[jRbnd-1][0], ntrack[jRbnd-1]-1, &Itot[j][0]);
-
-  //     // udating ghost positions
-  //     for (int i = 0; i < ntrack[j]; ++i){
-  //       int ind[] = {j,i};
-  //       assignId(ind);
-  //       Ctot[j][i].G.x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dx[F1];
-  //       Ctot[j][i].computeAllGeom();
-  //       if (i != ntrack[j]-1){ 
-  //         Itot[j][i].x[F1] += (j-jRbnd+1)*Ctot[jRbnd-1][iLbnd[j]+1].G.dx[F1];
-  //         Itot[j][i].computedA();
-  //       }
-  //     }
-  //   }
-  // }
-
   for (int i = 0; i <= iLbnd; ++i){
     Ctot[i] = Ctot[iLbnd+1];
     Ctot[i].G.x[MV] -= (iLbnd-i+1) * Ctot[iLbnd+1].G.dx[MV];
@@ -297,8 +249,12 @@ void Grid::updateGhosts(int it, double t){
 
   static double minmod(double a, double b){
 
+    // double theta = 1.5;
+    // double r = a/b;
     if (fabs(a) < fabs(b) && a*b > 0){ return(a); }
     if (fabs(b) < fabs(a) && a*b > 0){ return(b); }
+    // double lim = fmax(0, fmin(theta*r, fmin((1+r)/2., theta)));
+    // return(b*lim);
     return(0);
 
   }
@@ -312,6 +268,20 @@ void Grid::updateGhosts(int it, double t){
       // reconstruction using primitive variables
       double qL = cL.S.prim[q];
       double qR = cR.S.prim[q];
+      grad[q] = (qR - qL) / (xR-xL);
+    }
+
+  }
+
+  static void gradcons(Cell cL, Cell cR, int dim, double *grad){
+
+    double xL = cL.G.cen[dim];
+    double xR = cR.G.cen[dim];
+
+    for (int q = 0; q < NUM_Q; ++q){
+      // conserved variables when splitting zones
+      double qL = cL.S.cons[q];
+      double qR = cR.S.cons[q];
       grad[q] = (qR - qL) / (xR-xL);
     }
 
@@ -606,6 +576,7 @@ void Grid::split(int j, int i){
   Cell *c  = &Ctot[i];
   Cell *cR = &Ctot[i+1];  // this should be an empty cell as we just freed it  
 
+
   // computing gradients
   // done before geometry update
   #if SPATIAL_RECONSTRUCTION_ == PIECEWISE_LINEAR_
@@ -613,10 +584,18 @@ void Grid::split(int j, int i){
     Cell *cL      = &Ctot[i-1]; 
     Cell *cR_old  = &Ctot[i+2];  // +2 because we freed up space on the right already
 
-    double gradL[NUM_Q], gradR[NUM_Q], gradC[NUM_Q];
+    // we're going to copy the conserved variables
+    // c->S.prim2cons(c->G.cen[r_]); 
+    // cL->S.prim2cons(cL->G.cen[r_]); 
+    // cR_old->S.prim2cons(cR_old->G.cen[r_]); 
+
+    double gradL[NUM_Q], gradR[NUM_Q], gradN[NUM_Q], gradC[NUM_Q];
     grad(*cL, *c, MV, gradL);
     grad(*c,  *cR_old, MV, gradR);
+    grad(*cL,  *cR_old, MV, gradN);
     for (int q = 0; q < NUM_Q; ++q){ 
+      gradL[q] = minmod(gradL[q], gradN[q]);
+      gradR[q] = minmod(gradR[q], gradN[q]);
       gradC[q] = minmod(gradL[q], gradR[q]);
     }
 
@@ -625,12 +604,23 @@ void Grid::split(int j, int i){
   // updating geometry
   double x_old = c->G.x[MV];
   double dl_old = c->G.dx[MV];
+  // double cen_old = c->G.cen[MV];
+  // double xL = x_old - dl_old/2.;
+  // double xR = x_old + dl_old/2.;
+  // double dlL = cen_old - xL;
+  // double dlR = xR - cen_old;
 
   c->G.x[MV]  = x_old - dl_old/4.;
   cR->G.x[MV] = x_old + dl_old/4.;
 
   c->G.dx[MV]  = dl_old/2.;
   cR->G.dx[MV] = dl_old/2.;
+
+  // c->G.x[MV]  = (xL+cen_old)/2.;
+  // cR->G.x[MV] = (xR+cen_old)/2.;
+
+  // c->G.dx[MV]  = dlL;
+  // cR->G.dx[MV] = dlR;
 
   c->computeAllGeom();
   cR->computeAllGeom();
@@ -657,11 +647,14 @@ void Grid::split(int j, int i){
 
   #endif
 
-  c->S.prim2cons(c->G.x[r_]);
-  c->S.state2flux(c->G.x[r_]);
+  // c->S.cons2prim(c->G.cen[r_]);
+  // cR->S.cons2prim(cR->G.cen[r_]);
 
-  cR->S.prim2cons(cR->G.x[r_]);
-  cR->S.state2flux(cR->G.x[r_]);
+  c->S.prim2cons(c->G.cen[r_]);
+  c->S.state2flux(c->G.cen[r_]);
+
+  cR->S.prim2cons(cR->G.cen[r_]);
+  cR->S.state2flux(cR->G.cen[r_]);
 
   Itot[i].x[MV]  = x_old;
   Itot[i].computedA();
@@ -688,8 +681,8 @@ void Grid::merge(int j, int i){
     cVic = cR;
   }
 
-  c->S.prim2cons(c->G.x[r_]);
-  cVic->S.prim2cons(cVic->G.x[r_]);
+  c->S.prim2cons(c->G.cen[r_]);
+  cVic->S.prim2cons(cVic->G.cen[r_]);
   // updating values
   double dV_loc = c->G.dV;
   double dV_vic = cVic->G.dV;
@@ -710,8 +703,8 @@ void Grid::merge(int j, int i){
   c->G.dx[MV] += cVic->G.dx[MV];
   c->computeAllGeom();
 
-  c->S.cons2prim(c->G.x[r_]);
-  c->S.state2flux(c->G.x[r_]);
+  c->S.cons2prim(c->G.cen[r_]);
+  c->S.state2flux(c->G.cen[r_]);
 
   // shifting cells and interfaces around
   if (side==left_){
@@ -779,62 +772,10 @@ void Grid::computeFluxes(){
       Ctot[i].flux[1][MV][q] = Itot[i  ].flux[q];
     }
   }
-  // flux in F1 direction (building the interfaces from neighbor ids)
-  // #pragma omp parallel for 
-  // for (int j = 0; j < nde_nax[F1]-1; ++j){
-  //   double jpos = ( Ctot[j][iLbnd[j]+1].G.x[F1] + Ctot[j+1][iLbnd[j+1]+1].G.x[F1] )/2.;
 
-  //   // resetting fluxes
-  //   for (int i = 0; i < ntrack[j]; ++i){
-  //     for (int q = 0; q < NUM_Q; ++q){ Ctot[j][i].flux[1][F1][q] = 0.; }
-  //   }
-  //   for (int i = 0; i < ntrack[j+1]; ++i){
-  //     for (int q = 0; q < NUM_Q; ++q){ Ctot[j+1][i].flux[0][F1][q] = 0.; }
-  //   }
-  //   for (int i = 0; i < ntrack[j]; ++i){
+  // overriding fluxes (boundaries, special fluxes... )
+  userFluxes();
 
-  //     Cell *c0 = &Ctot[j][i];
-  //     double x0 = c0->G.x[MV];
-  //     double xL0 = x0 - c0->G.dx[MV]/2.;
-  //     double xR0 = x0 + c0->G.dx[MV]/2.;
-
-  //     computeTransGradients(j,i);
-
-  //     // We reconstruct on the (+) side of the track (or R-side)
-  //     // this will be taken into account in the choice of gradients of reconstructStates()
-  //     for (std::vector<int>::size_type n = 0; n < c0->neigh[F1][1].size(); ++n){
-  //       int idn = c0->neigh[F1][1][n];
-  //       Cell *cn = &Ctot[0][idn];
-  //       double xn = cn->G.x[MV];
-  //       double xLn = xn - cn->G.dx[MV]/2.;
-  //       double xRn = xn + cn->G.dx[MV]/2.;
-
-  //       Interface Int;
-  //       Int.dim   = F1;
-  //       Int.v     = 0;
-  //       Int.x[F1] = jpos;
-  //       Int.x[MV] = ( fmax(xL0,xLn) + fmin(xR0,xRn) )/2.;
-  //       Int.dx[0] = fmax(0, fmin(xR0,xRn) - fmax(xL0,xLn));
-  //       Int.computedA();
-
-  //       reconstructStates(j,i,F1,idn,&Int);
-  //       Int.computeLambda();
-  //       Int.computeFlux();
-
-  //       #if SHOCK_DETECTION_ == ENABLED_
-  //         // printf("%le %le %d %d\n", c0->S.prim[PPP], cn->S.prim[PPP], c0->nde_ind[1], cn->nde_ind[1]);
-  //         Int.measureShock(c0, cn);
-  //       #endif
-
-  //       c0->update_dt(F1, Int.lL);
-  //       cn->update_dt(F1, Int.lR);
-  //       for (int q = 0; q < NUM_Q; ++q){
-  //         c0->flux[1][F1][q] += Int.flux[q];
-  //         cn->flux[0][F1][q] += Int.flux[q];
-  //       }
-  //     }
-  //   }  
-  // }
 }
   
 
@@ -974,7 +915,7 @@ void Grid::prim2cons(){
   int iL = 0;
   int iR = ntrack;
   for (int i = iL; i < iR; ++i){
-    double r = Ctot[i].G.x[r_];
+    double r = Ctot[i].G.cen[r_];
     Ctot[i].S.prim2cons(r);
   }
 
@@ -986,7 +927,7 @@ void Grid::state2flux(){
   int iL = 0;
   int iR = ntrack;
   for (int i = iL; i < iR; ++i){
-    double r = Ctot[i].G.x[r_];
+    double r = Ctot[i].G.cen[r_];
     Ctot[i].S.state2flux(r);
   }
 
