@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:57:26
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-31 10:49:37
+* @Last Modified time: 2021-04-05 13:57:02
 */
 
 #include "../environment.h"
@@ -144,8 +144,6 @@
         for (int q = 0; q < NUM_Q; ++q){
           c->S.cons[q] /= c->G.dV;
         }
-        printf("%d %d\n", j, i);
-        fflush(stdout);
         c->S.cons2prim(c->G.x[r_]);
       }
     }
