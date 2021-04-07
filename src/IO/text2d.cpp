@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-09-28 16:57:12
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-03-11 15:08:09
+* @Last Modified time: 2021-04-07 10:47:03
 */
 
 #include "../simu.h"
@@ -60,7 +60,7 @@ public:
       c->S.prim[GMN] = pow(rho,1./3.) / gmin;
       c->S.prim[GMX] = pow(rho,1./3.) / gmax;
       c->S.prim[GMD] = pow(rho,1./3.) / gmid;
-      c->S.prim[GMX] = psyn;
+      c->S.prim[PSN] = psyn;
       // if (gmax > 10) printf("blah %d %d %le %le\n", j, i, gmax, c->S.prim[GMX]);
     #endif
 
