@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-03-29 23:58:54
+# @Last Modified time: 2021-04-07 10:26:04
 
 
 import numpy as np
@@ -375,7 +375,7 @@ def BMwave(data):
 
 # ----------------------------------------------------------------------------------------
 # Specific functions
-def AnalyseBoxFit(data, jtrack=0, full=False):
+def AnalyseBoxFit(data, jtrack=0, full=False, thetamax=0.5):
 
   E0 = 1.e53
   n0 = 1.e0
@@ -412,16 +412,15 @@ def AnalyseBoxFit(data, jtrack=0, full=False):
   plt.tight_layout()
   
   if full==True:
-    BoxFitImages(data)
+    BoxFitImages(data, thetamax=thetamax)
 
 
 
 
 
 
-def BoxFitImages(data, save=False):
+def BoxFitImages(data, save=False, thetamax=0.5):
 
-  thetamax = 0.5
   thetamax *= 180./np.pi
 
   f = plt.figure()
