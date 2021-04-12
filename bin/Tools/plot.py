@@ -2,7 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-04-12 14:17:05
+# @Last Modified time: 2021-04-12 14:24:40
 
 import numpy as np
 import seaborn as sns
@@ -449,7 +449,7 @@ def AnalyseBoxFit(data, jtrack=0, full=False, thetamax=0.5):
 
 
 
-def BoxFitImages(data, save=False, thetamax=0.5, **kwargs):
+def BoxFitImages(data, save=False, thetamax=0.5, rmin0=None, rmax0=None, **kwargs):
 
   thetamax *= 180./np.pi
 
@@ -462,6 +462,11 @@ def BoxFitImages(data, save=False, thetamax=0.5, **kwargs):
                                        fig=f, axis=ax, 
                                        invert=True, cmap='cividis', colorbar=False, **kwargs)
   ax.axvline(0, color='k', lw=0.7)
+
+  if rmin0 is not None:
+    rmin = rmin0
+  if rmax0 is not None:
+    rmax = rmax0
 
   ax.set_rmin(rmin)
   rmid = (rmax+rmin)/2. 
