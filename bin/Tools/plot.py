@@ -2,8 +2,7 @@
 # @Author: eliotayache
 # @Date:   2020-05-14 16:24:48
 # @Last Modified by:   Eliot Ayache
-# @Last Modified time: 2021-04-07 10:26:04
-
+# @Last Modified time: 2021-04-12 14:17:05
 
 import numpy as np
 import seaborn as sns
@@ -17,6 +16,7 @@ import matplotlib.cm as cm
 import glob
 import os
 import string
+from astropy.io import ascii
 
 from gamma_io import *
 from isentropic import *
@@ -30,14 +30,14 @@ plt.rc('ytick', labelsize=12)
 plt.rc('legend', fontsize=12) 
 plt.rcParams['savefig.dpi'] = 200
 
-def plot(key, it, contour=False):
-  f = plt.figure()
-  data = pd.read_csv('../../results/temp/%s%d.out' %(key,it), sep=" ", header=None)
-  if contour:
-    sns.set_style("white")
-    sns.kdeplot(data)
-  else:
-    sns.heatmap(data.T); f.show()
+# def plot(key, it, contour=False):
+#   f = plt.figure()
+#   data = pd.read_csv('../../results/temp/%s%d.out' %(key,it), sep=" ", header=None)
+#   if contour:
+#     sns.set_style("white")
+#     sns.kdeplot(data)
+#   else:
+#     sns.heatmap(data.T); f.show()
 
 def tricontour(name, it, key,):
   data = pd.read_csv('../../results/temp/%s%d.out'  %(name,it), sep=" ")
@@ -59,8 +59,11 @@ def tricontour(name, it, key,):
   return x,y,z
 
 
-def getArray(data, key):
-  return(data.pivot(index='j', columns='i', values=key).to_numpy())
+def getArray(data, key, oneDimensional=False):
+  if oneDimensional:
+    return(data[key].to_numpy())
+  else:
+    return(data.pivot(index='j', columns='i', values=key).to_numpy())
 
 
 
@@ -167,9 +170,11 @@ def quadMesh(data, key,
   slick=False,
   phi=0.,
   fig=None,
+  label=None,
   axis=None, 
   thetaobs=0.,
   nuobs=1.e17,
+  shrink=0.6,
   expand=False):
 
   # if key2 and geometry!="polar":
@@ -182,6 +187,8 @@ def quadMesh(data, key,
     PSyn = addSynchPower(data, phi, thetaobs, nuobs)
     data["PSyn"] = PSyn
     z = data.pivot(index='j', columns='i', values="PSyn").to_numpy()
+    zmin = np.min(z[np.logical_and(~np.isnan(z), z>0)])
+    z[np.logical_or(np.isnan(z), z<zmin)] = zmin
   elif key == "lfac":
     vx = data.pivot(index='j', columns='i', values="vx").to_numpy()
     vy = data.pivot(index='j', columns='i', values="vy").to_numpy()
@@ -302,8 +309,10 @@ def quadMesh(data, key,
     ax.set_rticks([xmin, xmax])
 
   if colorbar:
-    cb = f.colorbar(im, ax=ax, orientation='vertical', shrink=.6, pad=0.1)
-    cb.set_label(key, fontsize=14)
+    cb = f.colorbar(im, ax=ax, orientation='vertical', shrink=shrink, pad=0.1)
+    if label is None:
+      label = key  
+    cb.set_label(label, fontsize=14)
 
   if tlayout:
     f.tight_layout()
@@ -326,6 +335,19 @@ def loopFigs(dir, key, oneDimensional = False, **kwargs):
     plt.close()
 
 
+def plotConvergence(res,err):
+  res = np.array(res)
+  err = np.array(err)
+  plt.plot(res, err, marker='o', mec='k', ls='--', c='k')
+  slopes = np.gradient(np.log10(err), np.log10(res))
+  print(slopes)
+  plt.xscale('log')
+  plt.yscale('log')
+  plt.xlabel('resolution\n (initial no of cells)')
+  plt.ylabel('L1 error')
+
+
+
 # ----------------------------------------------------------------------------------------
 # Specific functions
 def isenwave(data):
@@ -333,13 +355,16 @@ def isenwave(data):
   f, axes = plotMulti(data, ["rho","p","vx"], 
     tracer=False, 
     line=False, 
-    labels={"rho":"$\\rho$", "vx":"v"})
+    labels={"rho":"density",'p':'pressure', "vx":"velocity"})
   plotIsen1D(time, "rho", ax=axes[0], color="r", label="exact")
   plotIsen1D(time, "p", ax=axes[1], color="r")
   plotIsen1D(time, "vx", ax=axes[2], color="r")
   plt.xlabel("x")
   axes[0].legend()
   plt.tight_layout()
+
+  computeOrderOfPrec(data)
+
   return(f, axes)
 
 
@@ -388,9 +413,14 @@ def AnalyseBoxFit(data, jtrack=0, full=False, thetamax=0.5):
     jtrack=jtrack,
     tracer=False, 
     line=False, 
-    labels={"rho":"$\\rho/\\rho_0$", 
-            "p":"$p/p_0$",
-            "lfac":"$\\gamma$",
+    # labels={"rho":"$\\rho/\\rho_0$", 
+    #         "p":"$p/p_0$",
+    #         "lfac":"$\\gamma$",
+    #         "gmax":"$\\gamma_\\mathrm{max}$",
+    #         "gmin":"$\\gamma_\\mathrm{min}$"}, 
+    labels={"rho":"density\n(normalised)", 
+            "p":"pressure\n(normalised)",
+            "lfac":"Lorentz factor",
             "gmax":"$\\gamma_\\mathrm{max}$",
             "gmin":"$\\gamma_\\mathrm{min}$"}, 
     x_norm=x_norm)
@@ -407,7 +437,7 @@ def AnalyseBoxFit(data, jtrack=0, full=False, thetamax=0.5):
   axes[2].set_yscale("log")
   axes[3].set_yscale("log")
   axes[4].set_yscale("log")
-  plt.xlabel("$r [cm]$")
+  plt.xlabel("$r$ (light seconds)")
   axes[0].legend()
   plt.tight_layout()
   
@@ -419,7 +449,7 @@ def AnalyseBoxFit(data, jtrack=0, full=False, thetamax=0.5):
 
 
 
-def BoxFitImages(data, save=False, thetamax=0.5):
+def BoxFitImages(data, save=False, thetamax=0.5, **kwargs):
 
   thetamax *= 180./np.pi
 
@@ -427,10 +457,10 @@ def BoxFitImages(data, save=False, thetamax=0.5):
   ax2 = plt.axes(projection='polar', frameon=False)
   ax = plt.axes(projection='polar')
   rmin, rmax, thetamaxim, im1 = quadMesh(data, "rho", log=True,
-                                       fig=f, axis=ax, colorbar=False)
+                                       fig=f, axis=ax, colorbar=False, **kwargs)
   rmin, rmax, thetamaxim, im2 = quadMesh(data, "p", log=True,
                                        fig=f, axis=ax, 
-                                       invert=True, cmap='cividis', colorbar=False)
+                                       invert=True, cmap='cividis', colorbar=False, **kwargs)
   ax.axvline(0, color='k', lw=0.7)
 
   ax.set_rmin(rmin)
@@ -458,7 +488,7 @@ def BoxFitImages(data, save=False, thetamax=0.5):
   cax.set_position([pos.x0, 0.25, pos.width, 0.23])
 
   time = data['t'][0]
-  plt.title('time = %.2e s\n radius in cm' %time, fontsize=12)
+  plt.title('-\ntime = %.2e s\n radius in cm' %time, fontsize=12)
 
   if save==True:
     f.savefig('boxfit.png', bbox_inches='tight')
@@ -469,7 +499,7 @@ def BoxFitImages(data, save=False, thetamax=0.5):
   ax = plt.axes(projection='polar')
   rmin, rmax, thetamaxim, im1 = quadMesh(data, "gmax", log=True,
                                        fig=f, axis=ax, colorbar=False)
-  rmin, rmax, thetamaxim, im2 = quadMesh(data, "psyn", v1min=2., 
+  rmin, rmax, thetamaxim, im2 = quadMesh(data, "gmin", log=True, 
                                        fig=f, axis=ax, 
                                        invert=True, cmap='cividis', colorbar=False)
   ax.axvline(0, color='k', lw=0.7)
@@ -493,12 +523,54 @@ def BoxFitImages(data, save=False, thetamax=0.5):
   cax.set_position([pos.x0, 0.52, pos.width, 0.23])
 
   cb = f.colorbar(im2, ax=ax2, orientation='vertical', pad=0.1)
-  cb.set_label("spectral index $p$", fontsize=12)
+  cb.set_label("$\\gamma_\\mathrm{min}$", fontsize=12)
   cax = cb.ax
   pos = cax.get_position()
   cax.set_position([pos.x0, 0.25, pos.width, 0.23])
 
-  plt.title('time = %.2e s\n radius in cm' %time, loc='center', fontsize=12)
+  plt.title('-\ntime = %.2e s\n radius in cm' %time, loc='center', fontsize=12)
+
+  if save==True:
+    f.savefig('test.png', bbox_inches='tight')
+
+
+
+
+  f = plt.figure()
+  ax2 = plt.axes(projection='polar', frameon=False)
+  ax = plt.axes(projection='polar')
+  rmin, rmax, thetamaxim, im1 = quadMesh(data, "PSyn", log=True,
+                                       fig=f, axis=ax, colorbar=False)
+  rmin, rmax, thetamaxim, im2 = quadMesh(data, "psyn", v1min=2., 
+                                       fig=f, axis=ax, 
+                                       invert=True, cmap='cividis', colorbar=False)
+  ax.axvline(0, color='k', lw=0.7)
+
+  ax.set_rmin(rmin)
+  rmid = (rmax+rmin)/2. 
+  ax.set_rticks([rmin, rmid, rmax])
+  ax.set_thetamin(-thetamax)
+  ax.set_thetamax(thetamax)
+
+  ax2.set_rorigin(0)
+  ax2.set_rmin(rmin)
+  ax2.set_rmax(rmax)
+  ax2.set_thetamin(-thetamax)
+  ax2.set_thetamax(thetamax)
+
+  cb = f.colorbar(im1, ax=ax, orientation='vertical', pad=0.1)
+  cb.set_label("X-ray Emissivity\n (code units)", fontsize=10)
+  cax = cb.ax
+  pos = cax.get_position()
+  cax.set_position([pos.x0, 0.52, pos.width, 0.23])
+
+  cb = f.colorbar(im2, ax=ax2, orientation='vertical', pad=0.1)
+  cb.set_label("spectral index", fontsize=12)
+  cax = cb.ax
+  pos = cax.get_position()
+  cax.set_position([pos.x0, 0.25, pos.width, 0.23])
+
+  plt.title('-\ntime = %.2e s\n radius in cm' %time, loc='center', fontsize=12)
 
   if save==True:
     f.savefig('test.png', bbox_inches='tight')
