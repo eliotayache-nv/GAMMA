@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-04-06 22:58:37
+* @Last Modified time: 2021-04-14 01:03:38
 */
 
 
@@ -18,13 +18,16 @@
   static double spectral_p(double fvelu){
     double pspec;
     #if VARIABLE_PSPEC_ == ENABLED_
-      if (fabs(fvelu) < 1.){
-        pspec = 2.;
-      } else if (fabs(fvelu) < 10){
-        pspec = 2.+ (p_-2.)*log10(fabs(fvelu));
-      } else {
-        pspec = p_;
-      }
+      // if (fabs(fvelu) < 1.){
+      //   pspec = 2.;
+      // } else if (fabs(fvelu) < 10){
+      //   pspec = 2.+ (p_-2.)*log10(fabs(fvelu));
+      // } else {
+      //   pspec = p_;
+      // }
+
+      pspec = 2.11 + 0.11*tanh((log10(fabs(fvelu))-.5));
+
     #else
       pspec = p_;
     #endif
@@ -267,8 +270,10 @@
       *gmax = radiation_gammae2trac(GAMMA_MAX_INIT_, S) / (lfac*rho);
       *gmin = radiation_gammae2trac(gammaMinInit(S), S) / (lfac*rho);
     }
-    if (*gmax <= 0. or ::isnan(*gmax)) *gmax = lim;
-    if (*gmin <= 0. or ::isnan(*gmin)) *gmin = lim;
+    // if (*gmax <= 0. or ::isnan(*gmax)) *gmax = lim;
+    // if (*gmin <= 0. or ::isnan(*gmin)) *gmin = lim;
+    if (::isnan(*gmax)) *gmax = lim;
+    if (::isnan(*gmin)) *gmin = lim;
     // if (*gmax > lim or *gmax <= 0. or ::isnan(*gmax)) *gmax = lim;
     // if (*gmin > lim or *gmin <= 0. or ::isnan(*gmin)) *gmin = lim;
 
