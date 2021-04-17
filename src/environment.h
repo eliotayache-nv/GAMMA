@@ -65,7 +65,7 @@ enum{skip_,merge_,split_};
 #define DETECT_SHOCK_THRESHOLD_ 0.01
 #define LOCAL_SYNCHROTRON_      DISABLED_
 #define GAMMA_MAX_INIT_         (1.e8)
-#define VARIABLE_PSPEC_         DISABLED_
+#define VARIABLE_PSPEC_         ENABLED_
 
 // ---------------------------------------------------------------------------------------
 // DO NOT MODIFY!
