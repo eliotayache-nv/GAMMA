@@ -2,21 +2,20 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-07 14:12:50
+* @Last Modified time: 2021-04-11 19:59:25
 */
 
 #include "../../environment.h"
 #include "../../grid.h"
-#include "../../cell.h"
-
+#include "../../simu.h"
+#include "../../constants.h"
 
 static double xmin = -0.35;
 static double xmax = 1.;
 static double ymin = -1.;
 static double ymax = 1.;
 
-static double Nx = 100;
-static double Ny = 1;
+static double Nx = 3160;
 static double rho_ref = 1.;
 static double v_ref   = 0.;
 static double p_ref   = 1.e2;
@@ -29,7 +28,6 @@ void loadParams(s_par *par){
 
   par->tini      = 0.;
   par->ncell[x_] = Nx;
-  par->ncell[y_] = Ny;
   par->nmax      = Nx+50;    // max number of cells in MV direction
   par->ngst      = 2;
 
@@ -39,15 +37,12 @@ int Grid::initialGeometry(){
 
   double x = xmax - xmin;
   double y = ymax - ymin;
-  for (int j = 0; j < ncell[y_]; ++j){
-    for (int i = 0; i < ncell[x_]; ++i){
-      Cell *c = &Cinit[j][i];
-      c->G.x[x_]  = (double) x*(i+0.5)/ncell[x_] + xmin;
-      c->G.dx[x_] =          x/ncell[x_];
-      c->G.x[y_]  = (double) y*(j+0.5)/ncell[y_] + ymin;
-      c->G.dx[y_] =          y/ncell[y_];
-      c->G.dV     = c->G.dx[x_]*c->G.dx[y_];
-    }
+  for (int i = 0; i < ncell[x_]; ++i){
+    Cell *c = &Cinit[i];
+    c->G.x[x_]  = (double) x*(i+0.5)/ncell[x_] + xmin;
+    c->G.dx[x_] =          x/ncell[x_];
+
+    c->computeAllGeom();
   }
   return 0;
 
@@ -79,7 +74,7 @@ int Grid::initialValues(){
 
   for (int j = 0; j < ncell[F1]; ++j){
     for (int i = 0; i < ncell[MV]; ++i){
-      Cell *c = &Cinit[j][i];
+      Cell *c = &Cinit[i];
       double x = c->G.x[x_];
       double y = c->G.x[y_];
       double x_eff = x*cos(angle) - y*sin(angle); // rotation
@@ -166,5 +161,29 @@ void FluidState::cons2prim_user(double *rho, double *p, double *uu){
   return;
 
 }
+
+
+
+void Simu::dataDump(){
+
+  // if (it%1 == 0){ grid.printCols(it, t); }
+  if (it%100 == 0){ grid.printCols(it, t); }
+
+}
+
+void Simu::runInfo(){
+
+  // if ((worldrank == 0) and (it%1 == 0)){ printf("it: %ld time: %le\n", it, t);}
+  if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
+
+}
+
+void Simu::evalEnd(){
+
+  // if (it > 300){ stop = true; }
+  if (t > 0.7){ grid.printCols(it, t); stop = true; } // 3.33e8 BOXFIT simu
+
+}
+
 
 

@@ -195,16 +195,6 @@ void Grid::userBoundaries(int it, double t){
 
 }
 
-void Grid::userFluxes(){
-
-  // reflective inner boundary
-  // for (int q = 0; q < NUM_Q; ++q){
-  //   Ctot[iLbnd+1].flux[0][MV][q] = 0.;
-  //   Ctot[iLbnd  ].flux[1][MV][q] = 0.;
-  // }
-
-}
-
 
 int Grid::checkCellForRegrid(int j, int i){
 

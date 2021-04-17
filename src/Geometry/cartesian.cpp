@@ -2,29 +2,35 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 15:17:31
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-09-28 09:02:30
+* @Last Modified time: 2021-04-11 20:07:40
 */
 
 
 #include "../cell.h"
 
-void Cell::computedV(){
+void Cell::computedV(s_cell_geometry *geom){
 
-  G.dV = 1.;
-  for (int d = 0; d < NUM_D; ++d){ G.dV *= G.dx[d]; }
+  if (geom==NULL) {geom = &G; }
 
-}
-
-void Cell::computedl(){
-
-    for (int d = 0; d < NUM_D; ++d) G.dl[d] = G.dx[d];
+  geom->dV = 1.;
+  for (int d = 0; d < NUM_D; ++d){ geom->dV *= geom->dx[d]; }
 
 }
 
+void Cell::computedl(s_cell_geometry *geom){
 
-void Cell::computeCentroid(){
+  if (geom==NULL) {geom = &G; }
 
-  for (int d = 0; d < NUM_D; ++d){ G.cen[d] = G.x[d]; }
+  for (int d = 0; d < NUM_D; ++d) geom->dl[d] = geom->dx[d];
+
+}
+
+
+void Cell::computeCentroid(s_cell_geometry *geom){
+
+  if (geom==NULL) {geom = &G; }
+
+  for (int d = 0; d < NUM_D; ++d){ geom->cen[d] = geom->x[d]; }
 
 }
 
@@ -40,7 +46,11 @@ void Cell::move(double xL, double xR){
 
 void Interface::computedA(){
 
+  #if NUM_D == 1
+    dA = 1;
+  #else
     dA = dx[0];
+  #endif
 
 }
 

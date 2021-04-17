@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-06-11 18:58:15
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-04-01 23:07:59
+* @Last Modified time: 2021-04-11 17:23:33
 */
 
 #include "../environment.h"
@@ -772,9 +772,6 @@ void Grid::computeFluxes(){
       Ctot[i].flux[1][MV][q] = Itot[i  ].flux[q];
     }
   }
-
-  // overriding fluxes (boundaries, special fluxes... )
-  userFluxes();
 
 }
   

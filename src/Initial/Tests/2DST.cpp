@@ -2,18 +2,19 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-16 18:50:01
+* @Last Modified time: 2021-04-11 21:04:32
 */
 
 #include "../../environment.h"
 #include "../../grid.h"
+#include "../../simu.h"
 
 void loadParams(s_par *par){
 
   par->tini      = 0.;
-  par->ncell[x_] = 100;
-  par->ncell[y_] = 100;
-  par->nmax      = 400;    // max number of cells in MV direction
+  par->ncell[x_] = 300;
+  par->ncell[y_] = 300;
+  par->nmax      = 600;    // max number of cells in MV direction
   par->ngst      = 2;
 
 }
@@ -27,7 +28,8 @@ int Grid::initialGeometry(){
       Cell *c = &Cinit[j][i];
       c->G.x[x_]  = (double) 2.*(i+0.5)/ncell[x_] - 1.;
       c->G.dx[x_] =          2./ncell[x_];
-      c->G.x[y_]  = (double) 2.*(j+0.5)/ncell[y_] - 1.000001;
+      c->G.x[y_]  = (double) 2.*(j+0.5)/ncell[y_] - 1;
+      // c->G.x[y_]  = (double) 2.*(j+0.5)/ncell[y_] - 1.000001;
       c->G.dx[y_] =          2./ncell[y_];
 
       c->computeAllGeom();
@@ -45,34 +47,54 @@ int Grid::initialValues(){
 
       double x = c->G.x[x_];
       double y = c->G.x[y_];
-      if (y > x and y >= -x){
+      if (x>0 and y>0){
         c->S.prim[RHO] = 0.1;
         c->S.prim[VV1] = 0.;
         c->S.prim[VV2] = 0.;
         c->S.prim[PPP] = 0.01;
-        c->S.cons[NUM_C] = 1.;
       }
-      if (y < -x and y > x){
+      if (x<0 and 0<=y){
         c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = 0.7;
-        c->S.prim[VV2] = 0.7;
+        c->S.prim[VV1] = 0.99;
+        c->S.prim[VV2] = 0.;
         c->S.prim[PPP] = 1.;
-        c->S.cons[NUM_C] = 2.;
       }
-      if (y <= x and y < -x){
+      if (x<=0 and y<=0){
         c->S.prim[RHO] = 0.5;
         c->S.prim[VV1] = 0.;
         c->S.prim[VV2] = 0.;
         c->S.prim[PPP] = 1.;
-        c->S.cons[NUM_C] = 3.;
       }
-      if (y >= -x and y <= x){
+      if (x>0 and 0>=y){
         c->S.prim[RHO] = 0.1;
-        c->S.prim[VV1] = -0.7;
-        c->S.prim[VV2] = 0.7;
+        c->S.prim[VV1] = 0;
+        c->S.prim[VV2] = 0.99;
         c->S.prim[PPP] = 1.;
-        c->S.cons[NUM_C] = 4.;
       }
+      // if (y > x and y >= -x){
+      //   c->S.prim[RHO] = 0.1;
+      //   c->S.prim[VV1] = 0.;
+      //   c->S.prim[VV2] = 0.;
+      //   c->S.prim[PPP] = 0.01;
+      // }
+      // if (y < -x and y > x){
+      //   c->S.prim[RHO] = 0.1;
+      //   c->S.prim[VV1] = 0.7;
+      //   c->S.prim[VV2] = 0.7;
+      //   c->S.prim[PPP] = 1.;
+      // }
+      // if (y <= x and y < -x){
+      //   c->S.prim[RHO] = 0.5;
+      //   c->S.prim[VV1] = 0.;
+      //   c->S.prim[VV2] = 0.;
+      //   c->S.prim[PPP] = 1.;
+      // }
+      // if (y >= -x and y <= x){
+      //   c->S.prim[RHO] = 0.1;
+      //   c->S.prim[VV1] = -0.7;
+      //   c->S.prim[VV2] = 0.7;
+      //   c->S.prim[PPP] = 1.;
+      // }
     }
 
   }
@@ -129,14 +151,16 @@ int Grid::checkCellForRegrid(int j, int i){
 
   Cell c = Ctot[j][i];
 
-  double split_dl = 0.05;
-  double merge_dl = 0.005;
-    // careful, dx != dl
+  double split_ar = 3;
+  double merge_ar = 0.2;
+  double dx = c.G.dx[x_];
+  double dy = c.G.dx[y_];
+  double ar = dx/dy;
 
-  if (c.G.dx[MV] > split_dl) {
+  if (ar > split_ar) {
     return(split_);
   }
-  if (c.G.dx[MV] < merge_dl) {
+  if (ar < merge_ar) {
     return(merge_);
   }
   return(skip_);
@@ -163,6 +187,31 @@ void FluidState::cons2prim_user(double *rho, double *p, double *uu){
   return;
 
 }
+
+
+
+
+void Simu::dataDump(){
+
+  // if (it%1 == 0){ grid.printCols(it, t); }
+  if (it%100 == 0){ grid.printCols(it, t); }
+
+}
+
+void Simu::runInfo(){
+
+  // if ((worldrank == 0) and (it%1 == 0)){ printf("it: %ld time: %le\n", it, t);}
+  if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
+
+}
+
+void Simu::evalEnd(){
+
+  // if (it > 300){ stop = true; }
+  if (t > 0.8){ grid.printCols(it, t); stop = true; } // 3.33e8 BOXFIT simu
+
+}
+
 
 
 

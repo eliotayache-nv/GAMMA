@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-04-06 22:58:37
+* @Last Modified time: 2021-04-13 10:51:24
 */
 
 
@@ -263,12 +263,12 @@
     double *psyn = &S.prim[PSN];
 
     if (isShocked){
-      if (pspec>*psyn or ::isnan(*psyn)) *psyn = pspec;
+      if (pspec>*psyn or std::isnan(*psyn)) *psyn = pspec;
       *gmax = radiation_gammae2trac(GAMMA_MAX_INIT_, S) / (lfac*rho);
       *gmin = radiation_gammae2trac(gammaMinInit(S), S) / (lfac*rho);
     }
-    if (*gmax <= 0. or ::isnan(*gmax)) *gmax = lim;
-    if (*gmin <= 0. or ::isnan(*gmin)) *gmin = lim;
+    if (*gmax <= 0. or std::isnan(*gmax)) *gmax = lim;
+    if (*gmin <= 0. or std::isnan(*gmin)) *gmin = lim;
     // if (*gmax > lim or *gmax <= 0. or ::isnan(*gmax)) *gmax = lim;
     // if (*gmin > lim or *gmin <= 0. or ::isnan(*gmin)) *gmin = lim;
 
