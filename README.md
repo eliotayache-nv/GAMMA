@@ -12,9 +12,7 @@ git clone https://github.com/eliotayache/GAMMA/ dirname
 
 ## Usage
 
-Output is stored in ./results/Last
-
-Before a new computation, create this directory.
+Output is stored in ./results/Last. you can run calculations you need to create this directory.
 
 ```bash
 mkdir -p results/Last
@@ -26,11 +24,6 @@ Use mpirun to launch computation.
 mpirun -n N_nodes ./bin/GAMMA -w  # to overwrite files in results/Last
 mpirun -n N_nodes ./bin/GAMMA -r  # to resume from the last file in results/Last
 ```
-
-## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
