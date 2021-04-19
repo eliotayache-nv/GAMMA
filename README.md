@@ -4,10 +4,10 @@ GAMMA is a code for modeling relativistic hydrodynamics and non-thermal emission
 
 ## Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
+Clone this repository in a directory of your choice
 
 ```bash
-pip install foobar
+git clone https://github.com/eliotayache/GAMMA/ dirname
 ```
 
 ## Usage
