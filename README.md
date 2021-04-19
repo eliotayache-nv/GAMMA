@@ -1,6 +1,7 @@
 # GAMMA
 
 GAMMA is a code for modeling relativistic hydrodynamics and non-thermal emission on a moving mesh.
+
 Parts of the code are currently still under development. A full documentation will be made available shortly.
 For now we provide information on how to compile and run the test cases included with the code.
 
