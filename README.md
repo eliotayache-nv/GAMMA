@@ -22,18 +22,18 @@ make -B
 
 ## Usage
 
-### Choosing modules
+### Choice of module to use
 
 The choice of geometry, time-integration, solver, dimensions are specified in ./Makefile
 ```Makefile
-INITIAL    = Tests/BM1D
-TIMESTEP   = rk3
-GEOMETRY   = spherical1D
-HYDRO      = rel_sph
-RADIATION  = radiation_sph
-SOLVER     = hllc
-DIMENSIONS = 1d
-IO         = text1d
+INITIAL    = Tests/BM1D      # Initial setup: .cpp file in src/Initial (see test examples)
+TIMESTEP   = rk3             # euler / rk3
+GEOMETRY   = spherical1D     # cartesian / spherical / spherical1D
+HYDRO      = rel_sph         # rel_cart / rel_sph
+RADIATION  = radiation_sph   # only one option for now
+SOLVER     = hllc            # only one option for now
+DIMENSIONS = 1d              # 1d / 2d
+IO         = text1d          # text1d / text2d
 ```
 
 
