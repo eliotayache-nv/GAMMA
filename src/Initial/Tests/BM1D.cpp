@@ -1,13 +1,16 @@
 #include "../../environment.h"
 #include "../../grid.h"
 #include "../../constants.h"
+#include "../../simu.h"
 
 #ifndef BM_
 #define BM_
-#define LORENTZ_ 1
+#define LORENTZ_ 0
 #endif
 
 bool onedim = true;
+double dth = M_PI/2./1000.;
+
 
 // set shell and CBM parameters
 static double n0      = 1.;           // cm-3:    CBM number density
@@ -48,8 +51,13 @@ static double Df = 2.*lfacShock2*rhoa;
   // Blandford&McKee(1976) eq. 8-10
 
 // grid size from shock position
-static double rmin0 = RShock*(1.-100./lfacShock2);
+static double rmin0 = RShock*(1.-50./lfacShock2);
 static double rmax0 = RShock*(1.+50./lfacShock2);
+
+// ARM parameters
+static double target_ar = 1.;     // target aspect ratio for lfac=1
+static double split_AR   = 3.;    // set upper bound as ratio of target_AR
+static double merge_AR   = 0.1;  // set upper bound as ratio of target_AR
 
 
 static void calcBM(double r, double t, double *rho, double *u, double *p){
@@ -82,8 +90,8 @@ static void calcBM(double r, double t, double *rho, double *u, double *p){
 void loadParams(s_par *par){
 
   par->tini      = tstart;             // initial time
-  par->ncell[x_] = 1000;              // number of cells in r direction
-  par->nmax      = 30000;              // max number of cells in MV direction
+  par->ncell[x_] = 9900;              // number of cells in r direction
+  par->nmax      = 10000;              // max number of cells in MV direction
   par->ngst      = 2;                 // number of ghost cells (?); probably don't change
 
   normalizeConstants(rhoNorm, vNorm, lNorm);
@@ -138,7 +146,7 @@ int Grid::initialValues(){
     else{
 
       // computing an average over each cell
-      int nbins = 1000;
+      int nbins = 1;
       double ddx = dr_denorm / nbins;
       double xl = r_denorm - dr_denorm/2.;
       double xr = xl+ddx;
@@ -171,8 +179,6 @@ int Grid::initialValues(){
       c->S.prim[PPP] = p/pNorm;
       c->S.prim[TR1] = 2.;
 
-      c->S.prim2cons(c->G.x[r_]);
-      c->S.cons2prim(c->G.x[r_]);
     }
   } 
   return 0;
@@ -184,18 +190,52 @@ void Grid::userKinematics(int it, double t){
 
   // setting lower and higher i boundary interface velocities
   // set by boundary velocity:
-  double vIn  = 1.;
-  double vOut = 1.05;
+  // double vIn  = 1.;
+  // double vOut = 1.05;
 
-  int iout = iRbnd-10;
-  if (Ctot[iout].S.prim[UU1] < 1.e-3 and it > 1000){
-    vOut = 0.;  
+  // int iout = iRbnd-10;
+  // if (Ctot[iout].S.prim[UU1] < 1.e-3 and it > 1000){
+  //   vOut = 0.;  
+  // }
+  // double xL = Ctot[iLbnd].G.x[r_];
+  // double xR = Ctot[iRbnd].G.x[r_];
+  // if (xL > 0.995*xR){
+  //   vIn = 0.;
+  // }
+  
+  // for (int n = 0; n < ngst; ++n){
+  //   int    iL = n;
+  //   int    iR = ntrack-2-n;
+  //   Itot[iL].v = vIn;
+  //   Itot[iR].v = vOut;
+  // }
+
+  // setting lower and higher i boundary interface velocities
+  // set by boundary velocity:
+  // DEFAULT VALUES
+  double vIn  = 0.;
+  double vOut = 1.5;
+  double vb = vOut;
+
+  // Checking if shock is too far behind.
+  int iout = iRbnd-1;
+  int iin = iLbnd+1;
+  double rout = Ctot[iout].G.x[r_];
+  double rin = Ctot[iin].G.x[r_];
+  double rlim = rin + 0.9 * (rout-rin);
+  int ia = iin;
+  double rcand = rin;
+  Cell c = Ctot[ia];
+  double pcand = c.S.prim[PPP];
+  while (rcand < rlim){
+    ia++;
+    c = Ctot[ia];
+    rcand = c.G.x[r_];
+    pcand = c.S.prim[PPP];
   }
-  double xL = Ctot[iLbnd].G.x[r_];
-  double xR = Ctot[iRbnd].G.x[r_];
-  if (xL > 0.995*xR){
-    vIn = 0.;
-  }
+  if (pcand < 1.1*eta and t > 5.e6){ vb = 0; }
+
+  vb = vOut;
   
   for (int n = 0; n < ngst; ++n){
     int    iL = n;
@@ -214,17 +254,20 @@ void Cell::userSourceTerms(double dt){
 
 void Grid::userBoundaries(int it, double t){
 
-  // for (int j = 0; j < nde_nax[F1]; ++j){
-  //   for (int i = 0; i <= iLbnd[j]; ++i){
-  //     Cell *c = &Ctot[j][i];
-  //     double rho, u, p;
-  //     double r = c->G.x[r_]*lNorm;
-  //     calcBM(r, t, &rho, &u, &p);
-  //     c->S.prim[RHO] = rho;
-  //     c->S.prim[UU1] = u;
-  //     c->S.prim[PPP] = p;
-  //   }
-  // }
+  if (t<1.e7){
+    for (int i = 0; i <= iLbnd; ++i){
+      Cell *c = &Ctot[i];
+      double rho, u, p;
+      double r = c->G.x[r_]*lNorm;
+
+      calcBM(r, t, &rho, &u, &p);
+      c->S.prim[RHO] = rho;
+      c->S.prim[UU1] = u;
+      c->S.prim[UU2] = 0;
+      c->S.prim[PPP] = p;
+      c->S.prim[TR1] = 2.;
+    }
+  }
 
   UNUSED(t);
   UNUSED(it);
@@ -238,44 +281,38 @@ int Grid::checkCellForRegrid(int j, int i){
   Cell c = Ctot[i];
 
   // double trac = c.S.prim[TR1];           // get tracer value
-  double r   = c.G.x[r_];                   // get cell radial coordinate
+  // double r   = c.G.x[r_];                   // get cell radial coordinate
   double dr  = c.G.dx[r_];                  // get cell radial spacing
-  double dr0 = (rmax0 - rmin0)/lNorm / 1000.;
-  double ar  = dr/dr0 / (r/(RShock/lNorm));    // calculate cell aspect ratio
-  // double rOut = Ctot[j][iRbnd[j]-1].G.x[x_];
-  // double ar  = dr / (rOut*dth);                // calculate cell aspect ratio
-
+  // double ar_local  = dr / (r*dth);          // calculate cell aspect ratio
   // printf("%le\n", ar);
+  double rOut = Ctot[iRbnd-1].G.x[x_];
+  double ar  = dr / (rOut*dth);             // calculate cell aspect ratio
 
-  // double rmin = Ctot[iLbnd+1].G.x[r_];
-  // double rmax = Ctot[iRbnd-1].G.x[r_];
-  // double delta_r = rmax - rmin;
-  // double target_dr = delta_r / nact;
+  // We will enforce stronger refinement closer to the shock front in the radial direction
+  // Looking for the shock in the j track.
+  double iS = iLbnd+1;
+  for (int ii = iRbnd-1; ii > iLbnd; --ii){
+    Cell ci = Ctot[ii];
+    double p = ci.S.prim[PPP];
+    iS = ii;
+    if (p > 1.5*eta){ // The shock is showing on the left of cell ii
+      // let's return the shock index in the track
+      break;
+    }
+  }
 
-  // double split_DR   = 5.;                   // set upper bound as ratio of target_AR
-  // double merge_DR   = 0.3;                  // set upper bound as ratio of target_AR
-
-  // if (c.S.lfac() < 2.){
-  //   split_DR = 20;
-  //   merge_DR = 1.2;
-  // }
-
-  // if (dr > split_DR * target_dr) {          // if cell is too long for its width
-  //   return(split_);                       // split
-  // }
-  // if (dr < merge_DR * target_dr) {          // if cell is too short for its width
-  //   return(merge_);                       // merge
-  // }
-  // return(skip_);
-
-  double target_ar = 1.;
-  double split_AR   = 10.;                   // set upper bound as ratio of target_AR
-  double merge_AR   = 0.05;                  // set upper bound as ratio of target_AR
-
-  if (ar > split_AR * target_ar) {          // if cell is too long for its width
+  // Let's now check if we are close to the shock position
+  double dist = i-iS;
+  if (0 < dist and dist < 10){ ar *= 10; }  
+                                             // -3 because we want the whole shock to be
+                                             // resolved. this is hard-wired for now but
+                                             // could be changed
+                               
+  double lfac = c.S.lfac();
+  if (ar > split_AR * target_ar / pow(lfac, 3./2.)) { // if cell is too long for its width
     return(split_);                       // split
   }
-  if (ar < merge_AR * target_ar) {          // if cell is too short for its width
+  if (ar < merge_AR * target_ar / pow(lfac, 3./2.)) { // if cell is too short for its width
     return(merge_);                       // merge
   }
   return(skip_);
@@ -288,9 +325,10 @@ void Cell::user_regridVal(double *res){
   // adapts the search to special target resolution requirements
   // depending on the tracer value
 
-  // if (S.lfac() < 2.){
-  //   *res /= 4;
-  // }
+  double r = G.x[r_];
+  double dr = G.dx[r_];
+  double lfac = S.lfac();
+  *res = dr / (r*dth) * pow(lfac, 3./2.);
 
 }
 
@@ -305,6 +343,37 @@ void FluidState::cons2prim_user(double *rho, double *p, double *uu){
   // *rho = fmax(*rho, ratio*rho0/rhoNorm);
 
   return;
+
+}
+
+
+void Simu::dataDump(){
+
+  // if (it%1 == 0){ grid.printCols(it, t); }
+  if (it%500 == 0){ grid.printCols(it, t); }
+
+  // datadump in log time:
+  int ndumps_per_decade = 1000;
+  static double t_last_dump = tstart;
+  double logdiff = log10(t)-log10(t_last_dump);
+  if (logdiff > 1./ndumps_per_decade){
+    t_last_dump = t; 
+    grid.printCols(it, t); 
+  }
+
+}
+
+void Simu::runInfo(){
+
+  // if ((worldrank == 0) and (it%1 == 0)){ printf("it: %ld time: %le\n", it, t);}
+  if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
+
+}
+
+void Simu::evalEnd(){
+
+  // if (it > 300){ stop = true; }
+  if (t > 3.33e8){ stop = true; } // 3.33e8 BOXFIT simu
 
 }
 

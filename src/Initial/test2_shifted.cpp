@@ -1,0 +1,103 @@
+/*
+* @Author: eliotayache
+* @Date:   2020-05-05 10:31:06
+* @Last Modified by:   Eliot Ayache
+* @Last Modified time: 2020-09-05 14:00:32
+*/
+
+#include "../environment.h"
+#include "../grid.h"
+
+void loadParams(s_par *par){
+
+  par->tini      = 0.;
+  par->ncell[x_] = 100;
+  par->ncell[y_] = 50;
+  par->nmax      = 110;    // max number of cells in MV direction
+  par->ngst      = 2;
+
+}
+
+int Grid::initialGeometry(){
+
+  for (int j = 0; j < ncell[y_]; ++j){
+    for (int i = 0; i < ncell[x_]; ++i){
+      Cell *c = &Cinit[j][i];
+      c->G.x[x_]  = (double) 2.*(i+0.5)/ncell[x_] -1 + 10.;
+      c->G.dx[x_] =          2./ncell[x_];
+      c->G.x[y_]  = (double) 0.5*(j+0.5)/ncell[y_] -0.25 + 1.01;
+      c->G.dx[y_] =          0.5/ncell[y_];
+      c->computedV();
+      // printf("%d %d %le %le\n", j, i, Cinit[j][i].G.x[F1], Cinit[j][i].G.x[MV]);
+    }
+  }
+  return 0;
+
+}
+
+int Grid::initialValues(){
+
+  for (int j = 0; j < ncell[F1]; ++j){
+    for (int i = 0; i < ncell[MV]; ++i){
+      Cell *c = &Cinit[j][i];
+
+      double x = c->G.x[x_];
+      double y = c->G.x[y_];
+      if (y-1 > x-10 and y-1 >= -x+10){
+        c->S.prim[RHO] = 0.1;
+        c->S.prim[VV1] = 0.;
+        c->S.prim[VV2] = 0.;
+        c->S.prim[PPP] = 0.01;
+        c->S.cons[NUM_C] = 1.;
+      }
+      if (y-1 < -x+10 and y-1 > x-10){
+        c->S.prim[RHO] = 0.1;
+        c->S.prim[VV1] = 0.7;
+        c->S.prim[VV2] = 0.7;
+        c->S.prim[PPP] = 1.;
+        c->S.cons[NUM_C] = 2.;
+      }
+      if (y-1 <= x-10 and y-1 < -x+10){
+        c->S.prim[RHO] = 0.5;
+        c->S.prim[VV1] = 0.;
+        c->S.prim[VV2] = 0.;
+        c->S.prim[PPP] = 1.;
+        c->S.cons[NUM_C] = 3.;
+      }
+      if (y-1 >= -x+10 and y-1 <= x-10){
+        c->S.prim[RHO] = 0.1;
+        c->S.prim[VV1] = -0.7;
+        c->S.prim[VV2] = 0.7;
+        c->S.prim[PPP] = 1.;
+        c->S.cons[NUM_C] = 4.;
+      }
+    }
+
+  }
+
+  return 0;
+
+}
+
+
+int Cell::checkCellForRegrid(){
+
+  // double split_dl = 0.1;
+  // double merge_dl = 0.005;
+
+  // if (G.dx[MV] > split_dl) {
+  //   // printf("split %d %d\n", nde_ind[y_], nde_ind[x_]);
+  //   return(split_);
+  // }
+  // if (G.dx[MV] < merge_dl) {
+  //   // printf("merge %d %d\n", nde_ind[y_], nde_ind[x_]);
+  //   return(merge_);
+  // }
+  return(skip_);
+
+}
+
+
+
+
+
