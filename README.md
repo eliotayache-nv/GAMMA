@@ -20,13 +20,11 @@ Before a new computation, create this directory.
 mkdir -p results/Last
 ```
 
+Use mpirun to launch computation.
 
 ```bash
-import foobar
-
-foobar.pluralize('word') # returns 'words'
-foobar.pluralize('goose') # returns 'geese'
-foobar.singularize('phenomena') # returns 'phenomenon'
+mpirun -n N_nodes ./bin/GAMMA -w  # to overwrite files in results/Last
+mpirun -n N_nodes ./bin/GAMMA -r  # to resume from the last file in results/Last
 ```
 
 ## Contributing
