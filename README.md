@@ -2,17 +2,25 @@
 
 GAMMA is a code for modeling relativistic hydrodynamics and non-thermal emission on a moving.
 
+## Requirements
+
+- gnu scientific library
+- OpenMP
+- MPI
+
 ## Installation
 
-Clone this repository in a directory of your choice.
+Clone this repository in a directory of your choice. Move to the directory and build the code.
 
 ```bash
 git clone https://github.com/eliotayache/GAMMA/ dirname
+cd dirname
+make -B
 ```
 
 ## Usage
 
-Output is stored in ./results/Last. you can run calculations you need to create this directory.
+Output is stored in dirname/results/Last. Before you can run calculations you need to create this directory.
 
 ```bash
 mkdir -p results/Last
