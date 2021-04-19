@@ -76,5 +76,5 @@ In `initialValues()` the fluid state should be specified in terms of primitive v
 [MIT](https://choosealicense.com/licenses/mit/)
 
 ## Contact
-Feel free to get in touch!
+Feel free to get in touch!  
 Eliot Ayache: e.h.r.ayache[at]bath.ac.uk
