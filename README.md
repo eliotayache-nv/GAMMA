@@ -41,6 +41,13 @@ IO         = text1d          # text1d / text2d
 
 A range of self-explanatory environement variables are specified in src/environment.h and should be set before running the code.
 
+### initial setup
+
+New initial setups can be created as new .cpp files in src/Initial. 
+These files should follow the same architecture as the example tests in src/Initial/Tests.
+
+In `initialValues()` the fluid state should be specified in terms of primitive variables.
+
 
 ### running a simulation
 
