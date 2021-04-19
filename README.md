@@ -23,7 +23,7 @@ make -B
 
 ## Usage
 
-### Choice of module to use
+### choice of module to use
 
 The choice of geometry, time-integration, solver, dimensions are specified in ./Makefile
 ```Makefile
@@ -46,8 +46,11 @@ A range of self-explanatory environement variables are specified in src/environm
 New initial setups can be created as new .cpp files in src/Initial. 
 These files should follow the same architecture as the example tests in src/Initial/Tests.
 
-In `initialValues()` the fluid state should be specified in terms of primitive variables `prim[NUM_Q]`.
+The geometry and fluid state are initialised on a grid `Cinit[ncell[F1]][ncell[MV]]`, with `F1` the fixed and `MV` moving dimensions. The relevant indices to move around the various grids involved in the code are all specified in `grid.h`
 
+In `initialValues()` the fluid state should be specified in terms of primitive variables `S.prim[q]` with velocities in units of c.
+
+In
 
 ### running a simulation
 
