@@ -54,7 +54,14 @@ IO         = text1d          # text1d / text2d
 
 ### environment variables
 
-A range of self-explanatory environement variables are specified in src/environment.h and should be set before running the code.
+A range of self-explanatory environement variables are specified in src/environment.h and should be set before running the code. The non-thermal particle population calculation switches are the following.
+```Makefile
+#define SHOCK_DETECTION_        ENABLED_
+#define DETECT_SHOCK_THRESHOLD_ 0.01
+#define LOCAL_SYNCHROTRON_      ENABLED_      # needs SHOCK_DETECTION_ ENABLED_
+#define GAMMA_MAX_INIT_         (1.e8)
+#define VARIABLE_PSPEC_         DISABLED_     # needs LOCAL_SYNCHROTRON_ and SHOCK_DETECTION_ ENABLED_
+```
 
 ### initial setup
 
