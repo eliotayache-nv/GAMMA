@@ -36,6 +36,10 @@ DIMENSIONS = 1d              # 1d / 2d
 IO         = text1d          # text1d / text2d
 ```
 
+### environment variables
+
+A range of self-explanatory environement variables are specified in src/environment.h and should be set before running the code.
+
 
 ### running a simulation
 
