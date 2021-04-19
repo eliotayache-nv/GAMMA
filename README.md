@@ -13,6 +13,7 @@ git clone https://github.com/eliotayache/GAMMA/ dirname
 ## Usage
 
 Output is stored in ./results/Last
+
 Before a new computation, create this directory.
 
 ```bash
