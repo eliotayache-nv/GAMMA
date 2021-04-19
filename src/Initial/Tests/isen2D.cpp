@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2020-12-07 10:44:47
+* @Last Modified time: 2021-04-17 10:41:17
 */
 
 #include "../../environment.h"
@@ -22,7 +22,7 @@ static double v_ref   = 0.;
 static double p_ref   = 1.e2;
 static double alpha   = 1.;
 static double L       = 0.3;
-static double angle   = 0;//M_PI/4.;
+static double angle   = M_PI/4.;//0;//M_PI/4.;
 
 
 void loadParams(s_par *par){
@@ -120,17 +120,17 @@ int Grid::initialValues(){
 
 void Grid::userKinematics(){
 
-  double vin = 0.5;
-  double vout = 0.5;
+  // double vin = 0.5;
+  // double vout = 0.5;
 
-  for (int j = 0; j < nde_nax[F1]; ++j){
-    for (int n = 0; n < ngst; ++n){
-      int    iL = n;
-      int    iR = ntrack[j]-2-n;
-      Itot[j][iL].v = vin;
-      Itot[j][iR].v = vout;
-    }
-  }
+  // for (int j = 0; j < nde_nax[F1]; ++j){
+  //   for (int n = 0; n < ngst; ++n){
+  //     int    iL = n;
+  //     int    iR = ntrack[j]-2-n;
+  //     Itot[j][iL].v = vin;
+  //     Itot[j][iR].v = vout;
+  //   }
+  // }
 
 
 }
@@ -158,7 +158,7 @@ int Grid::checkCellForRegrid(int j, int i){
   if (dx / dy < 0.5){
     return merge_;
   }
-  if (dx /dy > 1.5){
+  if (dx / dy > 2.){
     return split_;
   }
 
@@ -184,5 +184,30 @@ void FluidState::cons2prim_user(double *rho, double *p, double *uu){
   return;
 
 }
+
+
+
+void Simu::dataDump(){
+
+  // if (it%1 == 0){ grid.printCols(it, t); }
+  if (it%100 == 0){ grid.printCols(it, t); }
+
+}
+
+void Simu::runInfo(){
+
+  // if ((worldrank == 0) and (it%1 == 0)){ printf("it: %ld time: %le\n", it, t);}
+  if ((worldrank == 0) and (it%100 == 0)){ printf("it: %ld time: %le\n", it, t);}
+
+}
+
+void Simu::evalEnd(){
+
+  // if (it > 300){ stop = true; }
+  if (t > 0.7){ grid.printCols(it, t); stop = true; } // 3.33e8 BOXFIT simu
+
+}
+
+
 
 

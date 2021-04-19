@@ -80,7 +80,6 @@ class Grid{
   void prepForUpdate(int it, double t);
   void computeFluxes();
   double collect_dt();
-  void userFluxes();
   void updateGhosts(int it, double t);
   void userBoundaries(int it, double t);
   void reconstructStates( int j, int i, int dim, 
