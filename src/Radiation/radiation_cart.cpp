@@ -2,7 +2,7 @@
 * @Author: Eliot Ayache
 * @Date:   2020-10-25 10:19:37
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-04-19 21:53:00
+* @Last Modified time: 2021-01-26 16:05:20
 */
 
 
@@ -15,46 +15,28 @@
 
 #if SHOCK_DETECTION_ == ENABLED_
 
-  static double spectral_p(double fvelu){
-    double pspec;
-    #if VARIABLE_PSPEC_ == ENABLED_
-      // if (fabs(fvelu) < 1.){
-      //   pspec = 2.;
-      // } else if (fabs(fvelu) < 10){
-      //   pspec = 2.+ (p_-2.)*log10(fabs(fvelu));
-      // } else {
-      //   pspec = p_;
-      // }
-
-      pspec = 2.11 + 0.11*tanh((log10(fabs(fvelu))-.5));
-
-    #else
-      pspec = p_;
-    #endif
-    return(pspec);
-  }
-
   static double compute_cs(double rho, double p){
     return(sqrt(GAMMA_*p / (rho + p*GAMMA_/(GAMMA_-1.))));
   }
 
-  static double compute_Sd(FluidState S1, FluidState S2, int dim, double *pspec, 
-                           bool reverse=false, double radius = -1){
+  static double compute_Sd(FluidState S1, FluidState S2, int dim, 
+                           bool reverse=false){
 
-    int uux = UU1+dim;
-    int uut = UU2-dim;
+    #if NUM_D == 2
+      int uux = UU1+dim;
+      int uut = UU2-dim;
+    #endif
 
     // 1S1R Rezzolla&Zanotti2013 eq. 4.211 (p238)
     // ------------------------------------------
     // this equation involves numerically solving an integral over pressure
     int n_evals = 10; // number of points in the integral
-    double chi = 0.5; // param for strength of shocks to detect (0:weak, 1:strong)
+    double chi = 0.2; // param for strength of shocks to detect (0:weak, 1:strong)
 
     double p1 = S1.prim[PPP];
     double p2 = S2.prim[PPP];
 
-    if (fabs((p1-p2)/p1)<1.e-10) return(-1); // no shock possible
-    if (p1 < p2) return (-1); // shock increases pressure
+    if (p1==p2) return(-1); // no shock possible
 
     double delta_p = p2 - p1;
     double dp = delta_p / (double) n_evals;
@@ -64,6 +46,8 @@
     double h1 = 1 + p1*GAMMA_/(GAMMA_-1.)/rho1;
     double h2 = 1 + p2*GAMMA_/(GAMMA_-1.)/rho2;
 
+    // projecting the velocity field in a local tetrad (R&Z13 p244)
+    // in cartesian coordinates, gamma = diag(1,1,1) => M = diag(1,1,1) => no projection
     double lfac1 = S1.lfac();
     double lfac2 = S2.lfac();
     double vx1 = S1.prim[uux] / lfac1;
@@ -72,39 +56,23 @@
       vx1 *= -1;
       vx2 *= -1;
     }
-    double ut1 = 0;
-    #if NUM_D > 1
-      ut1 = S1.prim[uut];
-    #endif
-    double v12 = (vx1 - vx2) / (1 - vx1*vx2);
-      // has to be computed pre-projection
-
-    // projecting the velocity field in a local tetrad (R&Z13 p244) (Pons+98) (Zanotti+10)
-    // in spherical coordinates, gamma = diag(1,r2,r2sin2(theta)) 
-    // => M = diag(1,r,rsin(theta)) 
-    // if (dim == r_){
-    //   ut1 *= radius;
-    // } else {
-    //   vx1 *= radius;
-    //   vx2 *= radius;
-    // }
-
+    double ut1 = S1.prim[uut];
     double A1 = h1*ut1;
 
     double I = 0;
     // if (p1!=p2) { // we get I = 0 if p1=p2, so no need for integration:
-    for (int ip = 0; ip < n_evals; ++ip){
-      double p = p1 + (ip+.5)*dp;
+      for (int ip = 0; ip < n_evals; ++ip){
+        double p = p1 + (ip+.5)*dp;
 
-      // h is computed from s (entropy). Since rarefaction waves are isentropic,
-      // we can set s = s1, so rho = rho1(p/p1)^(1/GAMMA_) (Laplace)
-      double rho = rho1  * pow(p/p1, 1./GAMMA_);    
-      double h = 1 + p*GAMMA_/(GAMMA_-1.)/rho;
-      double cs = compute_cs(rho,p);
+        // h is computed from s (entropy). Since rarefaction waves are isentropic,
+        // we can set s = s1, so rho = rho1(p/p1)^(1/GAMMA_) (Laplace)
+        double rho = rho1  * pow(p/p1, 1./GAMMA_);    
+        double h = 1 + p*GAMMA_/(GAMMA_-1.)/rho;
+        double cs = compute_cs(rho,p);
 
-      double dI = sqrt(h*h + A1*A1 * (1.-cs*cs)) / ((h*h + A1*A1) * rho * cs) * dp;
-      I += dI;
-    }
+        double dI = sqrt(h*h + A1*A1 * (1.-cs*cs)) / ((h*h + A1*A1) * rho * cs) * dp;
+        I += dI;
+      }
     // }
 
     double vSR = tanh(I);
@@ -136,41 +104,24 @@
     double v2Sa = (p1 - p2) * (1. - vx2*Vs);
     double v2Sb = (Vs - vx2) * (h2*rho2*lfac22*(1.-vx22) + p1 - p2);
     double v2S = v2Sa / v2Sb;
-
+    
     // Shock detection threshold:
     double vlim = vSR + chi*(v2S - vSR);
+    double v12 = (vx1 - vx2) / (1 - vx1*vx2);
     double Sd = v12 - vlim;
-
-    // spectral index calculation (interface shock setup)
-    // double betau = (vx2 - Vs)/(1 - vx2*Vs);
-    // double lfacu = 1./sqrt(1.-betau*betau);
-    // double fvelu = lfacu*betau;
-
-    // spectral index calculation (shock lfac setup: we assume vx2 = 0)
-    // in other words we're always running into a static environment
-    double betau = Vs;
-    double lfacu = 1./sqrt(1.-betau*betau);
-    double fvelu = lfacu*betau;
-
-    *pspec = spectral_p(fvelu);
 
     return(Sd);
   }
 
   void Interface :: measureShock(Cell *cL, Cell *cR){
 
-    double Sd, pspec;
-    
+    double Sd;
     // Forward shocks
-    Sd = compute_Sd(SL, SR, dim, &pspec);
+    Sd = compute_Sd(SL, SR, dim);
     cL->Sd = fmax(cL->Sd, Sd);
-    if (pspec > cL->pspec) cL->pspec = pspec;
-
     // Reverse shocks
-    if (dim==MV){ return; } // turning of radial reverse shocks in boxfit setup (toggle)
-    Sd = compute_Sd(SR, SL, dim, &pspec, true);
+    Sd = compute_Sd(SR, SL, dim, true);
     cR->Sd = fmax(cR->Sd, Sd);
-    if (pspec > cR->pspec) cR->pspec = pspec;
 
   }  
 
@@ -182,9 +133,8 @@
 
   void Cell :: resetShock(){
 
-    Sd = -1;
+    Sd = 0;
     isShocked = false;
-    pspec = 0;
 
   }
 
@@ -214,23 +164,6 @@
 
   }
 
-  static double gammaMinInit(FluidState S){
-
-    double rho = S.prim[RHO];
-    double p   = S.prim[PPP];
-    double psyn = S.prim[PSN];
-    double gma = S.gamma();
-    double h   = 1.+p*gma/(gma-1.)/rho; // ideal gas EOS (TBC)
-    double eps = rho*(h-1.)/gma;
-    double ee = eps_e_ * eps;
-    double ne = zeta_ * rho / Nmp_;
-    double lfac_av = ee / (ne * Nme_);
-    double gammaMin = (psyn-2.) / (psyn-1.) *lfac_av;
-
-    return(gammaMin);
-
-  }
-
   void Cell :: radiation_apply_trac2gammae(){
     // To apply only on Cdump cells in output!
 
@@ -248,14 +181,10 @@
     double lfac = S.lfac();
     double rho = S.prim[RHO];
     double lim = lfac * pow(rho, 4./3.);  // equiv. gammae = 1.
-    if (S.prim[GMX] > lim / (lfac*rho) or S.prim[GMX] <= 0.){
-        S.prim[GMX] = lim / (lfac*rho);
-        S.cons[GMX] = lim;
-    }
-    if (S.prim[GMN] > lim / (lfac*rho) or S.prim[GMN] <= 0.){
-        S.prim[GMN] = lim / (lfac*rho);
-        S.cons[GMN] = lim;
-    }
+    S.prim[GMN] = lim / (lfac*rho);
+    S.prim[GMX] = lim / (lfac*rho);
+    S.cons[GMN] = lim;
+    S.cons[GMX] = lim;
 
   }
 
@@ -266,19 +195,13 @@
     double lim = lfac * pow(rho, 4./3.) / (lfac*rho);  // equiv. gammae = 1.
     double *gmax = &S.prim[GMX];
     double *gmin = &S.prim[GMN];
-    double *psyn = &S.prim[PSN];
 
     if (isShocked){
-      if (pspec>*psyn or std::isnan(*psyn)) *psyn = pspec;
       *gmax = radiation_gammae2trac(GAMMA_MAX_INIT_, S) / (lfac*rho);
-      *gmin = radiation_gammae2trac(gammaMinInit(S), S) / (lfac*rho);
+      *gmin = radiation_gammae2trac(1., S) / (lfac*rho);
     }
-    // if (*gmax <= 0. or ::isnan(*gmax)) *gmax = lim;
-    // if (*gmin <= 0. or ::isnan(*gmin)) *gmin = lim;
-    if (::isnan(*gmax)) *gmax = lim;
-    if (::isnan(*gmin)) *gmin = lim;
-    // if (*gmax > lim or *gmax <= 0. or ::isnan(*gmax)) *gmax = lim;
-    // if (*gmin > lim or *gmin <= 0. or ::isnan(*gmin)) *gmin = lim;
+    if (*gmax > lim or *gmax == 0.) *gmax = lim;
+    if (*gmin > lim or *gmin == 0.) *gmin = lim;
 
   }
 
@@ -286,16 +209,14 @@
 
     double rho = S.prim[RHO];
     double p = S.prim[PPP];
-    double gma = S.gamma();
-    double h = 1 + p*gma/(gma-1.)/rho;
-    double eps = rho * (h-1.) / gma;
+    double h = 1 + p*GAMMA_/(GAMMA_-1.)/rho;
+    double eps = rho * (h-1.) / GAMMA_;
     double eB = eps_B_ * eps;
     double B = sqrt(8.*PI*eB);
 
-    double dgma = Nalpha_ * pow(rho, 4./3.) * B*B * G.dV * dt;
+    double dgmax = Nalpha_ * pow(rho, 4./3.) * B*B * G.dV * dt;
     // printf("%le\n", dgmax);
-    S.cons[GMX] += dgma;
-    S.cons[GMN] += dgma;
+    S.prim[GMX] += dgmax;
 
   }
 
