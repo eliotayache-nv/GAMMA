@@ -1,6 +1,6 @@
-# Foobar
+# GAMMA
 
-Foobar is a Python library for dealing with word pluralization.
+GAMMA is a code for modeling relativistic hydrodynamics and non-thermal emission on a moving.
 
 ## Installation
 
