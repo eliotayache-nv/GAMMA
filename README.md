@@ -68,7 +68,7 @@ A range of self-explanatory environement variables are specified in src/environm
 New initial setups can be created as new .cpp files in src/Initial. 
 These files should follow the same architecture as the example tests in src/Initial/Tests.
 
-The geometry and fluid state are initialised on a grid `Cinit`. After initialisation the calculation will be moved to the `Ctot`grid that includes ghost cells. The relevant indices to move around the various grids involved in the code are all specified in `grid.h`
+The geometry and fluid state are initialised on a grid `Cinit`. After initialisation the calculation will be moved to the `Ctot`grid that includes ghost cells. The relevant indices to move around the various grids involved in the code are all specified in `src/grid.h`
 
 In `initialValues()` the fluid state should be specified in terms of primitive variables `S.prim[q]` with velocities in units of c.
 
@@ -77,4 +77,5 @@ In `initialValues()` the fluid state should be specified in terms of primitive v
 [MIT](https://choosealicense.com/licenses/mit/)
 
 ## Contact
+Feel free to get in touch!
 Eliot Ayache: e.h.r.ayache[at]bath.ac.uk
