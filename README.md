@@ -46,7 +46,7 @@ A range of self-explanatory environement variables are specified in src/environm
 New initial setups can be created as new .cpp files in src/Initial. 
 These files should follow the same architecture as the example tests in src/Initial/Tests.
 
-In `initialValues()` the fluid state should be specified in terms of primitive variables.
+In `initialValues()` the fluid state should be specified in terms of primitive variables `prim[NUM_Q]`.
 
 
 ### running a simulation
