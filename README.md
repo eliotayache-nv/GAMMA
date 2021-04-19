@@ -73,15 +73,7 @@ In `initialValues()` the fluid state should be specified in terms of primitive v
 
 The following functions have to be declared in this initial file:
 ```c++
-void loadParams(s_par *par){
-
-  par->tini      = 0.;
-  par->ncell[x_] = Nx;
-  par->ncell[y_] = Ny;
-  par->nmax      = Nx+50;    // max number of cells in MV direction
-  par->ngst      = 2;
-
-}
+void loadParams(s_par *par){}
 int Grid::initialGeometry(){return(0);}
 int Grid::initialValues(){return(0);}
 void Grid::userKinematics(){}
