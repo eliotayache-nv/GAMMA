@@ -2,7 +2,7 @@
 * @Author: eliotayache
 * @Date:   2020-05-05 10:31:06
 * @Last Modified by:   Eliot Ayache
-* @Last Modified time: 2021-04-17 10:41:17
+* @Last Modified time: 2021-04-19 23:33:20
 */
 
 #include "../../environment.h"
@@ -46,7 +46,7 @@ int Grid::initialGeometry(){
       c->G.dx[x_] =          x/ncell[x_];
       c->G.x[y_]  = (double) y*(j+0.5)/ncell[y_] + ymin;
       c->G.dx[y_] =          y/ncell[y_];
-      c->G.dV     = c->G.dx[x_]*c->G.dx[y_];
+      c->computeAllGeom();
     }
   }
   return 0;

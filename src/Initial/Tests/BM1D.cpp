@@ -8,7 +8,6 @@
 #define LORENTZ_ 0
 #endif
 
-bool onedim = true;
 double dth = M_PI/2./1000.;
 
 
