@@ -93,5 +93,4 @@ void Simu::evalEnd(){}
 [MIT](https://choosealicense.com/licenses/mit/)
 
 ## Contact
-Feel free to get in touch!  
-Eliot Ayache: e.h.r.ayache[at]bath.ac.uk
+Feel free to get in touch! e.h.r.ayache@bath.ac.uk
