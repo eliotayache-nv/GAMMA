@@ -31,7 +31,7 @@ Output is stored in ./results/Last. Before you can run calculations you need to 
 mkdir -p results/Last
 ```
 
-Use mpirun to launch computation on `N_nodes` nodes. The code automatically uses all cores availables.
+Use mpirun to launch computation on `N_nodes` nodes. The code automatically uses all cores available.
 
 ```bash
 mpirun -n N_nodes ./bin/GAMMA -w  # to overwrite files in results/Last
