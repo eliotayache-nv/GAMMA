@@ -27,3 +27,6 @@ mpirun -n N_nodes ./bin/GAMMA -r  # to resume from the last file in results/Last
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
+
+## Contact
+Eliot Ayache: e.h.r.ayache[at]bath.ac.uk
