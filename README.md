@@ -4,7 +4,7 @@ GAMMA is a code for modeling relativistic hydrodynamics and non-thermal emission
 
 ## Installation
 
-Clone this repository in a directory of your choice
+Clone this repository in a directory of your choice.
 
 ```bash
 git clone https://github.com/eliotayache/GAMMA/ dirname
@@ -12,7 +12,15 @@ git clone https://github.com/eliotayache/GAMMA/ dirname
 
 ## Usage
 
-```python
+Output is stored in ./results/Last
+Before a new computation, create this directory.
+
+```bash
+mkdir -p results/Last
+```
+
+
+```bash
 import foobar
 
 foobar.pluralize('word') # returns 'words'
