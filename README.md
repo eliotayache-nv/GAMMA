@@ -66,15 +66,31 @@ A range of self-explanatory environement variables are specified in src/environm
 ### initial setup
 
 New initial setups can be created as new .cpp files in src/Initial. 
-These files should follow the same architecture as the example tests in src/Initial/Tests.
+**These files should follow the same architecture as the example tests in src/Initial/Tests.** They specify the initial grid geometry, the initial fluid values, the output times, the AMR criteria and other user-specified (override) functions.
 
-The geometry and fluid state are initialised on a grid `Cinit`. After initialisation the calculation will be moved to the `Ctot`grid that includes ghost cells. The relevant indices to move around the various grids involved in the code are all specified in `grid.h`
-
+The geometry and fluid state are initialised on a grid `Cinit`. After initialisation the calculation will be moved to the `Ctot`grid that includes ghost cells. The relevant indices to move around the various grids involved in the code are all specified in `src/grid.h`  
 In `initialValues()` the fluid state should be specified in terms of primitive variables `S.prim[q]` with velocities in units of c.
+
+The following functions have to be declared in this initial file:
+```c++
+void loadParams(s_par *par){}
+int Grid::initialGeometry(){return(0);}
+int Grid::initialValues(){return(0);}
+void Grid::userKinematics(){}
+void Cell::userSourceTerms(double dt){}
+void Grid::userBoundaries(int it, double t){}
+int Grid::checkCellForRegrid(int j, int i){return(skip_);}
+void Cell::user_regridVal(double *res){}
+void FluidState::cons2prim_user(double *rho, double *p, double *uu){}
+void Simu::dataDump(){}
+void Simu::runInfo(){}
+void Simu::evalEnd(){}
+
+```
 
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
 
 ## Contact
-Eliot Ayache: e.h.r.ayache[at]bath.ac.uk
+Feel free to get in touch! e.h.r.ayache@bath.ac.uk
