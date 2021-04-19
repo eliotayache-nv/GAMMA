@@ -1,15 +1,16 @@
-INITIAL    = Paper2/BoxFit_TopHat_lowres
+INITIAL    = Tests/BM1D
 TIMESTEP   = rk3
-GEOMETRY   = spherical
+GEOMETRY   = spherical1D
 HYDRO      = rel_sph
 RADIATION  = radiation_sph
 SOLVER     = hllc
-DIMENSIONS = 2d
-IO         = text2d
+DIMENSIONS = 1d
+IO         = text1d
 
 OS_NAME := $(shell uname -s | tr A-Z a-z)
 HOST_NAME := $(shell hostname | cut -c-6)s
 
+# Different options depending on the system.
 ifeq ($(HOME), /home/ba-eayache)
 	CXX     = CC
 	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 -fopenmp		#run this line on distant
@@ -44,6 +45,14 @@ ifeq ($(OS_NAME), linux)
 	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
 else
 ifeq ($(OS_NAME), darwin)
+	CXX     = /usr/local/bin/mpic++
+# 	CXXFLAGS = -Wall -Wextra -g -std=c++11 -O0  	#run this line on local
+# 	CXXFLAGS = -Wall -Wextra -Qunused-arguments -std=c++11 -g  	#run this line on local
+	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 -fopenmp	#run this line on local
+# 	LFLAGS = -L/usr/local/lib -fopenmp -lhdf5 -lgsl -lm 		#run this line on local
+	LFLAGS = -L/usr/local/lib -fopenmp -lgsl -lm	#run this line on local
+	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
+else
 	CXX     = /usr/local/bin/mpic++
 # 	CXXFLAGS = -Wall -Wextra -g -std=c++11 -O0  	#run this line on local
 # 	CXXFLAGS = -Wall -Wextra -Qunused-arguments -std=c++11 -g  	#run this line on local
