@@ -1,4 +1,4 @@
-  #ifndef ENVIRONMENT_H_
+#ifndef ENVIRONMENT_H_
 #define ENVIRONMENT_H_
 
 #include <mpi.h>
@@ -53,8 +53,6 @@ enum{skip_,merge_,split_};
 #define GAMMA_ (4./3.)
 #define EOS_   IDEAL_EOS_
 #define CFL_   0.2
-
-#define DUMPSTEP_ 100
 
 #define MPI_ ENABLED_
 #define OMP_ ENABLED_
