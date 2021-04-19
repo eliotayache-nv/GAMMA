@@ -22,7 +22,8 @@ ifeq ($(HOME), /home/t/ehra20)
 	CXXFLAGS = -Wall -Wextra -std=c++0x -O3 -fopenmp 		#run this line on distant
 # 	CXXFLAGS = -Wall -Wextra -std=c++0x -g -fopenmp 		#run this line on distant
 	LFLAGS = -fopenmp -lgsl -lgslcblas -lm	#run this line on distant
-	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
+	IFLAGS = -I/usr/local/include -I/usr/include 
+# 	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
 else
 ifeq ($(HOME), /home/rwe-ubuntu)
 	CXX     = mpicxx
@@ -41,8 +42,10 @@ else
 ifeq ($(OS_NAME), linux)
 	CXX     = mpicxx
 	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 -fopenmp		#run this line on distant
-	LFLAGS = -L/usr/local/lib -fopenmp -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5 -lgsl -lgslcblas -lm	#run this line on distant
-	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
+	LFLAGS = -L/usr/local/lib -fopenmp  -lgsl -lgslcblas -lm	#run this line on distant
+# 	LFLAGS = -L/usr/local/lib -fopenmp -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5 -lgsl -lgslcblas -lm	#run this line on distant
+	IFLAGS = -I/usr/local/include -I/usr/include
+# 	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
 else
 ifeq ($(OS_NAME), darwin)
 	CXX     = /usr/local/bin/mpic++
@@ -51,7 +54,8 @@ ifeq ($(OS_NAME), darwin)
 	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 -fopenmp	#run this line on local
 # 	LFLAGS = -L/usr/local/lib -fopenmp -lhdf5 -lgsl -lm 		#run this line on local
 	LFLAGS = -L/usr/local/lib -fopenmp -lgsl -lm	#run this line on local
-	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
+	IFLAGS = -I/usr/local/include -I/usr/include 
+# 	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
 else
 	CXX     = /usr/local/bin/mpic++
 # 	CXXFLAGS = -Wall -Wextra -g -std=c++11 -O0  	#run this line on local
@@ -59,7 +63,8 @@ else
 	CXXFLAGS = -Wall -Wextra -std=c++11 -O3 -fopenmp	#run this line on local
 # 	LFLAGS = -L/usr/local/lib -fopenmp -lhdf5 -lgsl -lm 		#run this line on local
 	LFLAGS = -L/usr/local/lib -fopenmp -lgsl -lm	#run this line on local
-	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
+	IFLAGS = -I/usr/local/include -I/usr/include 
+# 	IFLAGS = -I/usr/local/include -I/usr/include -I/usr/include/hdf5/serial
 endif
 endif
 endif
