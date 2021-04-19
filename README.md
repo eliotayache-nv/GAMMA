@@ -22,11 +22,24 @@ make -B
 
 ## Usage
 
-### choice of parameters
+### Choosing modules
+
+The choice of geometry, time-integration, solver, dimensions are specified in ./Makefile
+```Makefile
+INITIAL    = Tests/BM1D
+TIMESTEP   = rk3
+GEOMETRY   = spherical1D
+HYDRO      = rel_sph
+RADIATION  = radiation_sph
+SOLVER     = hllc
+DIMENSIONS = 1d
+IO         = text1d
+```
+
 
 ### running a simulation
 
-Output is stored in dirname/results/Last. Before you can run calculations you need to create this directory.
+Output is stored in ./results/Last. Before you can run calculations you need to create this directory.
 
 ```bash
 mkdir -p results/Last
