@@ -91,7 +91,7 @@ void Simu::evalEnd(){}
 ```
 
 ## License
-[MIT](https://choosealicense.com/licenses/mit/
+[MIT](https://choosealicense.com/licenses/mit/)
 
 ## Contact
 Feel free to get in touch! e.h.r.ayache@bath.ac.uk
