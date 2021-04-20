@@ -5,6 +5,8 @@ GAMMA is a code for modeling relativistic hydrodynamics and non-thermal emission
 Parts of the code are currently still under development. A full documentation will be made available shortly.
 For now we provide information on how to compile and run the test cases included with the code.
 
+The code is described in Ayache, van Eerten & Eardley (submitted) [arXiv:2104.09397](https://arxiv.org/abs/2104.09397)
+
 ## Requirements
 
 - gnu scientific library
@@ -88,9 +90,8 @@ void Simu::evalEnd(){}
 
 ```
 
-
 ## License
-[MIT](https://choosealicense.com/licenses/mit/)
+[MIT](https://choosealicense.com/licenses/mit/
 
 ## Contact
 Feel free to get in touch! e.h.r.ayache@bath.ac.uk
