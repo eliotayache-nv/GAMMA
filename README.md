@@ -96,5 +96,9 @@ void Simu::evalEnd(){}
 
 - GAMMA: a new method for modeling relativistic hydrodynamics and non-thermal emission on a moving mesh ([arXiv:2104.09397](https://arxiv.org/abs/2104.09397))
 
+## Acknowledgements
+
+This work is funded in part the European Union’s Horizon 2020 Programme under the AHEAD2020 project (grant agreement n. 871158).
+
 ## Contact
 Feel free to get in touch! eliot.ayache@astro.su.se
