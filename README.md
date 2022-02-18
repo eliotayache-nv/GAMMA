@@ -98,7 +98,7 @@ void Simu::evalEnd(){}
 
 ## Acknowledgements
 
-This work is funded in part the European Union’s Horizon 2020 Programme under the AHEAD2020 project (grant agreement n. 871158).
+This work is funded in part by the European Union’s Horizon 2020 Programme under the AHEAD2020 project (grant agreement n. 871158).
 
 ## Contact
 Feel free to get in touch! eliot.ayache@astro.su.se
