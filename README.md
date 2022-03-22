@@ -31,7 +31,7 @@ Output is stored in ./results/Last. Before you can run calculations you need to 
 mkdir -p results/Last
 ```
 
-Use mpirun to launch computation.
+Use mpirun to launch computation on `N_nodes` nodes. The code automatically uses all cores available.
 
 ```bash
 mpirun -n N_nodes ./bin/GAMMA -w  # to overwrite files in results/Last
@@ -88,9 +88,17 @@ void Simu::evalEnd(){}
 
 ```
 
-
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
 
+
+## Publications
+
+- GAMMA: a new method for modeling relativistic hydrodynamics and non-thermal emission on a moving mesh ([arXiv:2104.09397](https://arxiv.org/abs/2104.09397))
+
+## Acknowledgements
+
+This work is funded in part by the European Union’s Horizon 2020 Programme under the AHEAD2020 project (grant agreement n. 871158).
+
 ## Contact
-Feel free to get in touch! e.h.r.ayache@bath.ac.uk
+Feel free to get in touch! eliot.ayache@astro.su.se
