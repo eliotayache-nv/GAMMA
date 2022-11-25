@@ -88,7 +88,12 @@ void Simu::evalEnd(){}
 
 ```
 
+### output visualisation
+
+Python plotting functions are available in `/bin/Tools/plotting_scripts.py`. These functions should be run from this directory.
+
 ## License
+
 [MIT](https://choosealicense.com/licenses/mit/)
 
 
